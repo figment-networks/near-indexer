@@ -21,6 +21,7 @@ func New(rpc *client.Client) Server {
 
 	s.GET("/health", s.GetHealth)
 	s.GET("/status", s.GetStatus)
+	s.GET("/height", s.GetHeight)
 	s.GET("/block", s.GetCurrentBlock)
 	s.GET("/validators", s.GetValidators)
 
@@ -35,22 +36,32 @@ func (s Server) GetHealth(c *gin.Context) {
 // GetStatus renders the node status
 func (s Server) GetStatus(c *gin.Context) {
 	block, err := s.rpc.Status()
-	rpcResult(c, block, err)
+	response(c, block, err)
+}
+
+// GetHeight returns the current height
+func (s Server) GetHeight(c *gin.Context) {
+	block, err := s.rpc.CurrentBlock()
+	result := gin.H{
+		"height": block.Header.Height,
+		"time":   block.Header.Timestamp,
+	}
+	response(c, result, err)
 }
 
 // GetCurrentBlock renders the latest available block
 func (s Server) GetCurrentBlock(c *gin.Context) {
 	block, err := s.rpc.CurrentBlock()
-	rpcResult(c, block, err)
+	response(c, block, err)
 }
 
 // GetValidators renders all validators
 func (s Server) GetValidators(c *gin.Context) {
 	validators, err := s.rpc.Validators()
-	rpcResult(c, validators, err)
+	response(c, validators, err)
 }
 
-func rpcResult(c *gin.Context, data interface{}, err error) {
+func response(c *gin.Context, data interface{}, err error) {
 	if err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"error": err})
 		return
