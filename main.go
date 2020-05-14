@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/figment-networks/near-indexer/near/client"
+	"github.com/figment-networks/near-indexer/near"
 	"github.com/figment-networks/near-indexer/server"
 )
 
@@ -23,7 +23,7 @@ func main() {
 		log.Fatal("endpoint is required")
 	}
 
-	rpc := client.New(endpoint)
+	rpc := near.NewClient(endpoint)
 	srv := server.New(&rpc)
 
 	listenAddr := fmt.Sprintf("%v:%v", addr, port)

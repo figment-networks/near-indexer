@@ -1,4 +1,4 @@
-package client
+package near
 
 import (
 	"bytes"
@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/gorilla/rpc/v2/json2"
-
-	"github.com/figment-networks/near-indexer/near"
 )
 
 const (
@@ -22,8 +20,8 @@ type Client struct {
 	client   *http.Client
 }
 
-// New returns a new node client
-func New(endpoint string) Client {
+// NewClient returns a new node client
+func NewClient(endpoint string) Client {
 	return Client{
 		endpoint: endpoint,
 		client: &http.Client{
@@ -56,36 +54,36 @@ func (c Client) Call(method string, args interface{}, out interface{}) error {
 }
 
 // Status returns current status of the node
-func (c Client) Status() (status near.Status, err error) {
+func (c Client) Status() (status Status, err error) {
 	err = c.Call(methodStatus, nil, &status)
 	return
 }
 
 // CurrentBlock returns the latest available block
-func (c Client) CurrentBlock() (block near.Block, err error) {
+func (c Client) CurrentBlock() (block Block, err error) {
 	params := map[string]interface{}{"finality": "final"}
 	err = c.Call(methodBlock, params, &block)
 	return
 }
 
 // BlockByHeight returns a block for a given height
-func (c Client) BlockByHeight(id uint64) (block near.Block, err error) {
+func (c Client) BlockByHeight(id uint64) (block Block, err error) {
 	params := map[string]interface{}{"block_id": id}
 	err = c.Call(methodBlock, params, &block)
 	return
 }
 
 // BlockByHash returns a block for a given hash
-func (c Client) BlockByHash(hash string) (block near.Block, err error) {
+func (c Client) BlockByHash(hash string) (block Block, err error) {
 	params := map[string]interface{}{"block_id": hash}
 	err = c.Call(methodBlock, params, &block)
 	return
 }
 
 // Validators returns a list of available validators
-func (c Client) Validators() ([]near.Validator, error) {
+func (c Client) Validators() ([]Validator, error) {
 	result := struct {
-		Validators []near.Validator `json:"current_validators"`
+		Validators []Validator `json:"current_validators"`
 	}{}
 	if err := c.Call(methodValidators, []interface{}{nil}, &result); err != nil {
 		return nil, err

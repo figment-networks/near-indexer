@@ -3,17 +3,17 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/figment-networks/near-indexer/near/client"
+	"github.com/figment-networks/near-indexer/near"
 )
 
 // Server handles all HTTP calls
 type Server struct {
-	rpc *client.Client
+	rpc *near.Client
 	*gin.Engine
 }
 
 // New returns a new server
-func New(rpc *client.Client) Server {
+func New(rpc *near.Client) Server {
 	s := Server{
 		rpc:    rpc,
 		Engine: gin.Default(),
