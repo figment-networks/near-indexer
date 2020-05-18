@@ -9,9 +9,13 @@ import (
 )
 
 const (
-	methodStatus     = "status"
-	methodBlock      = "block"
-	methodValidators = "validators"
+	methodStatus      = "status"
+	methodBlock       = "block"
+	methodChunk       = "chunk"
+	methodValidators  = "validators"
+	methodQuery       = "query"
+	methodTransaction = "tx"
+	methodGasPrice    = "gas_price"
 )
 
 // Client interacts with the node RPC API
@@ -54,7 +58,7 @@ func (c Client) Call(method string, args interface{}, out interface{}) error {
 }
 
 // Status returns current status of the node
-func (c Client) Status() (status Status, err error) {
+func (c Client) Status() (status NodeStatus, err error) {
 	err = c.Call(methodStatus, nil, &status)
 	return
 }
@@ -80,13 +84,66 @@ func (c Client) BlockByHash(hash string) (block Block, err error) {
 	return
 }
 
-// Validators returns a list of available validators
+// Chunk returns block chunk details by hash
+func (c Client) Chunk(hash string) (chunk ChunkDetails, err error) {
+	params := []string{hash}
+	err = c.Call(methodChunk, params, &chunk)
+	return
+}
+
+// Account returns an account by id
+func (c Client) Account(id string) (acc Account, err error) {
+	params := map[string]string{
+		"request_type": "view_account",
+		"finality":     "final",
+		"account_id":   id,
+	}
+	err = c.Call(methodQuery, params, &acc)
+	return
+}
+
+// Transaction returns a transaction by hash
+func (c Client) Transaction(id string) (tran TransactionDetails, err error) {
+	// NOTE: There's a bug in docs/rpc where it says the second params
+	// is optional, however it really requires it and will return an
+	// error in case if its not provided.
+	args := []interface{}{id, "reference"}
+	err = c.Call(methodTransaction, args, &tran)
+	return
+}
+
+// GasPrice returns the current gas price
+func (c Client) GasPrice(block string) (string, error) {
+	result := GasPriceDetails{}
+	args := []interface{}{nil}
+	err := c.Call(methodGasPrice, args, &result)
+	return result.GasPrice, err
+}
+
+// Validators returns current validators
 func (c Client) Validators() ([]Validator, error) {
 	result := struct {
-		Validators []Validator `json:"current_validators"`
+		CurrentValidators []Validator `json:"current_validators"`
+		NextValidators    []Validator `json:"next_validators"`
 	}{}
-	if err := c.Call(methodValidators, []interface{}{nil}, &result); err != nil {
+	params := []interface{}{nil}
+
+	if err := c.Call(methodValidators, params, &result); err != nil {
 		return nil, err
 	}
-	return result.Validators, nil
+	return result.CurrentValidators, nil
+}
+
+// ValidatorsByHeight returns validators for a given height
+func (c Client) ValidatorsByHeight(height uint64) ([]Validator, error) {
+	result := struct {
+		CurrentValidators []Validator `json:"current_validators"`
+		NextValidators    []Validator `json:"next_validators"`
+	}{}
+	params := []interface{}{height}
+
+	if err := c.Call(methodValidators, params, &result); err != nil {
+		return nil, err
+	}
+	return result.CurrentValidators, nil
 }

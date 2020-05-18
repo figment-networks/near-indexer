@@ -1,4 +1,4 @@
-.PHONY: build test
+.PHONY: build test fmt
 
 build:
 	go build

@@ -17,7 +17,7 @@ type SyncInfo struct {
 	Syncing           bool      `json:"syncing"`
 }
 
-type Status struct {
+type NodeStatus struct {
 	ChainID  string   `json:"chain_id"`
 	RPCAddr  string   `json:"rpc_addr"`
 	SyncInfo SyncInfo `json:"sync_info"`
@@ -30,34 +30,32 @@ type Block struct {
 }
 
 type BlockHeader struct {
-	Height              int             `json:"height"`
-	EpochID             string          `json:"epoch_id"`
-	NextEpochID         string          `json:"next_epoch_id"`
-	Hash                string          `json:"hash"`
-	PrevHash            string          `json:"prev_hash"`
-	PrevStateRoot       string          `json:"prev_state_root"`
-	ChunkReceiptsRoot   string          `json:"chunk_receipts_root"`
-	ChunkHeadersRoot    string          `json:"chunk_headers_root"`
-	ChunkTxRoot         string          `json:"chunk_tx_root"`
-	OutcomeRoot         string          `json:"outcome_root"`
-	ChunksIncluded      int             `json:"chunks_included"`
-	ChallengesRoot      string          `json:"challenges_root"`
-	Timestamp           int64           `json:"timestamp"`
-	RandomValue         string          `json:"random_value"`
-	Score               int             `json:"score"`
-	ValidatorProposals  []interface{}   `json:"validator_proposals"`
-	ChunkMask           []bool          `json:"chunk_mask"`
-	GasPrice            string          `json:"gas_price"`
-	RentPaid            string          `json:"rent_paid"`
-	ValidatorReward     string          `json:"validator_reward"`
-	TotalSupply         string          `json:"total_supply"`
-	ChallengesResult    []interface{}   `json:"challenges_result"`
-	LastQuorumPreVote   string          `json:"last_quorum_pre_vote"`
-	LastQuorumPreCommit string          `json:"last_quorum_pre_commit"`
-	LastDsFinalBlock    string          `json:"last_ds_final_block"`
-	NextBpHash          string          `json:"next_bp_hash"`
-	Approvals           [][]interface{} `json:"approvals"`
-	Signature           string          `json:"signature"`
+	Height             uint64        `json:"height"`
+	EpochID            string        `json:"epoch_id"`
+	NextEpochID        string        `json:"next_epoch_id"`
+	Hash               string        `json:"hash"`
+	PrevHash           string        `json:"prev_hash"`
+	PrevStateRoot      string        `json:"prev_state_root"`
+	ChunkReceiptsRoot  string        `json:"chunk_receipts_root"`
+	ChunkHeadersRoot   string        `json:"chunk_headers_root"`
+	ChunkTxRoot        string        `json:"chunk_tx_root"`
+	OutcomeRoot        string        `json:"outcome_root"`
+	ChunksIncluded     int           `json:"chunks_included"`
+	ChallengesRoot     string        `json:"challenges_root"`
+	Timestamp          int64         `json:"timestamp"`
+	RandomValue        string        `json:"random_value"`
+	ValidatorProposals []interface{} `json:"validator_proposals"`
+	ChunkMask          []bool        `json:"chunk_mask"`
+	GasPrice           string        `json:"gas_price"`
+	RentPaid           string        `json:"rent_paid"`
+	ValidatorReward    string        `json:"validator_reward"`
+	TotalSupply        string        `json:"total_supply"`
+	ChallengesResult   []interface{} `json:"challenges_result"`
+	LastFinalBlock     string        `json:"last_final_block"`
+	LastDsFinalBlock   string        `json:"last_ds_final_block"`
+	NextBpHash         string        `json:"next_bp_hash"`
+	Approvals          []interface{} `json:"approvals"`
+	Signature          string        `json:"signature"`
 }
 
 type BlockChunk struct {
@@ -67,8 +65,8 @@ type BlockChunk struct {
 	PrevStateRoot        string        `json:"prev_state_root"`
 	EncodedMerkleRoot    string        `json:"encoded_merkle_root"`
 	EncodedLength        int           `json:"encoded_length"`
-	HeightCreated        int           `json:"height_created"`
-	HeightIncluded       int           `json:"height_included"`
+	HeightCreated        uint64        `json:"height_created"`
+	HeightIncluded       uint64        `json:"height_included"`
 	ShardID              int           `json:"shard_id"`
 	GasUsed              int           `json:"gas_used"`
 	GasLimit             int64         `json:"gas_limit"`
@@ -87,18 +85,18 @@ type Account struct {
 	CodeHash      string `json:"code_hash"`
 	StorageUsage  int    `json:"storage_usage"`
 	StoragePaidAt int    `json:"storage_paid_at"`
-	BlockHeight   int    `json:"block_height"`
+	BlockHeight   uint64 `json:"block_height"`
 	BlockHash     string `json:"block_hash"`
 }
 
 type Transaction struct {
-	Hash       string   `json:"hash"`
-	Nonce      int      `json:"nonce"`
-	PublicKey  string   `json:"public_key"`
-	ReceiverID string   `json:"receiver_id"`
-	Signature  string   `json:"signature"`
-	SignerID   string   `json:"signer_id"`
-	Actions    []Action `json:"actions"`
+	Hash       string        `json:"hash"`
+	Nonce      int           `json:"nonce"`
+	PublicKey  string        `json:"public_key"`
+	ReceiverID string        `json:"receiver_id"`
+	Signature  string        `json:"signature"`
+	SignerID   string        `json:"signer_id"`
+	Actions    []interface{} `json:"actions"`
 }
 
 type Action struct {
@@ -120,4 +118,51 @@ type Validator struct {
 	PublicKey         string `json:"public_key"`
 	Shards            []int  `json:"shards"`
 	Stake             string `json:"stake"`
+}
+
+type ReceiptsOutcome struct {
+	BlockHash string `json:"block_hash"`
+	ID        string `json:"id"`
+	Outcome   struct {
+		GasBurnt   int64         `json:"gas_burnt"`
+		Logs       []interface{} `json:"logs"`
+		ReceiptIds []interface{} `json:"receipt_ids"`
+		Status     struct {
+			SuccessValue string `json:"SuccessValue"`
+		} `json:"status"`
+	} `json:"outcome"`
+}
+
+type Status struct {
+	SuccessValue     string `json:"SuccessValue"`
+	SuccessReceiptID string `json:"SuccessReceiptId"`
+}
+
+type Outcome struct {
+	GasBurnt   int64         `json:"gas_burnt"`
+	Logs       []interface{} `json:"logs"`
+	ReceiptIds []string      `json:"receipt_ids"`
+	Status     Status        `json:"status"`
+}
+
+type TransactionOutcome struct {
+	BlockHash string  `json:"block_hash"`
+	ID        string  `json:"id"`
+	Outcome   Outcome `json:"outcome"`
+}
+
+type TransactionDetails struct {
+	ReceiptsOutcome    []ReceiptsOutcome  `json:"receipts_outcome"`
+	Status             Status             `json:"status"`
+	Transaction        Transaction        `json:"transaction"`
+	TransactionOutcome TransactionOutcome `json:"transaction_outcome"`
+}
+
+type GasPriceDetails struct {
+	GasPrice string `json:"gas_price"`
+}
+
+type ChunkDetails struct {
+	Header       BlockChunk    `json:"header"`
+	Transactions []Transaction `json:"transactions"`
 }
