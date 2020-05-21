@@ -22,10 +22,7 @@ func startSync(cfg *config.Config, db *store.Store) error {
 	client := near.NewClient(cfg.RPCEndpoint)
 
 	for range time.Tick(duration) {
-		runner := pipeline.NewSync(cfg, db, &client)
-
-		log.Println("starting sync")
-		if err := runner.Execute(); err != nil {
+		if err := pipeline.RunSync(cfg, db, client); err != nil {
 			log.Println("sync error:", err)
 		}
 	}
@@ -41,11 +38,11 @@ func startCleanup(cfg *config.Config, db *store.Store) error {
 	}
 
 	for range time.Tick(duration) {
-		log.Println("starting cleanup")
-		if err := pipeline.NewCleanup(cfg, db).Execute(); err != nil {
-			log.Println("clenaup error:", err)
+		if err := pipeline.RunCleanup(cfg, db); err != nil {
+			log.Println("cleanup error:", err)
 		}
 	}
+
 	return nil
 }
 

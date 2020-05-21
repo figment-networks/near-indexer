@@ -1,29 +1,43 @@
 package mapper
 
 import (
-	"time"
-
 	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/model/types"
+	"github.com/figment-networks/near-indexer/model/util"
 	"github.com/figment-networks/near-indexer/near"
 )
 
 // Validator constructs a new validator record from chain input
 func Validator(block *near.Block, v *near.Validator) (*model.Validator, error) {
-	efficiency := float32(0)
-	if v.NumExpectedBlocks > 0 && v.NumProducedBlocks > 0 {
-		efficiency = (float32(v.NumProducedBlocks) * 100.0) / float32(v.NumExpectedBlocks)
-	}
-
 	result := &model.Validator{
-		Height:         block.Header.Height,
-		Time:           time.Unix(0, block.Header.Timestamp),
-		PublicKey:      v.PublicKey,
+		Height:         types.Height(block.Header.Height),
+		Time:           util.ParseTime(block.Header.Timestamp),
 		AccountID:      v.AccountID,
 		ExpectedBlocks: v.NumExpectedBlocks,
 		ProducedBlocks: v.NumProducedBlocks,
-		Stake:          v.Stake,
-		Efficiency:     efficiency,
+		Stake:          types.NewAmount(v.Stake),
+		Efficiency:     util.Percentage(v.NumExpectedBlocks, v.NumProducedBlocks),
 	}
 
 	return result, result.Validate()
+}
+
+// ValidatorAgg constructs a new validator record from chain input
+func ValidatorAgg(block *near.Block, v *near.Validator) (*model.ValidatorAgg, error) {
+	height := types.Height(block.Header.Height)
+	time := util.ParseTime(block.Header.Timestamp)
+
+	result := &model.ValidatorAgg{
+		StartHeight:    height,
+		StartTime:      time,
+		LastHeight:     height,
+		LastTime:       time,
+		AccountID:      v.AccountID,
+		ExpectedBlocks: v.NumExpectedBlocks,
+		ProducedBlocks: v.NumProducedBlocks,
+		Stake:          types.NewAmount(v.Stake),
+		Efficiency:     util.Percentage(v.NumExpectedBlocks, v.NumProducedBlocks),
+	}
+
+	return result, nil
 }

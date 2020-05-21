@@ -15,6 +15,5 @@ func runSync(cfg *config.Config) error {
 	}
 	defer db.Close()
 
-	runner := pipeline.NewSync(cfg, db, &client)
-	return runner.Execute()
+	return pipeline.RunSync(cfg, db, client)
 }

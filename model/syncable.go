@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/figment-networks/near-indexer/model/types"
 )
 
 const (
@@ -17,7 +19,7 @@ type Syncable struct {
 	Model
 
 	RunID       int64           `json:"run_id"`
-	Height      uint64          `json:"height"`
+	Height      types.Height    `json:"height"`
 	Time        time.Time       `json:"time"`
 	Type        string          `json:"type"`
 	Data        json.RawMessage `json:"data"`
@@ -34,7 +36,7 @@ func (s Syncable) Validate() error {
 	if s.Height <= 0 {
 		return errors.New("height is invalid")
 	}
-	if s.Time.Year() == 0 {
+	if s.Time.Year() == 1 {
 		return errors.New("year is invalid")
 	}
 	if s.Type == "" {

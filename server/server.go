@@ -1,36 +1,46 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/figment-networks/near-indexer/near"
+	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/model/types"
 	"github.com/figment-networks/near-indexer/store"
 )
 
 // Server handles all HTTP calls
 type Server struct {
-	db  *store.Store
-	rpc *near.Client
-	*gin.Engine
+	router *gin.Engine
+	db     *store.Store
 }
 
 // New returns a new server
-func New(db *store.Store, rpc *near.Client) Server {
+func New(db *store.Store) Server {
+	router := gin.Default()
+
 	s := Server{
+		router: router,
 		db:     db,
-		rpc:    rpc,
-		Engine: gin.Default(),
 	}
 
-	s.GET("/health", s.GetHealth)
-	s.GET("/height", s.GetHeight)
-	s.GET("/block", s.GetBlock)
-	s.GET("/validators", s.GetValidators)
+	router.GET("/health", s.GetHealth)
+	router.GET("/leaderboard", s.GetTopValidators)
+	router.GET("/height", s.GetHeight)
+	router.GET("/block", s.GetRecentBlock)
+	router.GET("/blocks", s.GetBlocks)
+	router.GET("/blocks/:id", s.GetBlock)
+	router.GET("/validators", s.GetValidators)
+	router.GET("/validators/:id", s.GetValidators)
+	router.GET("/transactions/:id", s.GetTransaction)
 
 	return s
+}
+
+// Run runs the server
+func (s Server) Run(addr string) error {
+	return s.router.Run(addr)
 }
 
 // GetHealth renders the server health status
@@ -45,45 +55,79 @@ func (s Server) GetHealth(c *gin.Context) {
 // GetHeight renders the last indexed height
 func (s Server) GetHeight(c *gin.Context) {
 	block, err := s.db.Blocks.Recent()
-	if err != nil {
-		c.JSON(400, gin.H{"error": err})
+	if shouldReturn(c, err) {
 		return
 	}
-	c.JSON(200, gin.H{
+	jsonOk(c, gin.H{
 		"height": block.Height,
 		"time":   block.Time,
 	})
 }
 
-// GetBlock renders the last indexed block
-func (s Server) GetBlock(c *gin.Context) {
+// GetRecentBlock renders the last indexed block
+func (s Server) GetRecentBlock(c *gin.Context) {
 	block, err := s.db.Blocks.Recent()
-	if err != nil {
-		c.JSON(400, gin.H{"error": err})
+	if shouldReturn(c, err) {
 		return
 	}
-	c.JSON(200, block)
+	jsonOk(c, block)
+}
+
+// GetBlocks renders blocks that match search params
+func (s Server) GetBlocks(c *gin.Context) {
+	blocks, err := s.db.Blocks.Search()
+	if shouldReturn(c, err) {
+		return
+	}
+	jsonOk(c, blocks)
+}
+
+// GetBlock renders a block for a given height or hash
+func (s Server) GetBlock(c *gin.Context) {
+	var block *model.Block
+	var err error
+
+	rid := resourceID(c, "id")
+	if rid.IsNumeric() {
+		block, err = s.db.Blocks.FindByHeight(rid.UInt64())
+	} else {
+		block, err = s.db.Blocks.FindByHash(rid.String())
+	}
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, block)
 }
 
 // GetValidators renders the validators list for a height
 func (s Server) GetValidators(c *gin.Context) {
-	var height uint64
-
-	fmt.Sscanf(c.Query("height"), "%d", &height)
+	height := types.HeightFromString(c.Query("height"))
 	if height == 0 {
 		b, err := s.db.Blocks.Recent()
-		if err != nil {
-			c.JSON(400, gin.H{"error": err})
+		if shouldReturn(c, err) {
 			return
 		}
 		height = b.Height
 	}
 
 	validators, err := s.db.Validators.ByHeight(height)
-	if err != nil {
-		c.JSON(400, gin.H{"error": err})
+	if shouldReturn(c, err) {
 		return
 	}
 
-	c.JSON(200, validators)
+	jsonOk(c, validators)
+}
+
+// GetTopValidators returns top validators
+func (s Server) GetTopValidators(c *gin.Context) {
+	validators, err := s.db.ValidatorAggs.Top()
+	if shouldReturn(c, err) {
+		return
+	}
+	jsonOk(c, validators)
+}
+
+// GetTransaction returns a transaction details
+func (s Server) GetTransaction(c *gin.Context) {
 }

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -15,6 +16,11 @@ var (
 type baseStore struct {
 	db    *gorm.DB
 	model interface{}
+}
+
+// Conn returns an underlying database connection
+func (s baseStore) Conn() *sql.DB {
+	return s.db.DB()
 }
 
 // Create creates a new record. Must pass a pointer.

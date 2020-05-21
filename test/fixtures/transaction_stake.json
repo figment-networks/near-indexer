@@ -1,0 +1,51 @@
+{
+  "receipts_outcome": [
+    {
+      "block_hash": "4ofHzGutg2Vvssxq8dc7zh5LjjpBJvXHZ4T38Gk6ndnE",
+      "id": "AGzP9U7vqiCHGzFUCGopu3fvhfy1cxLxKb2uYLbBJvZK",
+      "outcome": {
+        "gas_burnt": 924119500000,
+        "logs": [],
+        "receipt_ids": [],
+        "status": {
+          "SuccessValue": ""
+        }
+      }
+    }
+  ],
+  "status": {
+    "SuccessValue": "",
+    "SuccessReceiptId": ""
+  },
+  "transaction": {
+    "hash": "49yoUfCcBZTxYz1G3QChqcXxeig6j7KKGFEc3Qjk5YfL",
+    "nonce": 1,
+    "public_key": "ed25519:8iYioptjWU8NbocUhzZLSnDKV6jdTEE7AXCvJ35SXXf2",
+    "receiver_id": "nodeasy.test",
+    "signature": "ed25519:5nhVpfsYgrJhfPoRfmX9T7jQpjEsiHhBH4HxL8Aueo3u4nhYGPG5CijSxerjt4jFCEibDpCJgGXXB6nre2bJH5Ni",
+    "signer_id": "nodeasy.test",
+    "actions": [
+      {
+        "Stake": {
+          "public_key": "ed25519:AKeh7RgMdWKg2v5kVUz2zetWAtu8D1p5ZhSNLd6s9GKn",
+          "stake": "104000000000000000000000000000"
+        }
+      }
+    ]
+  },
+  "transaction_outcome": {
+    "block_hash": "4ofHzGutg2Vvssxq8dc7zh5LjjpBJvXHZ4T38Gk6ndnE",
+    "id": "49yoUfCcBZTxYz1G3QChqcXxeig6j7KKGFEc3Qjk5YfL",
+    "outcome": {
+      "gas_burnt": 924119500000,
+      "logs": [],
+      "receipt_ids": [
+        "AGzP9U7vqiCHGzFUCGopu3fvhfy1cxLxKb2uYLbBJvZK"
+      ],
+      "status": {
+        "SuccessValue": "",
+        "SuccessReceiptId": "AGzP9U7vqiCHGzFUCGopu3fvhfy1cxLxKb2uYLbBJvZK"
+      }
+    }
+  }
+}

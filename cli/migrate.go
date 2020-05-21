@@ -1,42 +1,39 @@
 package cli
 
 import (
-	"fmt"
-	"log"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	// Migrate configuration
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-
-	"github.com/golang-migrate/migrate/v4"
+	"github.com/pressly/goose"
 
 	"github.com/figment-networks/near-indexer/config"
+	"github.com/figment-networks/near-indexer/migrations"
 )
 
 func startMigrations(cfg *config.Config) error {
-	// TEMP
-	db, err := initStore(cfg)
+	store, err := initStore(cfg)
 	if err != nil {
 		return err
 	}
-	return db.Automigrate()
+	defer store.Close()
 
-	log.Println("getting current directory")
-	dir, err := os.Getwd()
+	tmpDir, err := ioutil.TempDir("", "")
 	if err != nil {
 		return err
 	}
-	srcDir := filepath.Join(dir, "migrations")
-	srcPath := fmt.Sprintf("file://%s", srcDir)
+	defer os.RemoveAll(tmpDir)
 
-	log.Println("using migrations from", srcDir)
-	migrations, err := migrate.New(srcPath, cfg.DatabaseURL)
-	if err != nil {
-		return err
+	for path, f := range migrations.Assets.Files {
+		if filepath.Ext(path) != ".sql" {
+			continue
+		}
+
+		extPath := filepath.Join(tmpDir, filepath.Base(path))
+		if err := ioutil.WriteFile(extPath, f.Data, 0755); err != nil {
+			return err
+		}
 	}
 
-	log.Println("running migrations")
-	return migrations.Up()
+	return goose.Up(store.Conn(), tmpDir)
 }

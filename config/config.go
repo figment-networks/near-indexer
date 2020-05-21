@@ -34,8 +34,9 @@ type Config struct {
 	CleanupInterval  string `json:"cleanup_interval" envconfig:"CLEANUP_INTERVAL" default:"10m"`
 	CleanupThreshold int    `json:"cleanup_threshold" envconfig:"CLEANUP_THRESHOLD" default:"1000"`
 	DatabaseURL      string `json:"database_url" envconfig:"DATABASE_URL"`
-	DumpDir          string `json:"dump_dir"`
+	DumpDir          string `json:"dump_dir" envconfig:"DUMP_DIR"`
 	Debug            bool   `json:"debug" envconfig:"DEBUG"`
+	LogLevel         string `json:"log_level" envconfig:"LOG_LEVEL" default:"info"`
 }
 
 // Validate returns an error if config is invalid

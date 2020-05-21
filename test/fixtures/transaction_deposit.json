@@ -1,0 +1,50 @@
+{
+  "receipts_outcome": [
+    {
+      "block_hash": "2UA2Qhp5FM39bZw1WKuWMprGjCxNNhqy6ot76ZDKQNmK",
+      "id": "39YbKqKNcLiAyB1d4tDdSCunM2u6ZpViSjm4jD2ztPZq",
+      "outcome": {
+        "gas_burnt": 937144500000,
+        "logs": [],
+        "receipt_ids": [],
+        "status": {
+          "SuccessValue": ""
+        }
+      }
+    }
+  ],
+  "status": {
+    "SuccessValue": "",
+    "SuccessReceiptId": ""
+  },
+  "transaction": {
+    "hash": "FujFFVfCor3X4h9XXyBNvjCZ8AbhNh64T8kXSUdzY8k3",
+    "nonce": 1,
+    "public_key": "ed25519:A7q7wSn4CWxaTZcw2VKFznZGuLVfE4h9jyfiugQhMK7Z",
+    "receiver_id": "skywalker.betanet",
+    "signature": "ed25519:5DB2aitx55yZXyGLF1MenEB7xsBUtBFFzu8KnMGhHGfYMZjBBiusjeJiipNeVKYVGqWQPySaFC32wwJeN7LmrJLF",
+    "signer_id": "24530697.betanet",
+    "actions": [
+      {
+        "Transfer": {
+          "deposit": "499000000000000000000000000"
+        }
+      }
+    ]
+  },
+  "transaction_outcome": {
+    "block_hash": "6QHa9m8RuuY2QmyTw83JNQQM2HK3jVzP7XTLSyTzWC2y",
+    "id": "FujFFVfCor3X4h9XXyBNvjCZ8AbhNh64T8kXSUdzY8k3",
+    "outcome": {
+      "gas_burnt": 937144500000,
+      "logs": [],
+      "receipt_ids": [
+        "39YbKqKNcLiAyB1d4tDdSCunM2u6ZpViSjm4jD2ztPZq"
+      ],
+      "status": {
+        "SuccessValue": "",
+        "SuccessReceiptId": "39YbKqKNcLiAyB1d4tDdSCunM2u6ZpViSjm4jD2ztPZq"
+      }
+    }
+  }
+}

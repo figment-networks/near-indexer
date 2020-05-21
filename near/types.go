@@ -166,3 +166,18 @@ type ChunkDetails struct {
 	Header       BlockChunk    `json:"header"`
 	Transactions []Transaction `json:"transactions"`
 }
+
+type Transfer struct {
+	Deposit string `json:"deposit"`
+}
+
+type Stake struct {
+	PublicKey string `json:"public_key"`
+	Amount    string `json:"stake"`
+}
+
+type Fisher struct {
+	AccountID string `json:"account_id"`
+	PublicKey string `json:"public_key"`
+	Stake     string `json:"stake"`
+}

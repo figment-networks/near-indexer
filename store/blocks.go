@@ -51,3 +51,16 @@ func (s BlocksStore) Recent() (*model.Block, error) {
 
 	return block, checkErr(err)
 }
+
+// Search returns matching blocks
+func (s BlocksStore) Search() ([]model.Block, error) {
+	result := []model.Block{}
+
+	err := s.db.
+		Order("height DESC").
+		Limit(25).
+		Find(&result).
+		Error
+
+	return result, err
+}

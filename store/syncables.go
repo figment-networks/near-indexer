@@ -75,3 +75,16 @@ func (s SyncablesStore) Height() (uint64, error) {
 
 	return result.Height, checkErr(err)
 }
+
+var (
+	syncablesRecentHeight = `
+		SELECT
+			MAX(height) AS height
+		FROM (
+			SELECT DISTINCT ON(type) type, height
+			FROM syncables
+			WHERE processed_at IS NOT NULL
+			GROUP by height, type
+			ORDER BY type asc, height desc
+		) t`
+)

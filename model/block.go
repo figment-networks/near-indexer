@@ -3,27 +3,39 @@ package model
 import (
 	"errors"
 	"time"
+
+	"github.com/figment-networks/near-indexer/model/types"
 )
 
 type Block struct {
 	Model
 
-	Height          uint64    `json:"height"`
-	Time            time.Time `json:"time"`
-	Producer        string    `json:"producer"`
-	Hash            string    `json:"hash"`
-	PrevHash        string    `json:"prev_hash"`
-	GasPrice        string    `json:"gas_price"`
-	RentPaid        string    `json:"rent_paid"`
-	ValidatorReward string    `json:"validator_reward"`
-	TotalSupply     string    `json:"total_supply"`
-	Signature       string    `json:"signature"`
-	ChunksCount     int       `json:"chunks_count"`
+	Height            types.Height `json:"height"`
+	Time              time.Time    `json:"time"`
+	AppVersion        string       `json:"app_version"`
+	Producer          string       `json:"producer"`
+	Hash              string       `json:"hash"`
+	PrevHash          string       `json:"prev_hash"`
+	GasPrice          types.Amount `json:"gas_price"`
+	GasLimit          int          `json:"gas_allowed"`
+	GasUsed           int          `json:"gas_used"`
+	RentPaid          types.Amount `json:"rent_paid"`
+	ValidatorReward   types.Amount `json:"validator_reward"`
+	TotalSupply       types.Amount `json:"total_supply"`
+	Signature         string       `json:"signature"`
+	ChunksCount       int          `json:"chunks_count"`
+	TransactionsCount int          `json:"transactions_count"`
 }
 
 // Validate returns an error if block data is invalid
 func (b Block) Validate() error {
-	if b.Height == 0 {
+	if b.Hash == "" {
+		return errors.New("hash is required")
+	}
+	if b.Producer == "" {
+		return errors.New("procucer is required")
+	}
+	if !b.Height.Valid() {
 		return errors.New("height is invalid")
 	}
 	if b.Time.Year() == 1 {

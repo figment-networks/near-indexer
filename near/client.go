@@ -2,6 +2,9 @@ package near
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 	"time"
 
@@ -18,6 +21,10 @@ const (
 	methodGasPrice    = "gas_price"
 )
 
+var (
+	ErrBlockNotFound = errors.New("block not found")
+)
+
 // Client interacts with the node RPC API
 type Client struct {
 	endpoint string
@@ -25,8 +32,8 @@ type Client struct {
 }
 
 // NewClient returns a new node client
-func NewClient(endpoint string) Client {
-	return Client{
+func NewClient(endpoint string) *Client {
+	return &Client{
 		endpoint: endpoint,
 		client: &http.Client{
 			Timeout: time.Second * 5,
@@ -54,7 +61,12 @@ func (c Client) Call(method string, args interface{}, out interface{}) error {
 	}
 	defer resp.Body.Close()
 
-	return json2.DecodeClientResponse(resp.Body, out)
+	err = json2.DecodeClientResponse(resp.Body, out)
+	if err != nil {
+		d, _ := json.Marshal(err)
+		log.Printf("RPC ERROR: %s\n", d)
+	}
+	return err
 }
 
 // Status returns current status of the node
@@ -104,9 +116,8 @@ func (c Client) Account(id string) (acc Account, err error) {
 
 // Transaction returns a transaction by hash
 func (c Client) Transaction(id string) (tran TransactionDetails, err error) {
-	// NOTE: There's a bug in docs/rpc where it says the second params
-	// is optional, however it really requires it and will return an
-	// error in case if its not provided.
+	// NOTE: There's a bug in docs/rpc where it says the second param is optional,
+	// however it really requires it and will return an error when it' missing.
 	args := []interface{}{id, "reference"}
 	err = c.Call(methodTransaction, args, &tran)
 	return
@@ -122,9 +133,10 @@ func (c Client) GasPrice(block string) (string, error) {
 
 // Validators returns current validators
 func (c Client) Validators() ([]Validator, error) {
+	// TODO: move to responses
 	result := struct {
 		CurrentValidators []Validator `json:"current_validators"`
-		NextValidators    []Validator `json:"next_validators"`
+		CurrentFishermen  []Fisher    `json:"current_fishermen"`
 	}{}
 	params := []interface{}{nil}
 
@@ -136,9 +148,10 @@ func (c Client) Validators() ([]Validator, error) {
 
 // ValidatorsByHeight returns validators for a given height
 func (c Client) ValidatorsByHeight(height uint64) ([]Validator, error) {
+	// TODO: move to responses
 	result := struct {
 		CurrentValidators []Validator `json:"current_validators"`
-		NextValidators    []Validator `json:"next_validators"`
+		CurrentFishermen  []Fisher    `json:"current_fishermen"`
 	}{}
 	params := []interface{}{height}
 

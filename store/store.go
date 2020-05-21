@@ -1,6 +1,8 @@
 package store
 
 import (
+	"database/sql"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
@@ -11,19 +13,13 @@ import (
 type Store struct {
 	db *gorm.DB
 
-	Runs       RunsStore
-	Syncables  SyncablesStore
-	Blocks     BlocksStore
-	Validators ValidatorsStore
-}
-
-func (s *Store) Automigrate() error {
-	return s.db.AutoMigrate(
-		&model.Run{},
-		&model.Syncable{},
-		&model.Block{},
-		&model.Validator{},
-	).Error
+	Runs          RunsStore
+	Heights       HeightsStore
+	Syncables     SyncablesStore
+	Blocks        BlocksStore
+	Accounts      AccountsStore
+	Validators    ValidatorsStore
+	ValidatorAggs ValidatorAggsStore
 }
 
 // Test checks the connection status
@@ -34,6 +30,11 @@ func (s *Store) Test() error {
 // Close closes the database connection
 func (s *Store) Close() error {
 	return s.db.Close()
+}
+
+// Conn returns an underlying database connection
+func (s *Store) Conn() *sql.DB {
+	return s.db.DB()
 }
 
 // SetDebugMode enabled detailed query logging
@@ -51,25 +52,12 @@ func New(connStr string) (*Store, error) {
 	return &Store{
 		db: conn,
 
-		Runs:       NewRunsStore(conn),
-		Syncables:  NewSyncablesStore(conn),
-		Blocks:     NewBlocksStore(conn),
-		Validators: NewValidatorsStore(conn),
+		Heights:       HeightsStore{scoped(conn, model.Height{})},
+		Runs:          RunsStore{scoped(conn, model.Run{})},
+		Syncables:     SyncablesStore{scoped(conn, model.Syncable{})},
+		Blocks:        BlocksStore{scoped(conn, model.Block{})},
+		Accounts:      AccountsStore{scoped(conn, model.Account{})},
+		Validators:    ValidatorsStore{scoped(conn, model.Validator{})},
+		ValidatorAggs: ValidatorAggsStore{scoped(conn, model.ValidatorAgg{})},
 	}, nil
-}
-
-func NewSyncablesStore(db *gorm.DB) SyncablesStore {
-	return SyncablesStore{scoped(db, model.Syncable{})}
-}
-
-func NewRunsStore(db *gorm.DB) RunsStore {
-	return RunsStore{scoped(db, model.Run{})}
-}
-
-func NewBlocksStore(db *gorm.DB) BlocksStore {
-	return BlocksStore{scoped(db, model.Block{})}
-}
-
-func NewValidatorsStore(db *gorm.DB) ValidatorsStore {
-	return ValidatorsStore{scoped(db, model.Validator{})}
 }
