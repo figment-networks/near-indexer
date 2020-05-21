@@ -45,7 +45,7 @@ func (c *Context) Abort(val interface{}) {
 	}
 
 	c.lastErr = err
-	c.errors = append(c.errors)
+	c.errors = append(c.errors, err)
 	c.shouldAbort = true
 }
 

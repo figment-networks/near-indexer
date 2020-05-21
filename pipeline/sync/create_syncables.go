@@ -10,7 +10,6 @@ import (
 
 func CreateSyncables(c *Context) {
 	log.Println("creating syncables for height", c.Height.Height)
-
 	createBlockSyncable(c)
 	createValidatorsSyncable(c)
 }
