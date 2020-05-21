@@ -27,6 +27,24 @@ type Block struct {
 	TransactionsCount int          `json:"transactions_count"`
 }
 
+// BlockIntervalStat contains block count stats for a given time interval
+type BlockIntervalStat struct {
+	TimeInterval string  `json:"time_interval"`
+	Count        int64   `json:"count"`
+	Avg          float64 `json:"avg"`
+}
+
+// BlockAvgStat contains block averages
+type BlockAvgStat struct {
+	StartHeight int64   `json:"start_height"`
+	EndHeight   int64   `json:"end_height"`
+	StartTime   string  `json:"start_time"`
+	EndTime     string  `json:"end_time"`
+	Count       int64   `json:"count"`
+	Diff        float64 `json:"diff"`
+	Avg         float64 `json:"avg"`
+}
+
 // Validate returns an error if block data is invalid
 func (b Block) Validate() error {
 	if b.Hash == "" {

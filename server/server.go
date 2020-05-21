@@ -31,6 +31,8 @@ func New(db *store.Store) Server {
 	router.GET("/block", s.GetRecentBlock)
 	router.GET("/blocks", s.GetBlocks)
 	router.GET("/blocks/:id", s.GetBlock)
+	router.GET("/block_times", s.GetBlockTimes)
+	router.GET("/block_times_interval", s.GetBlockTimesInterval)
 	router.GET("/validators", s.GetValidators)
 	router.GET("/validators/:id", s.GetValidators)
 	router.GET("/transactions/:id", s.GetTransaction)
@@ -98,6 +100,41 @@ func (s Server) GetBlock(c *gin.Context) {
 	}
 
 	jsonOk(c, block)
+}
+
+func (s Server) GetBlockTimes(c *gin.Context) {
+	params := blockTimesParams{}
+
+	if err := c.BindQuery(&params); err != nil {
+		badRequest(c, err)
+		return
+	}
+	params.setDefaults()
+
+	result, err := s.db.Blocks.AvgRecentTimes(params.Limit)
+	if err != nil {
+		badRequest(c, err)
+		return
+	}
+
+	jsonOk(c, result)
+}
+
+func (s Server) GetBlockTimesInterval(c *gin.Context) {
+	params := blockTimesIntervalParams{}
+
+	if err := c.BindQuery(&params); err != nil {
+		badRequest(c, err)
+		return
+	}
+	params.setDefaults()
+
+	result, err := s.db.Blocks.AvgTimesForInterval(params.Interval, params.Period)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, result)
 }
 
 // GetValidators renders the validators list for a height

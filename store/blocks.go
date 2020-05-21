@@ -64,3 +64,71 @@ func (s BlocksStore) Search() ([]model.Block, error) {
 
 	return result, err
 }
+
+// AvgRecentTimes returns recent blocks averages
+func (s BlocksStore) AvgRecentTimes(limit int64) (*model.BlockAvgStat, error) {
+	res := &model.BlockAvgStat{}
+
+	err := s.db.
+		Raw(blockTimesForRecentBlocksQuery, limit).
+		Scan(res).
+		Error
+
+	return res, checkErr(err)
+}
+
+// AvgTimesForInterval returns block stats for a given interval
+func (s BlocksStore) AvgTimesForInterval(interval, period string) ([]model.BlockIntervalStat, error) {
+	rows, err := s.db.Raw(blockTimesForIntervalQuery, interval, period).Rows()
+	if err != nil {
+		return nil, checkErr(err)
+	}
+	defer rows.Close()
+
+	result := []model.BlockIntervalStat{}
+
+	for rows.Next() {
+		row := model.BlockIntervalStat{}
+		if err := s.db.ScanRows(rows, &row); err != nil {
+			return nil, err
+		}
+		result = append(result, row)
+	}
+
+	return result, err
+}
+
+const (
+	blockTimesForRecentBlocksQuery = `
+		SELECT 
+			MIN(height) start_height, 
+			MAX(height) end_height, 
+			MIN(time) start_time,
+			MAX(time) end_time,
+			COUNT(*) count, 
+			EXTRACT(EPOCH FROM MAX(time) - MIN(time)) AS diff, 
+			EXTRACT(EPOCH FROM ((MAX(time) - MIN(time)) / COUNT(*))) AS avg
+		FROM
+			( 
+				SELECT * FROM blocks
+				ORDER BY height DESC
+				LIMIT ?
+			) t;`
+
+	blockTimesForIntervalQuery = `
+		SELECT
+			time_bucket($1, time) AS time_interval,
+			COUNT(*) AS count,
+			EXTRACT(EPOCH FROM (last(time, time) - first(time, time)) / COUNT(*)) AS avg
+		FROM
+			blocks
+		WHERE
+			(
+				SELECT time
+				FROM blocks
+				ORDER BY time DESC
+				LIMIT 1
+			) - $2::INTERVAL < time
+		GROUP BY time_interval
+		ORDER BY time_interval ASC;`
+)
