@@ -21,7 +21,7 @@ func Run() {
 	flag.Parse()
 
 	if showVersion {
-		log.Println(versionString())
+		log.Println(config.VersionString())
 		return
 	}
 

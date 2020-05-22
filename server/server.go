@@ -1,10 +1,9 @@
 package server
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
+	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/model/types"
 	"github.com/figment-networks/near-indexer/store"
@@ -26,6 +25,7 @@ func New(db *store.Store) Server {
 	}
 
 	router.GET("/health", s.GetHealth)
+	router.GET("/status", s.GetStatus)
 	router.GET("/leaderboard", s.GetTopValidators)
 	router.GET("/height", s.GetHeight)
 	router.GET("/block", s.GetRecentBlock)
@@ -36,6 +36,7 @@ func New(db *store.Store) Server {
 	router.GET("/validators", s.GetValidators)
 	router.GET("/validators/:id", s.GetValidators)
 	router.GET("/transactions/:id", s.GetTransaction)
+	router.GET("/accounts/:id", s.GetAccount)
 
 	return s
 }
@@ -48,10 +49,27 @@ func (s Server) Run(addr string) error {
 // GetHealth renders the server health status
 func (s Server) GetHealth(c *gin.Context) {
 	if err := s.db.Test(); err != nil {
-		c.String(http.StatusInternalServerError, "ERROR")
+		jsonError(c, 500, "unhealthy")
 		return
 	}
-	c.String(200, "OK")
+	jsonOk(c, gin.H{"healthy": true})
+}
+
+// GetStatus returns the status of the service
+func (s Server) GetStatus(c *gin.Context) {
+	data := gin.H{
+		"app_name":    config.AppName,
+		"app_version": config.AppVersion,
+		"git_commit":  config.GitCommit,
+		"go_version":  config.GoVersion,
+	}
+
+	if block, err := s.db.Blocks.Recent(); err == nil {
+		data["last_block_time"] = block.Time
+		data["last_block_height"] = block.Height
+	}
+
+	jsonOk(c, data)
 }
 
 // GetHeight renders the last indexed height
@@ -167,4 +185,13 @@ func (s Server) GetTopValidators(c *gin.Context) {
 
 // GetTransaction returns a transaction details
 func (s Server) GetTransaction(c *gin.Context) {
+}
+
+// GetAccount returns an account by name
+func (s Server) GetAccount(c *gin.Context) {
+	acc, err := s.db.Accounts.FindByName(c.Param("id"))
+	if shouldReturn(c, err) {
+		return
+	}
+	jsonOk(c, acc)
 }

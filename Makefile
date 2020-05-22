@@ -10,8 +10,8 @@ DOCKER_TAG   ?= latest
 build: migrations
 	go build \
 		-ldflags "\
-			-X github.com/figment-networks/${PROJECT}/cli.gitCommit=${GIT_COMMIT} \
-			-X github.com/figment-networks/${PROJECT}/cli.goVersion=${GO_VERSION}"
+			-X github.com/figment-networks/${PROJECT}/config.GitCommit=${GIT_COMMIT} \
+			-X github.com/figment-networks/${PROJECT}/config.GoVersion=${GO_VERSION}"
 
 # Generate static migrations file
 migrations:
