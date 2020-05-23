@@ -45,6 +45,11 @@ func (s baseStore) DeleteByHeight(height uint64) error {
 	return s.db.Delete(s.model, "height = ?", height).Error
 }
 
+// Import imports records in bulk
+func (s baseStore) Import(query string, rows int, fn bulkRowFunc) error {
+	return bulkInsert(s.db, query, rows, fn)
+}
+
 func scoped(conn *gorm.DB, m interface{}) baseStore {
 	return baseStore{conn, m}
 }

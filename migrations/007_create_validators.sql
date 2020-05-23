@@ -4,6 +4,7 @@ CREATE TABLE validators (
   height          INTEGER NOT NULL,
   time            TIMESTAMP WITH TIME ZONE NOT NULL,
   account_id      VARCHAR NOT NULL,
+  epoch           VARCHAR NOT NULL,
   expected_blocks INTEGER NOT NULL,
   produced_blocks INTEGER NOT NULL,
   slashed         BOOLEAN,

@@ -16,9 +16,15 @@ var (
 type Height struct {
 	Model
 
-	Height types.Height `json:"height"`
-	Status string       `json:"status"`
-	Error  *string      `json:"error"`
+	Height     types.Height `json:"height"`
+	Status     string       `json:"status"`
+	RetryCount int          `json:"retry_count"`
+	Error      *string      `json:"error"`
+}
+
+type HeightStatusCount struct {
+	Status string
+	Num    int
 }
 
 func (h Height) Validate() error {
@@ -29,4 +35,15 @@ func (h Height) Validate() error {
 		return errors.New("status is required")
 	}
 	return nil
+}
+
+// ShouldRetry returns true if height is retriable
+func (h Height) ShouldRetry() bool {
+	return h.Status == HeightStatusError && h.RetryCount < 3
+}
+
+// ResetForRetry clears the errors
+func (h *Height) ResetForRetry() {
+	h.Error = nil
+	h.RetryCount++
 }

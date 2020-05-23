@@ -37,6 +37,9 @@ type Config struct {
 	DumpDir          string `json:"dump_dir" envconfig:"DUMP_DIR"`
 	Debug            bool   `json:"debug" envconfig:"DEBUG"`
 	LogLevel         string `json:"log_level" envconfig:"LOG_LEVEL" default:"info"`
+
+	syncDuration    time.Duration
+	cleanupDuration time.Duration
 }
 
 // Validate returns an error if config is invalid
@@ -52,15 +55,19 @@ func (c *Config) Validate() error {
 	if c.SyncInterval == "" {
 		return errSyncIntervalRequired
 	}
-	if _, err := time.ParseDuration(c.SyncInterval); err != nil {
+	if d, err := time.ParseDuration(c.SyncInterval); err != nil {
 		return errSyncIntervalInvalid
+	} else {
+		c.syncDuration = d
 	}
 
 	if c.CleanupInterval == "" {
 		return errCleanupIntervalRequired
 	}
-	if _, err := time.ParseDuration(c.CleanupInterval); err != nil {
+	if d, err := time.ParseDuration(c.CleanupInterval); err != nil {
 		return errCleanupIntervalInvalid
+	} else {
+		c.cleanupDuration = d
 	}
 
 	return nil
@@ -79,6 +86,14 @@ func (c *Config) IsProduction() bool {
 // ListenAddr returns a full listen address and port
 func (c *Config) ListenAddr() string {
 	return fmt.Sprintf("%s:%d", c.ServerAddr, c.ServerPort)
+}
+
+func (c *Config) SyncDuration() time.Duration {
+	return c.syncDuration
+}
+
+func (c *Config) CleanupDuration() time.Duration {
+	return c.cleanupDuration
 }
 
 // New returns a new config

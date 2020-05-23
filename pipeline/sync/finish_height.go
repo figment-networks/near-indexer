@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/near"
 )
 
 func FinishRun(c *Context) {
@@ -13,17 +14,23 @@ func FinishRun(c *Context) {
 }
 
 func finishHeight(c *Context) {
+	// No height was set, the chain was aborted at the very beginning
 	if c.Height == nil {
 		return
 	}
 
-	if len(c.errors) == 0 {
+	if err := c.FirstError(); err == nil {
 		c.Height.Status = model.HeightStatusOK
+		c.Height.Error = nil
 	} else {
-		e := c.LastError().Error()
-
+		msg := err.Error()
 		c.Height.Status = model.HeightStatusError
-		c.Height.Error = &e
+		c.Height.Error = &msg
+
+		// Indicate that height does not have a block
+		if err == near.ErrNotFound {
+			c.Height.Status = model.HeightStatusNoBlock
+		}
 	}
 
 	if err := c.DB.Heights.Update(c.Height); err != nil {

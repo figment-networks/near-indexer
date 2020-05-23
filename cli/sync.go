@@ -8,6 +8,7 @@ import (
 
 func runSync(cfg *config.Config) error {
 	client := near.NewClient(cfg.RPCEndpoint)
+	client.SetDebug(true)
 
 	db, err := initStore(cfg)
 	if err != nil {

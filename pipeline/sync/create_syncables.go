@@ -3,7 +3,6 @@ package sync
 import (
 	"encoding/json"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/figment-networks/near-indexer/model"
@@ -12,18 +11,11 @@ import (
 func CreateSyncables(c *Context) {
 	log.Println("creating syncables for height", c.Height.Height)
 
-	wg := &sync.WaitGroup{}
-	wg.Add(2)
-
-	go createBlockSyncable(c, wg)
-	go createValidatorsSyncable(c, wg)
-
-	wg.Wait()
+	createBlockSyncable(c)
+	createValidatorsSyncable(c)
 }
 
-func createBlockSyncable(c *Context, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func createBlockSyncable(c *Context) {
 	block, err := c.Client.BlockByHeight(c.BlockHeight)
 	if err != nil {
 		c.Abort(err)
@@ -36,9 +28,7 @@ func createBlockSyncable(c *Context, wg *sync.WaitGroup) {
 	}
 }
 
-func createValidatorsSyncable(c *Context, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func createValidatorsSyncable(c *Context) {
 	validators, err := c.Client.ValidatorsByHeight(c.BlockHeight)
 	if err != nil {
 		c.Abort(err)

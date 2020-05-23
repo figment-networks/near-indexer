@@ -21,6 +21,7 @@ func Block(block *near.Block) (*model.Block, error) {
 		ValidatorReward: types.NewAmount(h.ValidatorReward),
 		TotalSupply:     types.NewAmount(h.TotalSupply),
 		Signature:       h.Signature,
+		Epoch:           h.EpochID,
 		ChunksCount:     h.ChunksIncluded,
 		GasPrice:        types.NewAmount(h.GasPrice),
 		GasLimit:        0, // TODO: calculate this

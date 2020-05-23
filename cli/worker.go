@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"log"
 	"sync"
 	"time"
@@ -11,42 +12,52 @@ import (
 	"github.com/figment-networks/near-indexer/store"
 )
 
-func startSync(cfg *config.Config, db *store.Store) error {
-	log.Println("sync will run every", cfg.SyncInterval)
-	duration, err := time.ParseDuration(cfg.SyncInterval)
-	if err != nil {
-		return err
-	}
-
-	log.Println("using rpc endpoint", cfg.RPCEndpoint)
+func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) context.CancelFunc {
+	wg.Add(1)
+	ctx, cancel := context.WithCancel(context.Background())
 	client := near.NewClient(cfg.RPCEndpoint)
 
-	for range time.Tick(duration) {
-		if err := pipeline.RunSync(cfg, db, client); err != nil {
-			log.Println("sync error:", err)
-		}
-	}
+	go func() {
+		defer wg.Done()
 
-	return nil
+		for {
+			select {
+			case <-time.Tick(cfg.SyncDuration()):
+				pipeline.RunSync(cfg, db, client)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	return cancel
 }
 
-func startCleanup(cfg *config.Config, db *store.Store) error {
-	log.Println("cleanup will run every", cfg.CleanupInterval)
-	duration, err := time.ParseDuration(cfg.CleanupInterval)
-	if err != nil {
-		return err
-	}
+func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) context.CancelFunc {
+	wg.Add(1)
+	ctx, cancel := context.WithCancel(context.Background())
 
-	for range time.Tick(duration) {
-		if err := pipeline.RunCleanup(cfg, db); err != nil {
-			log.Println("cleanup error:", err)
+	go func() {
+		defer wg.Done()
+
+		for {
+			select {
+			case <-time.Tick(cfg.CleanupDuration()):
+				pipeline.RunCleanup(cfg, db)
+			case <-ctx.Done():
+				return
+			}
 		}
-	}
+	}()
 
-	return nil
+	return cancel
 }
 
 func startWorker(cfg *config.Config) error {
+	log.Println("using rpc endpoint", cfg.RPCEndpoint)
+	log.Println("sync will run every", cfg.SyncInterval)
+	log.Println("cleanup will run every", cfg.CleanupInterval)
+
 	db, err := initStore(cfg)
 	if err != nil {
 		return err
@@ -54,23 +65,16 @@ func startWorker(cfg *config.Config) error {
 	defer db.Close()
 
 	wg := &sync.WaitGroup{}
-	wg.Add(2)
 
-	go func() {
-		if err := startSync(cfg, db); err != nil {
-			log.Println(err)
-		}
-		wg.Done()
-	}()
+	cancelSync := startSyncWorker(wg, cfg, db)
+	cancelCleanup := startCleanupWorker(wg, cfg, db)
 
-	go func() {
-		if err := startCleanup(cfg, db); err != nil {
-			log.Println(err)
-		}
-		wg.Done()
-	}()
+	s := <-initSignals()
+
+	log.Println("received signal", s)
+	cancelSync()
+	cancelCleanup()
 
 	wg.Wait()
-
 	return nil
 }

@@ -13,6 +13,7 @@ func Validator(block *near.Block, v *near.Validator) (*model.Validator, error) {
 		Height:         types.Height(block.Header.Height),
 		Time:           util.ParseTime(block.Header.Timestamp),
 		AccountID:      v.AccountID,
+		Epoch:          block.Header.EpochID,
 		ExpectedBlocks: v.NumExpectedBlocks,
 		ProducedBlocks: v.NumProducedBlocks,
 		Stake:          types.NewAmount(v.Stake),

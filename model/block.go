@@ -16,6 +16,7 @@ type Block struct {
 	Producer          string       `json:"producer"`
 	Hash              string       `json:"hash"`
 	PrevHash          string       `json:"prev_hash"`
+	Epoch             string       `json:"epoch"`
 	GasPrice          types.Amount `json:"gas_price"`
 	GasLimit          int          `json:"gas_allowed"`
 	GasUsed           int          `json:"gas_used"`

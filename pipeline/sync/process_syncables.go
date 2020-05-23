@@ -41,6 +41,7 @@ func processBlockSyncable(c *Context, syncable *model.Syncable) error {
 	if err != nil {
 		return err
 	}
+	record.AppVersion = c.Status.Version.String()
 
 	if err := c.DB.Blocks.DeleteByHeight(c.BlockHeight); err != nil {
 		return err
@@ -54,34 +55,45 @@ func processValidatorsSyncable(c *Context, syncable *model.Syncable) error {
 	if err := syncable.Decode(&validators); err != nil {
 		return err
 	}
+	if len(validators) == 0 {
+		return nil
+	}
 
-	for _, v := range validators {
+	validatorRecords := make([]model.Validator, len(validators))
+	validatorAggRecords := make([]model.ValidatorAgg, len(validators))
+	accountRecords := make([]model.Account, len(validators))
+
+	for idx, v := range validators {
+		// Prepare a new validator record
 		validator, err := mapper.Validator(c.Block, &v)
 		if err != nil {
 			return err
 		}
+		validatorRecords[idx] = *validator
 
+		// Prepare a new validator aggregate record
 		validatorAgg, err := mapper.ValidatorAgg(c.Block, &v)
 		if err != nil {
 			return err
 		}
+		validatorAggRecords[idx] = *validatorAgg
 
+		// Prepare a new account from the validator details
 		account, err := mapper.AccountFromValidator(c.Block, &v)
 		if err != nil {
 			return err
 		}
+		accountRecords[idx] = *account
+	}
 
-		if err := c.DB.ValidatorAggs.Upsert(validatorAgg); err != nil {
-			return err
-		}
-
-		if err := c.DB.Validators.Create(&validator); err != nil {
-			return err
-		}
-
-		if err := c.DB.Accounts.Upsert(account); err != nil {
-			return err
-		}
+	if err := c.DB.Validators.BulkInsert(validatorRecords); err != nil {
+		return err
+	}
+	if err := c.DB.ValidatorAggs.BulkUpsert(validatorAggRecords); err != nil {
+		return err
+	}
+	if err := c.DB.Accounts.BulkUpsert(accountRecords); err != nil {
+		return err
 	}
 
 	return nil

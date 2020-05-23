@@ -2,10 +2,10 @@ package near
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/rpc/v2/json2"
@@ -22,13 +22,14 @@ const (
 )
 
 var (
-	ErrBlockNotFound = errors.New("block not found")
+	ErrNotFound = errors.New("resource not found")
 )
 
 // Client interacts with the node RPC API
 type Client struct {
 	endpoint string
 	client   *http.Client
+	debug    bool
 }
 
 // NewClient returns a new node client
@@ -39,6 +40,42 @@ func NewClient(endpoint string) *Client {
 			Timeout: time.Second * 5,
 		},
 	}
+}
+
+func (c *Client) log(args ...interface{}) {
+	if c.debug {
+		log.Println(args...)
+	}
+}
+
+func (c *Client) handleServerError(err *json2.Error) error {
+	if err.Code == json2.E_SERVER {
+		if msg, ok := err.Data.(string); ok {
+			if strings.Contains(msg, "DB Not Found Error") {
+				return ErrNotFound
+			}
+		}
+	}
+	return errors.New(err.Message)
+}
+
+func (c *Client) handleRPCError(err error) error {
+	if err != nil {
+		switch err.(type) {
+		case *json2.Error:
+			e := err.(*json2.Error)
+			c.log("rpc service error:", e.Code, e.Message, e.Data)
+			return c.handleServerError(e)
+		default:
+			c.log("rcp error:", err)
+		}
+	}
+	return err
+}
+
+// SetDebug changes the debug mode
+func (c *Client) SetDebug(val bool) {
+	c.debug = val
 }
 
 // Call executes a RPC transaction
@@ -55,18 +92,15 @@ func (c Client) Call(method string, args interface{}, out interface{}) error {
 	}
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := c.client.Do(req)
+	resp, duration, err := reqWithTiming(c.client, req)
+	c.log("rpc call:", method, args, duration.String())
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
 	err = json2.DecodeClientResponse(resp.Body, out)
-	if err != nil {
-		d, _ := json.Marshal(err)
-		log.Printf("RPC ERROR: %s\n", d)
-	}
-	return err
+	return c.handleRPCError(err)
 }
 
 // Status returns current status of the node
@@ -93,6 +127,7 @@ func (c Client) BlockByHeight(id uint64) (block Block, err error) {
 func (c Client) BlockByHash(hash string) (block Block, err error) {
 	params := map[string]interface{}{"block_id": hash}
 	err = c.Call(methodBlock, params, &block)
+
 	return
 }
 

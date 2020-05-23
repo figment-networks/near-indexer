@@ -4,6 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/store"
@@ -91,4 +94,10 @@ func initStore(cfg *config.Config) (*store.Store, error) {
 	db.SetDebugMode(cfg.Debug)
 
 	return db, nil
+}
+
+func initSignals() chan os.Signal {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
+	return c
 }

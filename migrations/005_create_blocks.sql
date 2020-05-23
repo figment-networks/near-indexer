@@ -6,6 +6,7 @@ CREATE TABLE blocks (
   hash                VARCHAR NOT NULL,
   prev_hash           VARCHAR NOT NULL,
   producer            VARCHAR NOT NULL,
+  epoch               VARCHAR NOT NULL,
   gas_price           VARCHAR,
   gas_limit           INTEGER,
   gas_used            INTEGER,

@@ -159,11 +159,11 @@ func (s Server) GetBlockTimesInterval(c *gin.Context) {
 func (s Server) GetValidators(c *gin.Context) {
 	height := types.HeightFromString(c.Query("height"))
 	if height == 0 {
-		b, err := s.db.Blocks.Recent()
+		h, err := s.db.Heights.LastSuccessful()
 		if shouldReturn(c, err) {
 			return
 		}
-		height = b.Height
+		height = h.Height
 	}
 
 	validators, err := s.db.Validators.ByHeight(height)

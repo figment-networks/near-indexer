@@ -13,6 +13,7 @@ type Validator struct {
 	Height         types.Height `json:"height"`
 	Time           time.Time    `json:"time"`
 	AccountID      string       `json:"account_id"`
+	Epoch          string       `json:"epoch"`
 	ExpectedBlocks int          `json:"expected_blocks"`
 	ProducedBlocks int          `json:"produced_blocks"`
 	Slashed        bool         `json:"slashed"`

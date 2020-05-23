@@ -1,8 +1,6 @@
 package store
 
 import (
-	"time"
-
 	"github.com/figment-networks/near-indexer/model"
 )
 
@@ -43,10 +41,7 @@ func (s SyncablesStore) Count(kind string) (int, error) {
 
 // MarkProcessed updates the processed timestamp and saves the changes
 func (s SyncablesStore) MarkProcessed(syncable *model.Syncable) error {
-	now := time.Now()
-	syncable.ProcessedAt = &now
-
-	return s.Update(syncable)
+	return s.db.Exec("UPDATE syncables SET processed_at = now() WHERE id = ?", syncable.ID).Error
 }
 
 // FindMostRecent returns the most recent processed syncable for type

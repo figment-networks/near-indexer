@@ -11,4 +11,5 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pressly/goose v2.6.0+incompatible
+	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 )

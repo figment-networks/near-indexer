@@ -1,12 +1,17 @@
 package near
 
 import (
+	"fmt"
 	"time"
 )
 
 type Version struct {
 	Version string `json:"version"`
 	Build   string `json:"build"`
+}
+
+func (v Version) String() string {
+	return fmt.Sprintf("%s-%s", v.Version, v.Build)
 }
 
 type SyncInfo struct {
@@ -18,6 +23,7 @@ type SyncInfo struct {
 }
 
 type NodeStatus struct {
+	Version  Version  `json:"version"`
 	ChainID  string   `json:"chain_id"`
 	RPCAddr  string   `json:"rpc_addr"`
 	SyncInfo SyncInfo `json:"sync_info"`

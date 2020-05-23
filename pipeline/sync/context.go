@@ -14,6 +14,7 @@ type Context struct {
 	Client *near.Client
 	DB     *store.Store
 
+	Status      *near.NodeStatus
 	BlockHeight uint64
 	Block       *near.Block
 
@@ -49,10 +50,20 @@ func (c *Context) Abort(val interface{}) {
 	c.shouldAbort = true
 }
 
+// FirstError returns the first available error
+func (c *Context) FirstError() error {
+	if len(c.errors) > 0 {
+		return c.errors[0]
+	}
+	return nil
+}
+
+// LastError returns the last available error
 func (c *Context) LastError() error {
 	return c.lastErr
 }
 
+// IsAborted returns true if context is aborted
 func (c *Context) IsAborted() bool {
 	return c.shouldAbort
 }

@@ -15,10 +15,15 @@ func CreateHeight(c *Context) {
 		return
 	}
 	latest := status.SyncInfo.LatestBlockHeight
+	c.Status = &status
 
 	defer func() {
 		if c.BlockHeight > 0 {
-			log.Printf("started height=%d lag=%d", c.BlockHeight, latest-c.BlockHeight)
+			log.Printf("started height=%d retries=%d lag=%d",
+				c.BlockHeight,
+				c.Height.RetryCount,
+				latest-c.BlockHeight,
+			)
 		}
 	}()
 
@@ -33,13 +38,19 @@ func CreateHeight(c *Context) {
 	}
 	hval := uint64(h.Height)
 
+	// Retry the last height if it was not successful
+	if h.ShouldRetry() {
+		retryLastHeight(h, c)
+		return
+	}
+
 	// Node is behind for some reason
 	if latest < hval {
 		c.Abort("chain height is behind")
 		return
 	}
 
-	// We're up-to-date
+	// We're up-to-date, no need to process anything
 	if latest == hval {
 		c.Abort(nil)
 		return
@@ -56,4 +67,16 @@ func createNewHeight(val uint64, c *Context) {
 	if err := c.DB.Heights.Create(c.Height); err != nil {
 		c.Abort(err)
 	}
+}
+
+func retryLastHeight(h *model.Height, c *Context) {
+	h.ResetForRetry()
+
+	if err := c.DB.Heights.Update(h); err != nil {
+		c.Abort(err)
+		return
+	}
+
+	c.Height = h
+	c.BlockHeight = uint64(h.Height)
 }
