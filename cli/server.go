@@ -16,7 +16,7 @@ func startServer(cfg *config.Config) error {
 	}
 	defer db.Close()
 
-	srv := server.New(db)
+	srv := server.New(cfg, db)
 
 	log.Println("Starting server on", cfg.ListenAddr())
 	return srv.Run(cfg.ListenAddr())

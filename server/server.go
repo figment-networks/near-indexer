@@ -16,7 +16,7 @@ type Server struct {
 }
 
 // New returns a new server
-func New(db *store.Store) Server {
+func New(cfg *config.Config, db *store.Store) Server {
 	router := gin.Default()
 
 	s := Server{

@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/figment-networks/near-indexer/config"
+	"github.com/figment-networks/near-indexer/server"
 	"github.com/figment-networks/near-indexer/store"
 )
 
@@ -35,6 +36,10 @@ func Run() {
 
 	if runCommand == "" {
 		terminate("Command is required")
+	}
+
+	if cfg.Debug {
+		initProfiler()
 	}
 
 	if err := startCommand(cfg, runCommand); err != nil {
@@ -100,4 +105,8 @@ func initSignals() chan os.Signal {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill, syscall.SIGTERM)
 	return c
+}
+
+func initProfiler() {
+	go server.StartProfiler()
 }
