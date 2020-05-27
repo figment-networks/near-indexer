@@ -34,6 +34,7 @@ func New(db *store.Store) Server {
 	router.GET("/block_times", s.GetBlockTimes)
 	router.GET("/block_times_interval", s.GetBlockTimesInterval)
 	router.GET("/validators", s.GetValidators)
+	router.GET("/validator_times_interval", s.GetValidatorTimesInterval)
 	router.GET("/validators/:id", s.GetValidators)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
@@ -139,8 +140,7 @@ func (s Server) GetBlockTimes(c *gin.Context) {
 }
 
 func (s Server) GetBlockTimesInterval(c *gin.Context) {
-	params := blockTimesIntervalParams{}
-
+	params := timesIntervalParams{}
 	if err := c.BindQuery(&params); err != nil {
 		badRequest(c, err)
 		return
@@ -181,6 +181,23 @@ func (s Server) GetTopValidators(c *gin.Context) {
 		return
 	}
 	jsonOk(c, validators)
+}
+
+// GetValidatorTimesInterval returns active validators count over period of time
+func (s Server) GetValidatorTimesInterval(c *gin.Context) {
+	params := timesIntervalParams{}
+	if err := c.BindQuery(&params); err != nil {
+		badRequest(c, err)
+		return
+	}
+	params.setDefaults()
+
+	result, err := s.db.Validators.CountsForInterval(params.Interval, params.Period)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, result)
 }
 
 // GetTransaction returns a transaction details

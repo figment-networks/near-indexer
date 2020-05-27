@@ -47,7 +47,45 @@ func (s ValidatorsStore) BulkInsert(records []model.Validator) error {
 	})
 }
 
+// CountsForInterval returns validator counts for a period of time
+func (s ValidatorsStore) CountsForInterval(interval, period string) ([]model.ValidatorIntervalStat, error) {
+	rows, err := s.db.Raw(sqlValidatorCountsForInterval, interval, period).Rows()
+	if err != nil {
+		return nil, checkErr(err)
+	}
+	defer rows.Close()
+
+	result := []model.ValidatorIntervalStat{}
+
+	for rows.Next() {
+		row := model.ValidatorIntervalStat{}
+		if err := s.db.ScanRows(rows, &row); err != nil {
+			return nil, err
+		}
+		result = append(result, row)
+	}
+
+	return result, err
+}
+
 var (
+	sqlValidatorCountsForInterval = `
+		SELECT
+			time_bucket($1, time) AS time_interval,
+			COUNT(DISTINCT account_id) AS count
+		FROM
+			validators
+		WHERE
+			slashed = FALSE
+			AND (
+				SELECT time
+				FROM validators
+				ORDER BY time DESC
+				LIMIT 1
+			) - $2::INTERVAL < time
+		GROUP BY time_interval
+		ORDER BY time_interval ASC;`
+
 	sqlValidatorsBulkInsert = `
 		INSERT INTO validators (
 			height,

@@ -4,7 +4,7 @@ type blockTimesParams struct {
 	Limit int64 `form:"limit"`
 }
 
-type blockTimesIntervalParams struct {
+type timesIntervalParams struct {
 	Interval string `form:"interval"`
 	Period   string `form:"period"`
 }
@@ -19,11 +19,11 @@ func (p *blockTimesParams) setDefaults() {
 	}
 }
 
-func (p *blockTimesIntervalParams) setDefaults() {
+func (p *timesIntervalParams) setDefaults() {
 	if p.Interval == "" {
 		p.Interval = "1h"
 	}
 	if p.Period == "" {
-		p.Period = "1d"
+		p.Period = "48h"
 	}
 }
