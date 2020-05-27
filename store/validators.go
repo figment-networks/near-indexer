@@ -76,13 +76,16 @@ var (
 		FROM
 			validators
 		WHERE
-			slashed = FALSE
-			AND (
+			(
 				SELECT time
 				FROM validators
 				ORDER BY time DESC
 				LIMIT 1
 			) - $2::INTERVAL < time
+			AND (
+				slashed = FALSE
+				OR efficiency = 0.0
+			)
 		GROUP BY time_interval
 		ORDER BY time_interval ASC;`
 
