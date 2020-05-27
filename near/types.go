@@ -5,6 +5,18 @@ import (
 	"time"
 )
 
+const (
+	// https://docs.near.org/docs/concepts/transaction
+	ActionCreateAccount  = "CreateAccount"  // to make a new account (for a person, company, contract, car, refrigerator, etc)
+	ActionDeployContract = "DeployContract" // to deploy a new contract (with its own account)
+	ActionFunctionCall   = "FunctionCall"   // to invoke a method on a contract (with budget for compute and storage)
+	ActionTransfer       = "Transfer"       // to transfer tokens from one account to another
+	ActionStake          = "Stake"          // to express interest in becoming a proof-of-stake validator at the next available opportunity
+	ActionAddKey         = "AddKey"         // to add a key to an existing account (either FullAccess or FunctionCall access)
+	ActionDeleteKey      = "DeleteKey"      // to delete an existing key from an account
+	ActionDeleteAccount  = "DeleteAccount"  // to delete an account (and transfer balance to a beneficiary account)
+)
+
 type Version struct {
 	Version string `json:"version"`
 	Build   string `json:"build"`
@@ -95,6 +107,7 @@ type Account struct {
 	BlockHash     string `json:"block_hash"`
 }
 
+// Transaction is a collection of Actions augmented with critical information
 type Transaction struct {
 	Hash       string        `json:"hash"`
 	Nonce      int           `json:"nonce"`
