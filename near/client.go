@@ -12,13 +12,15 @@ import (
 )
 
 const (
-	methodStatus      = "status"
-	methodBlock       = "block"
-	methodChunk       = "chunk"
-	methodValidators  = "validators"
-	methodQuery       = "query"
-	methodTransaction = "tx"
-	methodGasPrice    = "gas_price"
+	methodStatus         = "status"
+	methodBlock          = "block"
+	methodChunk          = "chunk"
+	methodValidators     = "validators"
+	methodQuery          = "query"
+	methodTransaction    = "tx"
+	methodGasPrice       = "gas_price"
+	methodGenesisConfig  = "EXPERIMENTAL_genesis_config"
+	methodGenesisRecords = "EXPERIMENTAL_genesis_records"
 )
 
 var (
@@ -101,6 +103,18 @@ func (c Client) Call(method string, args interface{}, out interface{}) error {
 
 	err = json2.DecodeClientResponse(resp.Body, out)
 	return c.handleRPCError(err)
+}
+
+// GenesisConfig returns the chain genesis configuration
+func (c Client) GenesisConfig() (result GenesisConfig, err error) {
+	err = c.Call(methodGenesisConfig, nil, &result)
+	return
+}
+
+// GenesisRecords returns the chain genesis records
+func (c Client) GenesisRecords(limit, offset int) (result GenesisRecords, err error) {
+	err = c.Call(methodGenesisRecords, map[string]int{"limit": limit, "offset": offset}, &result)
+	return
 }
 
 // Status returns current status of the node
