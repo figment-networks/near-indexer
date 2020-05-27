@@ -26,7 +26,6 @@ func New(db *store.Store) Server {
 
 	router.GET("/health", s.GetHealth)
 	router.GET("/status", s.GetStatus)
-	router.GET("/leaderboard", s.GetTopValidators)
 	router.GET("/height", s.GetHeight)
 	router.GET("/block", s.GetRecentBlock)
 	router.GET("/blocks", s.GetBlocks)
@@ -34,8 +33,8 @@ func New(db *store.Store) Server {
 	router.GET("/block_times", s.GetBlockTimes)
 	router.GET("/block_times_interval", s.GetBlockTimesInterval)
 	router.GET("/validators", s.GetValidators)
-	router.GET("/validator_times_interval", s.GetValidatorTimesInterval)
 	router.GET("/validators/:id", s.GetValidators)
+	router.GET("/validator_times_interval", s.GetValidatorTimesInterval)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
 
@@ -155,8 +154,17 @@ func (s Server) GetBlockTimesInterval(c *gin.Context) {
 	jsonOk(c, result)
 }
 
-// GetValidators renders the validators list for a height
+// GetValidators returns recent validators
 func (s Server) GetValidators(c *gin.Context) {
+	validators, err := s.db.ValidatorAggs.Top()
+	if shouldReturn(c, err) {
+		return
+	}
+	jsonOk(c, validators)
+}
+
+// GetValidatorsByHeight renders the validators list for a height
+func (s Server) GetValidatorsByHeight(c *gin.Context) {
 	height := types.HeightFromString(c.Query("height"))
 	if height == 0 {
 		h, err := s.db.Heights.LastSuccessful()
@@ -171,15 +179,6 @@ func (s Server) GetValidators(c *gin.Context) {
 		return
 	}
 
-	jsonOk(c, validators)
-}
-
-// GetTopValidators returns top validators
-func (s Server) GetTopValidators(c *gin.Context) {
-	validators, err := s.db.ValidatorAggs.Top()
-	if shouldReturn(c, err) {
-		return
-	}
 	jsonOk(c, validators)
 }
 
