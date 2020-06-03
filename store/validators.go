@@ -68,6 +68,11 @@ func (s ValidatorsStore) CountsForInterval(interval, period string) ([]model.Val
 	return result, err
 }
 
+// Cleanup removes any records before a certain height
+func (s ValidatorsStore) Cleanup(maxHeight uint64) error {
+	return s.db.Delete(s.model, "height < ?", maxHeight).Error
+}
+
 var (
 	sqlValidatorCountsForInterval = `
 		SELECT

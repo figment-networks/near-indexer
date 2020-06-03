@@ -56,20 +56,21 @@ func (c *Config) Validate() error {
 	if c.SyncInterval == "" {
 		return errSyncIntervalRequired
 	}
-	if d, err := time.ParseDuration(c.SyncInterval); err != nil {
+
+	d, err := time.ParseDuration(c.SyncInterval)
+	if err != nil {
 		return errSyncIntervalInvalid
-	} else {
-		c.syncDuration = d
 	}
+	c.syncDuration = d
 
 	if c.CleanupInterval == "" {
 		return errCleanupIntervalRequired
 	}
-	if d, err := time.ParseDuration(c.CleanupInterval); err != nil {
+	d, err = time.ParseDuration(c.CleanupInterval)
+	if err != nil {
 		return errCleanupIntervalInvalid
-	} else {
-		c.cleanupDuration = d
 	}
+	c.cleanupDuration = d
 
 	return nil
 }
