@@ -126,7 +126,8 @@ var (
 			last_height     = excluded.last_height,
 			last_time       = excluded.last_time,
 			expected_blocks = excluded.expected_blocks,
-			produced_blocks = excluded.produced_blocks
+			produced_blocks = excluded.produced_blocks,
+			efficiency      = excluded.efficiency;
 	`
 
 	sqlValidatorCountsUpsert = `

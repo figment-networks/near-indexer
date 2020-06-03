@@ -30,6 +30,7 @@ type Config struct {
 	RPCEndpoint      string `json:"rpc_endpoint" envconfig:"NEAR_RPC_ENDPOINT"`
 	ServerAddr       string `json:"server_addr" envconfig:"SERVER_ADDR" default:"0.0.0.0"`
 	ServerPort       int    `json:"server_port" envconfig:"SERVER_PORT" default:"8081"`
+	StartHeight      uint64 `json:"start_height" envconfig:"START_HEIGHT"`
 	SyncInterval     string `json:"sync_interval" envconfig:"SYNC_INTERVAL" default:"10s"`
 	CleanupInterval  string `json:"cleanup_interval" envconfig:"CLEANUP_INTERVAL" default:"10m"`
 	CleanupThreshold int    `json:"cleanup_threshold" envconfig:"CLEANUP_THRESHOLD" default:"1000"`

@@ -14,10 +14,11 @@ type Context struct {
 	Client *near.Client
 	DB     *store.Store
 
-	Status      *near.NodeStatus
-	BlockHeight uint64
-	Height      *model.Height
-	Run         *model.Run
+	Status             *near.NodeStatus
+	DefaultStartHeight uint64
+	BlockHeight        uint64
+	Height             *model.Height
+	Run                *model.Run
 
 	Block      *near.Block
 	Validators []near.Validator

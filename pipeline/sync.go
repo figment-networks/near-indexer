@@ -16,6 +16,7 @@ type Task struct {
 
 func RunSync(cfg *config.Config, db *store.Store, client *near.Client) error {
 	ctx := sync.NewContext(db, client)
+	ctx.DefaultStartHeight = cfg.StartHeight
 
 	tasks := []Task{
 		{"create_height", sync.CreateHeight},

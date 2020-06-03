@@ -31,9 +31,13 @@ func CreateHeight(c *Context) {
 	h, err := c.DB.Heights.Last()
 	if err != nil {
 		if err == store.ErrNotFound {
-			// Start from the genesis height
-			// TODO: Should this be put into the config?
-			createHeightFromGenesis(c)
+			if c.DefaultStartHeight > 0 {
+				// Start with configured height
+				createNewHeight(c.DefaultStartHeight, c)
+			} else {
+				// Fetch start height from the genesis config
+				createHeightFromGenesis(c)
+			}
 			return
 		}
 		c.Abort(err)
