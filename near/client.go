@@ -113,7 +113,11 @@ func (c Client) GenesisConfig() (result GenesisConfig, err error) {
 
 // GenesisRecords returns the chain genesis records
 func (c Client) GenesisRecords(limit, offset int) (result GenesisRecords, err error) {
-	err = c.Call(methodGenesisRecords, map[string]int{"limit": limit, "offset": offset}, &result)
+	args := map[string]interface{}{
+		"limit":  limit,
+		"offset": offset,
+	}
+	err = c.Call(methodGenesisRecords, []interface{}{args}, &result)
 	return
 }
 

@@ -27,7 +27,7 @@ var (
 // Config holds the configration data
 type Config struct {
 	AppEnv           string `json:"app_env" envconfig:"APP_ENV" default:"development"`
-	RPCEndpoint      string `json:"rpc_endpoint" envconfig:"RPC_ENDPOINT"`
+	RPCEndpoint      string `json:"rpc_endpoint" envconfig:"NEAR_RPC_ENDPOINT"`
 	ServerAddr       string `json:"server_addr" envconfig:"SERVER_ADDR" default:"0.0.0.0"`
 	ServerPort       int    `json:"server_port" envconfig:"SERVER_PORT" default:"8081"`
 	SyncInterval     string `json:"sync_interval" envconfig:"SYNC_INTERVAL" default:"10s"`
@@ -88,10 +88,12 @@ func (c *Config) ListenAddr() string {
 	return fmt.Sprintf("%s:%d", c.ServerAddr, c.ServerPort)
 }
 
+// SyncDuration returns the parsed duration for the sync pipeline
 func (c *Config) SyncDuration() time.Duration {
 	return c.syncDuration
 }
 
+// CleanupDuration returns the parsed duration for the cleanup pipeline
 func (c *Config) CleanupDuration() time.Duration {
 	return c.cleanupDuration
 }

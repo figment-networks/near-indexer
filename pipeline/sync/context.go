@@ -16,11 +16,11 @@ type Context struct {
 
 	Status      *near.NodeStatus
 	BlockHeight uint64
-	Block       *near.Block
+	Height      *model.Height
+	Run         *model.Run
 
-	Height    *model.Height
-	Run       *model.Run
-	Syncables []model.Syncable
+	Block      *near.Block
+	Validators []near.Validator
 
 	shouldAbort bool
 	lastErr     error

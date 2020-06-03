@@ -17,9 +17,6 @@ const (
 	ActionDeleteAccount  = "DeleteAccount"  // to delete an account (and transfer balance to a beneficiary account)
 )
 
-type GenesisConfig interface{}
-type GenesisRecords interface{}
-
 type Version struct {
 	Version string `json:"version"`
 	Build   string `json:"build"`

@@ -7,10 +7,11 @@ import (
 )
 
 var (
-	HeightStatusOK      = "success"  // Successful result
-	HeightStatusError   = "error"    // Something went wrong
-	HeightStatusSkip    = "skip"     // Marked as skip
-	HeightStatusNoBlock = "no_block" // No block at height
+	HeightStatusPending = "pending"  // Height is pending processing
+	HeightStatusOK      = "success"  // Height has been processed succesfully
+	HeightStatusError   = "error"    // Height has encountered an error
+	HeightStatusSkip    = "skip"     // Height has been marked as skipped
+	HeightStatusNoBlock = "no_block" // Height does not contain a block
 )
 
 type Height struct {

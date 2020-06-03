@@ -3,12 +3,13 @@ package sync
 import (
 	"log"
 	"strings"
+	"time"
 
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/near"
 )
 
-func FinishRun(c *Context) {
+func FinishHeight(c *Context) {
 	finishRun(c)
 	finishHeight(c)
 }
@@ -43,6 +44,7 @@ func finishRun(c *Context) {
 		return
 	}
 
+	c.Run.Duration = time.Since(c.Height.CreatedAt).Milliseconds()
 	c.Run.Success = true
 	c.Run.Error = nil
 

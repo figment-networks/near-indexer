@@ -56,30 +56,3 @@ func (s SyncablesStore) FindMostRecent(kind string) (*model.Syncable, error) {
 
 	return result, checkErr(err)
 }
-
-// Height returns the lowest most recent processed height
-func (s SyncablesStore) Height() (uint64, error) {
-	result := struct {
-		Height uint64
-	}{}
-
-	err := s.db.
-		Raw(syncablesRecentHeight).
-		Scan(&result).
-		Error
-
-	return result.Height, checkErr(err)
-}
-
-var (
-	syncablesRecentHeight = `
-		SELECT
-			MAX(height) AS height
-		FROM (
-			SELECT DISTINCT ON(type) type, height
-			FROM syncables
-			WHERE processed_at IS NOT NULL
-			GROUP by height, type
-			ORDER BY type asc, height desc
-		) t`
-)

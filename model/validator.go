@@ -22,9 +22,8 @@ type Validator struct {
 }
 
 type ValidatorIntervalStat struct {
-	TimeInterval string  `json:"time_interval"`
-	Count        int     `json:"count"`
-	Avg          float64 `json:"avg"`
+	TimeInterval string `json:"time_interval"`
+	Count        int    `json:"count"`
 }
 
 func (Validator) TableName() string {

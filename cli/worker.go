@@ -16,13 +16,17 @@ func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) co
 	wg.Add(1)
 	ctx, cancel := context.WithCancel(context.Background())
 	client := near.NewClient(cfg.RPCEndpoint)
+	ticker := time.NewTicker(cfg.SyncDuration())
 
 	go func() {
-		defer wg.Done()
+		defer func() {
+			ticker.Stop()
+			wg.Done()
+		}()
 
 		for {
 			select {
-			case <-time.Tick(cfg.SyncDuration()):
+			case <-ticker.C:
 				pipeline.RunSync(cfg, db, client)
 			case <-ctx.Done():
 				return
@@ -36,13 +40,17 @@ func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) co
 func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) context.CancelFunc {
 	wg.Add(1)
 	ctx, cancel := context.WithCancel(context.Background())
+	ticker := time.NewTicker(cfg.CleanupDuration())
 
 	go func() {
-		defer wg.Done()
+		defer func() {
+			ticker.Stop()
+			wg.Done()
+		}()
 
 		for {
 			select {
-			case <-time.Tick(cfg.CleanupDuration()):
+			case <-ticker.C:
 				pipeline.RunCleanup(cfg, db)
 			case <-ctx.Done():
 				return

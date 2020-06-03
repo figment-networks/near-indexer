@@ -27,15 +27,22 @@ func CreateHeight(c *Context) {
 		}
 	}()
 
+	// Fetch the latest successfully processed height
 	h, err := c.DB.Heights.Last()
 	if err != nil {
 		if err == store.ErrNotFound {
-			createNewHeight(latest, c)
+			// Start from the genesis height
+			// TODO: Should this be put into the config?
+			createHeightFromGenesis(c)
 			return
 		}
 		c.Abort(err)
 		return
 	}
+	if c.IsAborted() {
+		return
+	}
+
 	hval := uint64(h.Height)
 
 	// Retry the last height if it was not successful
@@ -59,9 +66,19 @@ func CreateHeight(c *Context) {
 	createNewHeight(uint64(hval)+1, c)
 }
 
+func createHeightFromGenesis(c *Context) {
+	config, err := c.Client.GenesisConfig()
+	if err != nil {
+		c.Abort(err)
+		return
+	}
+	createNewHeight(config.GenesisHeight, c)
+}
+
 func createNewHeight(val uint64, c *Context) {
 	c.BlockHeight = val
 	c.Height = &model.Height{
+		Status: model.HeightStatusPending,
 		Height: types.Height(val),
 	}
 	if err := c.DB.Heights.Create(c.Height); err != nil {

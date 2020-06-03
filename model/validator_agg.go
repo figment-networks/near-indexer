@@ -25,3 +25,14 @@ type ValidatorAgg struct {
 func (ValidatorAgg) TableName() string {
 	return "validator_aggregates"
 }
+
+type ValidatorEpoch struct {
+	ID             int64
+	AccountID      string
+	Epoch          string
+	LastHeight     types.Height
+	LastTime       time.Time
+	ExpectedBlocks int
+	ProducedBlocks int
+	Efficiency     float64
+}

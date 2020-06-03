@@ -9,7 +9,7 @@ import (
 	"github.com/figment-networks/near-indexer/store"
 )
 
-type Stage struct {
+type Task struct {
 	Name    string
 	Handler sync.HandlerFunc
 }
@@ -17,22 +17,22 @@ type Stage struct {
 func RunSync(cfg *config.Config, db *store.Store, client *near.Client) error {
 	ctx := sync.NewContext(db, client)
 
-	stages := []Stage{
+	tasks := []Task{
 		{"create_height", sync.CreateHeight},
 		{"create_run", sync.CreateRun},
-		{"create_syncables", sync.CreateSyncables},
-		{"process_syncables", sync.ProcessSyncables},
-		{"finish_run", sync.FinishRun},
+		{"fetch_data", sync.FetchChainData},
+		{"process_data", sync.ProcessChainData},
+		{"finish_height", sync.FinishHeight},
 	}
 
-	for _, stage := range stages {
-		stage.Handler(ctx)
+	for _, task := range tasks {
+		task.Handler(ctx)
 
 		if ctx.IsAborted() {
 			if ctx.LastError() != nil {
-				log.Printf("aborted on stage %s with error: %s", stage.Name, ctx.LastError())
+				log.Printf("aborted on %s with error: %s", task.Name, ctx.LastError())
 			}
-			sync.FinishRun(ctx)
+			sync.FinishHeight(ctx)
 			break
 		}
 	}

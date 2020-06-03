@@ -71,21 +71,17 @@ func (s ValidatorsStore) CountsForInterval(interval, period string) ([]model.Val
 var (
 	sqlValidatorCountsForInterval = `
 		SELECT
-			time_bucket($1, time) AS time_interval,
-			COUNT(DISTINCT account_id) AS count
+  		time_bucket($1, time) AS time_interval,
+  		ROUND(AVG(active_count)) AS count
 		FROM
-			validators
+  		validator_counts
 		WHERE
-			(
-				SELECT time
-				FROM validators
-				ORDER BY time DESC
-				LIMIT 1
-			) - $2::INTERVAL < time
-			AND (
-				slashed = FALSE
-				OR efficiency = 0.0
-			)
+  		(
+    		SELECT time
+    		FROM validator_counts
+    		ORDER BY time DESC
+    		LIMIT 1
+  		) - $2::INTERVAL < time
 		GROUP BY time_interval
 		ORDER BY time_interval ASC;`
 

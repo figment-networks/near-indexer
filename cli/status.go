@@ -14,6 +14,9 @@ func startStatus(cfg *config.Config) error {
 	}
 	defer store.Close()
 
+	rpc := near.NewClient(cfg.RPCEndpoint)
+	rpc.SetDebug(cfg.Debug)
+
 	heightStatuses, err := store.Heights.StatusCounts()
 	if err != nil {
 		return err
@@ -24,9 +27,9 @@ func startStatus(cfg *config.Config) error {
 		fmt.Printf("Status: %s, Count: %d\n", s.Status, s.Num)
 	}
 
-	status, err := near.NewClient(cfg.RPCEndpoint).Status()
+	status, err := rpc.Status()
 	if err != nil {
-		terminate(err)
+		return err
 	}
 	info := status.SyncInfo
 
@@ -36,6 +39,14 @@ func startStatus(cfg *config.Config) error {
 	fmt.Println("Last height:", status.SyncInfo.LatestBlockHeight)
 	fmt.Println("Last hash:", status.SyncInfo.LatestBlockHash)
 	fmt.Println("Last time:", status.SyncInfo.LatestBlockTime)
+
+	gc, err := rpc.GenesisConfig()
+	if err != nil {
+		return err
+	}
+	fmt.Println("=== Genesis Status ===")
+	fmt.Println("Height:", gc.GenesisHeight)
+	fmt.Println("Time:", gc.GenesisTime)
 
 	return nil
 }

@@ -33,7 +33,7 @@ func New(cfg *config.Config, db *store.Store) Server {
 	router.GET("/block_times", s.GetBlockTimes)
 	router.GET("/block_times_interval", s.GetBlockTimesInterval)
 	router.GET("/validators", s.GetValidators)
-	router.GET("/validators/:id", s.GetValidators)
+	router.GET("/validators/:id", s.GetValidator)
 	router.GET("/validator_times_interval", s.GetValidatorTimesInterval)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
@@ -161,6 +161,14 @@ func (s Server) GetValidators(c *gin.Context) {
 		return
 	}
 	jsonOk(c, validators)
+}
+
+func (s Server) GetValidator(c *gin.Context) {
+	validator, err := s.db.ValidatorAggs.FindBy("account_id", c.Param("id"))
+	if shouldReturn(c, err) {
+		return
+	}
+	jsonOk(c, validator)
 }
 
 // GetValidatorsByHeight renders the validators list for a height
