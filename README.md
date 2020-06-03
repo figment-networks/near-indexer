@@ -9,7 +9,25 @@ Data indexer and API service for Near protocol networks
 
 ## Installation
 
+Please see the sections below for all available methods of installation.
+
+### Binary Releases
+
 *Not available yet*
+
+### Docker
+
+Pull the official Docker image:
+
+```bash
+docker pull figmentnetworks/near-indexer
+```
+
+### Golang
+
+```bash
+go get -u github.com/figment-networks/near-indexer
+```
 
 ## Usage
 
