@@ -11,6 +11,33 @@ Data indexer and API service for Near protocol networks
 
 *Not available yet*
 
+## Usage
+
+```bash
+$ ./near-indexer --help
+
+Usage of ./near-indexer:
+  -cmd string
+    	Command to run
+  -config string
+    	Path to config
+  -v	Show application version
+```
+
+Executing commands:
+
+```bash
+near-indexer -c path/to/config.json -cmd=COMMAND
+```
+
+Available commands:
+
+- `status`  - Print out current indexer and node status
+- `migrate` - Perform database migration
+- `sync`    - Run a one-time indexer sync (for testing purposes)
+- `worker`  - Run the continuos chain indexing worker
+- `server`  - Run the indexer HTTP API server
+
 ## Configuration
 
 You can configure the service using either a config file or environment variables.
