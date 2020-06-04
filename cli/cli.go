@@ -34,6 +34,9 @@ func Run() {
 		terminate(err)
 	}
 
+	config.InitRollbar(cfg)
+	defer config.TrackRecovery()
+
 	if runCommand == "" {
 		terminate("Command is required")
 	}
@@ -109,4 +112,8 @@ func initSignals() chan os.Signal {
 
 func initProfiler() {
 	go server.StartProfiler()
+}
+
+func initRollbar(cfg *config.Config) {
+	config.InitRollbar(cfg)
 }

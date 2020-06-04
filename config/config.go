@@ -39,6 +39,10 @@ type Config struct {
 	Debug            bool   `json:"debug" envconfig:"DEBUG"`
 	LogLevel         string `json:"log_level" envconfig:"LOG_LEVEL" default:"info"`
 
+	// Exception tracking
+	RollbarToken     string `json:"rollbar_token" envconfig:"ROLLBAR_TOKEN"`
+	RollbarNamespace string `json:"rollbar_namespace" envconfig:"ROLLBAR_NAMESPACE"`
+
 	syncDuration    time.Duration
 	cleanupDuration time.Duration
 }

@@ -24,6 +24,10 @@ func New(cfg *config.Config, db *store.Store) Server {
 		db:     db,
 	}
 
+	if cfg.RollbarToken != "" {
+		router.Use(RollbarMiddleware())
+	}
+
 	router.GET("/health", s.GetHealth)
 	router.GET("/status", s.GetStatus)
 	router.GET("/height", s.GetHeight)

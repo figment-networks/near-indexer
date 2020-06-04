@@ -72,7 +72,10 @@ Example:
   "server_port": 8081,
   "database_url": "postgres://user:pass@host/dbname",
   "sync_interval": "500ms",
-  "cleanup_interval": "10m"
+  "cleanup_interval": "10m",
+  "start_height": 0,
+  "rollbar_token": "rollbar access token",
+  "rollbar_namespace": "rollbar app name"
 }
 ```
 
@@ -83,12 +86,14 @@ Example:
 | `APP_ENV`           | Application environment | `development`
 | `DATABASE_URL`      | PostgreSQL database URL | REQUIRED
 | `NEAR_RPC_ENDPOINT` | Near RPC endpoint       | REQUIRED
-| `START_HEIGHT`      | Initial start height    | optional, will use genesis if blank
+| `START_HEIGHT`      | Initial start height    | optional, will use genesis if 0
 | `SERVER_ADDR`       | Server listen addr      | `0.0.0.0`
 | `SERVER_PORT`       | Server listen port      | `8081`
 | `SYNC_INTERVAL`     | Data sync interval      | `500ms`
 | `CLEANUP_INTERVAL`  | Data cleanup interval   | `10m`
 | `DEBUG`             | Turn on debugging mode  | `false`
+| ROLLBAR_TOKEN       | Rollbar access token    |
+| ROLLBACK_NAMESPACE  | Rollbar app name        |
 
 ## Running Application
 
