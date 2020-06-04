@@ -2,6 +2,7 @@ package sync
 
 import (
 	"log"
+	"time"
 
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/model/types"
@@ -14,15 +15,17 @@ func CreateHeight(c *Context) {
 		c.Abort(err)
 		return
 	}
+
 	latest := status.SyncInfo.LatestBlockHeight
 	c.Status = &status
+	c.Lag = latest - c.BlockHeight
 
 	defer func() {
 		if c.BlockHeight > 0 {
 			log.Printf("started height=%d retries=%d lag=%d",
 				c.BlockHeight,
 				c.Height.RetryCount,
-				latest-c.BlockHeight,
+				c.Lag,
 			)
 		}
 	}()
@@ -33,9 +36,11 @@ func CreateHeight(c *Context) {
 		if err == store.ErrNotFound {
 			if c.DefaultStartHeight > 0 {
 				// Start with configured height
+				log.Println("creating height from initial height config value")
 				createNewHeight(c.DefaultStartHeight, c)
 			} else {
 				// Fetch start height from the genesis config
+				log.Println("creating height from genesis config")
 				createHeightFromGenesis(c)
 			}
 			return
@@ -55,7 +60,8 @@ func CreateHeight(c *Context) {
 		return
 	}
 
-	// Node is behind for some reason
+	// Chain node is running behind the latest synced block.
+	// This is an indication of a testnet reset.
 	if latest < hval {
 		c.Abort("chain height is behind")
 		return
@@ -63,6 +69,8 @@ func CreateHeight(c *Context) {
 
 	// We're up-to-date, no need to process anything
 	if latest == hval {
+		log.Println("already at latest height", latest)
+		time.Sleep(time.Second)
 		c.Abort(nil)
 		return
 	}

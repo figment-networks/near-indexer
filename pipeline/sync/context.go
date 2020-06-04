@@ -19,6 +19,7 @@ type Context struct {
 	BlockHeight        uint64
 	Height             *model.Height
 	Run                *model.Run
+	Lag                uint64
 
 	Block      *near.Block
 	Validators []near.Validator
