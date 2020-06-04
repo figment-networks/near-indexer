@@ -17,12 +17,18 @@ func startStatus(cfg *config.Config) error {
 	rpc := near.NewClient(cfg.RPCEndpoint)
 	rpc.SetDebug(cfg.Debug)
 
+	height, err := store.Heights.LastSuccessful()
+	if err != nil {
+		return err
+	}
+
 	heightStatuses, err := store.Heights.StatusCounts()
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("=== Height Indexing ===")
+	fmt.Println("Last height:", height.Height)
 	for _, s := range heightStatuses {
 		fmt.Printf("Status: %s, Count: %d\n", s.Status, s.Num)
 	}

@@ -18,9 +18,10 @@ func CreateHeight(c *Context) {
 
 	latest := status.SyncInfo.LatestBlockHeight
 	c.Status = &status
-	c.Lag = latest - c.BlockHeight
 
 	defer func() {
+		c.Lag = latest - c.BlockHeight
+
 		if c.BlockHeight > 0 {
 			log.Printf("started height=%d retries=%d lag=%d",
 				c.BlockHeight,
