@@ -1,10 +1,14 @@
-.PHONY: build migrations test fmt docker docker-build docker-push
+.PHONY: setup build migrations test fmt docker docker-build docker-push
 
 PROJECT      ?= near-indexer
 GIT_COMMIT   ?= $(shell git rev-parse HEAD)
 GO_VERSION   ?= $(shell go version | awk {'print $$3'})
 DOCKER_IMAGE ?= figmentnetworks/${PROJECT}
 DOCKER_TAG   ?= latest
+
+# Install third-party tools
+setup:
+	go get -u github.com/jessevdk/go-assets-builder
 
 # Build the binary
 build: migrations
