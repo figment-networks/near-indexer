@@ -15,8 +15,10 @@ import (
 func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) context.CancelFunc {
 	wg.Add(1)
 	ctx, cancel := context.WithCancel(context.Background())
-	client := near.NewClient(cfg.RPCEndpoint)
 	ticker := time.NewTicker(cfg.SyncDuration())
+
+	client := near.NewClient(cfg.RPCEndpoint)
+	client.SetDebug(cfg.Debug)
 
 	go func() {
 		defer func() {

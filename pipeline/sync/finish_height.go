@@ -25,12 +25,15 @@ func finishHeight(c *Context) {
 		c.Height.Error = nil
 	} else {
 		msg := err.Error()
-		c.Height.Status = model.HeightStatusError
 		c.Height.Error = &msg
 
-		// Indicate that height does not have a block
-		if err == near.ErrNotFound {
+		switch err {
+		case near.ErrBlockNotFound:
 			c.Height.Status = model.HeightStatusNoBlock
+		case near.ErrBlockMissing:
+			c.Height.Status = model.HeightStatusMissing
+		default:
+			c.Height.Status = model.HeightStatusError
 		}
 	}
 

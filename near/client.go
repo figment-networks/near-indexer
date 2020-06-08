@@ -24,7 +24,8 @@ const (
 )
 
 var (
-	ErrNotFound = errors.New("resource not found")
+	ErrBlockMissing  = errors.New("block is missing")
+	ErrBlockNotFound = errors.New("block ")
 )
 
 // Client interacts with the node RPC API
@@ -53,8 +54,13 @@ func (c *Client) log(args ...interface{}) {
 func (c *Client) handleServerError(err *json2.Error) error {
 	if err.Code == json2.E_SERVER {
 		if msg, ok := err.Data.(string); ok {
-			if strings.Contains(msg, "DB Not Found Error") {
-				return ErrNotFound
+			msg = strings.ToLower(msg)
+
+			if strings.Contains(msg, "db not found error") {
+				return ErrBlockNotFound
+			}
+			if strings.Contains(msg, "block missing") {
+				return ErrBlockMissing
 			}
 		}
 	}
