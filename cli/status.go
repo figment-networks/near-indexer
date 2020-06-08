@@ -5,25 +5,26 @@ import (
 
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/near"
+	"github.com/figment-networks/near-indexer/store"
 )
 
 func startStatus(cfg *config.Config) error {
-	store, err := initStore(cfg)
+	db, err := initStore(cfg)
 	if err != nil {
 		return err
 	}
-	defer store.Close()
+	defer db.Close()
 
 	rpc := near.NewClient(cfg.RPCEndpoint)
 	rpc.SetDebug(cfg.Debug)
 
-	height, err := store.Heights.LastSuccessful()
-	if err != nil {
+	height, err := db.Heights.LastSuccessful()
+	if err != nil && err != store.ErrNotFound {
 		return err
 	}
 
-	heightStatuses, err := store.Heights.StatusCounts()
-	if err != nil {
+	heightStatuses, err := db.Heights.StatusCounts()
+	if err != nil && err != store.ErrNotFound {
 		return err
 	}
 

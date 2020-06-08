@@ -6,10 +6,6 @@ GO_VERSION   ?= $(shell go version | awk {'print $$3'})
 DOCKER_IMAGE ?= figmentnetworks/${PROJECT}
 DOCKER_TAG   ?= latest
 
-# Install third-party tools
-setup:
-	go get -u github.com/jessevdk/go-assets-builder
-
 # Build the binary
 build: migrations
 	go build \
@@ -20,6 +16,10 @@ build: migrations
 # Generate static migrations file
 migrations:
 	go-assets-builder migrations -p migrations -o migrations/migrations.go
+
+# Install third-party tools
+setup:
+	go get -u github.com/jessevdk/go-assets-builder
 
 # Run tests
 test:
