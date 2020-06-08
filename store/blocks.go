@@ -46,7 +46,8 @@ func (s BlocksStore) Recent() (*model.Block, error) {
 
 	err := s.db.
 		Order("height DESC").
-		First(block).
+		Limit(1).
+		Find(&block).
 		Error
 
 	return block, checkErr(err)
