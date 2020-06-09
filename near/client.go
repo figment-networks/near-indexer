@@ -25,7 +25,7 @@ const (
 
 var (
 	ErrBlockMissing  = errors.New("block is missing")
-	ErrBlockNotFound = errors.New("block ")
+	ErrBlockNotFound = errors.New("block not found")
 )
 
 // Client interacts with the node RPC API
