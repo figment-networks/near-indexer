@@ -1,6 +1,8 @@
 package server
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/figment-networks/near-indexer/config"
@@ -66,11 +68,16 @@ func (s Server) GetStatus(c *gin.Context) {
 		"app_version": config.AppVersion,
 		"git_commit":  config.GitCommit,
 		"go_version":  config.GoVersion,
+		"sync_status": "stale",
 	}
 
 	if block, err := s.db.Blocks.Recent(); err == nil {
 		data["last_block_time"] = block.Time
 		data["last_block_height"] = block.Height
+
+		if time.Since(block.Time).Seconds() <= 300 {
+			data["sync_status"] = "current"
+		}
 	}
 
 	jsonOk(c, data)
