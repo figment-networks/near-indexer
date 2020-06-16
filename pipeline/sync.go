@@ -14,7 +14,7 @@ type Task struct {
 	Handler sync.HandlerFunc
 }
 
-func RunSync(cfg *config.Config, db *store.Store, client *near.Client) error {
+func RunSync(cfg *config.Config, db *store.Store, client *near.Client) (uint64, error) {
 	ctx := sync.NewContext(db, client)
 	ctx.DefaultStartHeight = cfg.StartHeight
 
@@ -38,5 +38,5 @@ func RunSync(cfg *config.Config, db *store.Store, client *near.Client) error {
 		}
 	}
 
-	return ctx.LastError()
+	return ctx.Lag, ctx.LastError()
 }

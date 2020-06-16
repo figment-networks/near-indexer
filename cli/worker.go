@@ -15,21 +15,26 @@ import (
 func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) context.CancelFunc {
 	wg.Add(1)
 	ctx, cancel := context.WithCancel(context.Background())
-	ticker := time.NewTicker(cfg.SyncDuration())
+	timer := time.NewTimer(cfg.SyncDuration())
 
 	client := near.NewClient(cfg.RPCEndpoint)
 	client.SetDebug(cfg.Debug)
 
 	go func() {
 		defer func() {
-			ticker.Stop()
+			timer.Stop()
 			wg.Done()
 		}()
 
 		for {
 			select {
-			case <-ticker.C:
-				pipeline.RunSync(cfg, db, client)
+			case <-timer.C:
+				lag, _ := pipeline.RunSync(cfg, db, client)
+				if lag > 60 {
+					timer = time.NewTimer(time.Millisecond * 50)
+				} else {
+					timer = time.NewTimer(cfg.SyncDuration())
+				}
 			case <-ctx.Done():
 				return
 			}

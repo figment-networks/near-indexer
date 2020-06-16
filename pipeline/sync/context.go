@@ -33,6 +33,8 @@ func NewContext(db *store.Store, client *near.Client) *Context {
 	return &Context{
 		Client: client,
 		DB:     db,
+
+		errors: []error{},
 	}
 }
 

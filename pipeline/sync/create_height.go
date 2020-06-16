@@ -71,7 +71,7 @@ func CreateHeight(c *Context) {
 	// We're up-to-date, no need to process anything
 	if latest == hval {
 		log.Println("already at latest height", latest)
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 5)
 		c.Abort(nil)
 		return
 	}
