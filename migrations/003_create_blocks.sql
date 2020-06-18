@@ -23,8 +23,6 @@ CREATE TABLE blocks (
   PRIMARY KEY (id, time)
 );
 
-SELECT create_hypertable('blocks', 'time', if_not_exists => TRUE);
-
 CREATE INDEX idx_blocks_hash
   ON blocks(time, hash);
 

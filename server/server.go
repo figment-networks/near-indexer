@@ -140,7 +140,7 @@ func (s Server) GetBlockTimes(c *gin.Context) {
 	}
 	params.setDefaults()
 
-	result, err := s.db.Blocks.AvgRecentTimes(params.Limit)
+	result, err := s.db.Blocks.BlockTimes(params.Limit)
 	if err != nil {
 		badRequest(c, err)
 		return
@@ -157,7 +157,7 @@ func (s Server) GetBlockTimesInterval(c *gin.Context) {
 	}
 	params.setDefaults()
 
-	result, err := s.db.Blocks.AvgTimesForInterval(params.Interval, params.Period)
+	result, err := s.db.Blocks.BlockStats(params.Interval, params.Period)
 	if shouldReturn(c, err) {
 		return
 	}

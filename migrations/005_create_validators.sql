@@ -16,8 +16,6 @@ CREATE TABLE validators (
   PRIMARY KEY (time, id)
 );
 
-SELECT create_hypertable('validators', 'time', if_not_exists => TRUE);
-
 CREATE INDEX idx_validators_account_id
   ON validators(account_id);
 

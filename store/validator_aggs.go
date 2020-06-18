@@ -3,6 +3,7 @@ package store
 import (
 	"time"
 
+	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/near-indexer/model"
 )
 
@@ -68,9 +69,9 @@ func (s ValidatorAggsStore) Upsert(record *model.ValidatorAgg) error {
 }
 
 func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch) error {
-	return s.Import(sqlValidatorEpochsUpsert, len(records), func(i int) bulkRow {
+	return s.Import(sqlValidatorEpochsUpsert, len(records), func(i int) bulk.Row {
 		r := records[i]
-		return bulkRow{
+		return bulk.Row{
 			r.AccountID,
 			r.Epoch,
 			r.LastHeight,
@@ -90,9 +91,9 @@ func (s ValidatorAggsStore) UpdateCountsForHeight(height uint64) error {
 func (s ValidatorAggsStore) BulkUpsert(records []model.ValidatorAgg) error {
 	t := time.Now()
 
-	return s.Import(sqlValidatorAggsBulkUpsert, len(records), func(i int) bulkRow {
+	return s.Import(sqlValidatorAggsBulkUpsert, len(records), func(i int) bulk.Row {
 		r := records[i]
-		return bulkRow{
+		return bulk.Row{
 			r.StartHeight,
 			r.StartTime,
 			r.LastHeight,

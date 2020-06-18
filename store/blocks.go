@@ -1,6 +1,8 @@
 package store
 
 import (
+	"github.com/figment-networks/indexing-engine/store/jsonquery"
+
 	"github.com/figment-networks/near-indexer/model"
 )
 
@@ -66,41 +68,18 @@ func (s BlocksStore) Search() ([]model.Block, error) {
 	return result, err
 }
 
-// AvgRecentTimes returns recent blocks averages
-func (s BlocksStore) AvgRecentTimes(limit int64) (*model.BlockAvgStat, error) {
-	res := &model.BlockAvgStat{}
-
-	err := s.db.
-		Raw(blockTimesForRecentBlocksQuery, limit).
-		Scan(res).
-		Error
-
-	return res, checkErr(err)
+// BlockTimes returns recent blocks averages
+func (s BlocksStore) BlockTimes(limit int64) ([]byte, error) {
+	return jsonquery.MustObject(s.db, sqlBlockTimes, limit)
 }
 
-// AvgTimesForInterval returns block stats for a given interval
-func (s BlocksStore) AvgTimesForInterval(interval, period string) ([]model.BlockIntervalStat, error) {
-	rows, err := s.db.Raw(blockTimesForIntervalQuery, interval, period).Rows()
-	if err != nil {
-		return nil, checkErr(err)
-	}
-	defer rows.Close()
-
-	result := []model.BlockIntervalStat{}
-
-	for rows.Next() {
-		row := model.BlockIntervalStat{}
-		if err := s.db.ScanRows(rows, &row); err != nil {
-			return nil, err
-		}
-		result = append(result, row)
-	}
-
-	return result, err
+// BlockStats returns block stats for a given interval
+func (s BlocksStore) BlockStats(interval, period string) ([]byte, error) {
+	return jsonquery.MustArray(s.db, sqlBlocksTimesInterval, interval, period)
 }
 
 const (
-	blockTimesForRecentBlocksQuery = `
+	sqlBlockTimes = `
 		SELECT
 			MIN(height) start_height,
 			MAX(height) end_height,
@@ -109,27 +88,23 @@ const (
 			COUNT(*) count,
 			EXTRACT(EPOCH FROM MAX(time) - MIN(time)) AS diff,
 			EXTRACT(EPOCH FROM ((MAX(time) - MIN(time)) / COUNT(*))) AS avg
-		FROM
-			(
-				SELECT * FROM blocks
-				ORDER BY height DESC
-				LIMIT ?
-			) t;`
+		FROM (
+			SELECT height, time
+			FROM blocks
+			ORDER BY height DESC
+			LIMIT ?
+		) t`
 
-	blockTimesForIntervalQuery = `
+	sqlBlocksTimesInterval = `
 		SELECT
-			time_bucket($1, time) AS time_interval,
-			COUNT(*) AS count,
-			EXTRACT(EPOCH FROM (last(time, time) - first(time, time)) / COUNT(*)) AS avg
+			time AS time_interval,
+			blocks_count AS count,
+			block_time_avg AS avg
 		FROM
-			blocks
+			block_stats
 		WHERE
-			(
-				SELECT time
-				FROM blocks
-				ORDER BY time DESC
-				LIMIT 1
-			) - $2::INTERVAL < time
-		GROUP BY time_interval
-		ORDER BY time_interval ASC;`
+			bucket = $1
+		ORDER BY
+			time DESC
+		LIMIT $2`
 )

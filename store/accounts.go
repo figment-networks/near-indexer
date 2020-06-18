@@ -3,6 +3,7 @@ package store
 import (
 	"time"
 
+	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/near-indexer/model"
 )
 
@@ -40,9 +41,9 @@ func (s AccountsStore) Upsert(acc *model.Account) error {
 func (s AccountsStore) BulkUpsert(records []model.Account) error {
 	t := time.Now()
 
-	return s.Import(sqlAccountsBulkUpsert, len(records), func(i int) bulkRow {
+	return s.Import(sqlAccountsBulkUpsert, len(records), func(i int) bulk.Row {
 		r := records[i]
-		return bulkRow{
+		return bulk.Row{
 			r.Name,
 			r.StartHeight,
 			r.StartTime,

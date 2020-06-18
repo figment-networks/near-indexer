@@ -15,11 +15,11 @@ type Store struct {
 
 	Runs          RunsStore
 	Heights       HeightsStore
-	Syncables     SyncablesStore
 	Blocks        BlocksStore
 	Accounts      AccountsStore
 	Validators    ValidatorsStore
 	ValidatorAggs ValidatorAggsStore
+	Stats         StatsStore
 }
 
 // Test checks the connection status
@@ -54,10 +54,10 @@ func New(connStr string) (*Store, error) {
 
 		Heights:       HeightsStore{scoped(conn, model.Height{})},
 		Runs:          RunsStore{scoped(conn, model.Run{})},
-		Syncables:     SyncablesStore{scoped(conn, model.Syncable{})},
 		Blocks:        BlocksStore{scoped(conn, model.Block{})},
 		Accounts:      AccountsStore{scoped(conn, model.Account{})},
 		Validators:    ValidatorsStore{scoped(conn, model.Validator{})},
 		ValidatorAggs: ValidatorAggsStore{scoped(conn, model.ValidatorAgg{})},
+		Stats:         StatsStore{baseStore{db: conn}},
 	}, nil
 }

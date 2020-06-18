@@ -52,8 +52,8 @@ func Run() {
 
 func startCommand(cfg *config.Config, name string) error {
 	switch name {
-	case "migrate":
-		return startMigrations(cfg)
+	case "migrate", "migrate:up", "migrate:down", "migrate:redo":
+		return startMigrations(name, cfg)
 	case "server":
 		return startServer(cfg)
 	case "worker":
@@ -62,6 +62,8 @@ func startCommand(cfg *config.Config, name string) error {
 		return runSync(cfg)
 	case "status":
 		return startStatus(cfg)
+	case "reset":
+		return startReset(cfg)
 	default:
 		return fmt.Errorf("%s is not a valid command", name)
 	}

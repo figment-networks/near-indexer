@@ -17,13 +17,22 @@ func (p *blockTimesParams) setDefaults() {
 	if p.Limit <= 0 {
 		p.Limit = 100
 	}
+	if p.Limit > 1000 {
+		p.Limit = 1000
+	}
 }
 
 func (p *timesIntervalParams) setDefaults() {
 	if p.Interval == "" {
-		p.Interval = "1h"
+		p.Interval = "h"
 	}
+
 	if p.Period == "" {
-		p.Period = "48h"
+		if p.Interval == "h" {
+			p.Period = "48"
+		}
+		if p.Interval == "d" {
+			p.Period = "30"
+		}
 	}
 }

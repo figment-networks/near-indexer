@@ -42,7 +42,13 @@ func serverError(c *gin.Context, err interface{}) {
 
 // jsonOk renders a successful response
 func jsonOk(c *gin.Context, data interface{}) {
-	c.JSON(200, data)
+	switch data.(type) {
+	case []byte:
+		c.Header("Content-Type", "application/json")
+		c.String(200, "%s", data)
+	default:
+		c.JSON(200, data)
+	}
 }
 
 // shouldReturn is a shorthand method for handling resource errors

@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pressly/goose"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/figment-networks/near-indexer/migrations"
 )
 
-func startMigrations(cfg *config.Config) error {
+func startMigrations(cmd string, cfg *config.Config) error {
 	store, err := initStore(cfg)
 	if err != nil {
 		return err
@@ -35,5 +36,22 @@ func startMigrations(cfg *config.Config) error {
 		}
 	}
 
-	return goose.Up(store.Conn(), tmpDir)
+	dir := "up"
+	if chunks := strings.Split(cmd, ":"); len(chunks) > 1 {
+		dir = chunks[1]
+	}
+
+	switch dir {
+	case "migrate", "up":
+		err = goose.Up(store.Conn(), tmpDir)
+	case "down":
+		err = goose.Down(store.Conn(), tmpDir)
+	case "redo":
+		if err = goose.Down(store.Conn(), tmpDir); err != nil {
+			return err
+		}
+		err = goose.Up(store.Conn(), tmpDir)
+	}
+
+	return err
 }

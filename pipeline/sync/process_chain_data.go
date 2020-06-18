@@ -28,6 +28,7 @@ func processBlockData(c *Context) error {
 	if err := c.DB.Blocks.DeleteByHeight(c.BlockHeight); err != nil {
 		return err
 	}
+	c.BlockTime = record.Time
 
 	return c.DB.Blocks.Create(record)
 }

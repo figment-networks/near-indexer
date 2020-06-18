@@ -2,6 +2,7 @@ package sync
 
 import (
 	"errors"
+	"time"
 
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/near"
@@ -17,6 +18,7 @@ type Context struct {
 	Status             *near.NodeStatus
 	DefaultStartHeight uint64
 	BlockHeight        uint64
+	BlockTime          time.Time
 	Height             *model.Height
 	Run                *model.Run
 	Lag                uint64

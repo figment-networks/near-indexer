@@ -21,11 +21,6 @@ type Validator struct {
 	Efficiency     float64      `json:"efficiency"`
 }
 
-type ValidatorIntervalStat struct {
-	TimeInterval string `json:"time_interval"`
-	Count        int    `json:"count"`
-}
-
 func (Validator) TableName() string {
 	return "validators"
 }

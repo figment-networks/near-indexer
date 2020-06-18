@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/jinzhu/gorm"
 )
 
@@ -46,8 +47,8 @@ func (s baseStore) DeleteByHeight(height uint64) error {
 }
 
 // Import imports records in bulk
-func (s baseStore) Import(query string, rows int, fn bulkRowFunc) error {
-	return bulkInsert(s.db, query, rows, fn)
+func (s baseStore) Import(query string, rows int, fn bulk.RowFunc) error {
+	return bulk.Import(s.db, query, rows, fn)
 }
 
 func scoped(conn *gorm.DB, m interface{}) baseStore {
