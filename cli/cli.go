@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/figment-networks/near-indexer/config"
@@ -67,6 +68,15 @@ func startCommand(cfg *config.Config, name string) error {
 	default:
 		return fmt.Errorf("%s is not a valid command", name)
 	}
+}
+
+func confirm(message string) bool {
+	var val string
+
+	fmt.Printf("%s (Y/N): ", message)
+	fmt.Fscanln(os.Stdin, &val)
+
+	return strings.TrimSpace(val) == "Y"
 }
 
 func terminate(message interface{}) {

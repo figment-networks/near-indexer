@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"log"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -40,6 +41,28 @@ func (s *Store) Conn() *sql.DB {
 // SetDebugMode enabled detailed query logging
 func (s *Store) SetDebugMode(enabled bool) {
 	s.db.LogMode(enabled)
+}
+
+// ResetAll performs a full database reset without dropping any objects
+func (s *Store) ResetAll() error {
+	queries := []string{
+		"TRUNCATE TABLE blocks",
+		"TRUNCATE TABLE validators",
+		"TRUNCATE TABLE validator_counts",
+		"TRUNCATE TABLE validator_epochs",
+		"TRUNCATE TABLE validator_aggregates",
+		"TRUNCATE TABLE runs",
+		"TRUNCATE TABLE heights",
+	}
+
+	for _, q := range queries {
+		log.Println("executing", q)
+		if err := s.db.Exec(q).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // New returns a new store from the connection string
