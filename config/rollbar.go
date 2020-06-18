@@ -30,11 +30,10 @@ func InitRollbar(cfg *Config) {
 	if cfg == nil {
 		return
 	}
-	if cfg.AppEnv != modeProduction {
-		return
-	}
 	if cfg.RollbarToken == "" {
-		log.Println("rollbar token is not provided, skipping error tracking")
+		if cfg.AppEnv == modeProduction {
+			log.Println("rollbar token is not provided, skipping error tracking")
+		}
 		return
 	}
 

@@ -12,6 +12,7 @@ import (
 
 const (
 	modeDevelopment = "development"
+	modeStaging     = "staging"
 	modeProduction  = "production"
 )
 
