@@ -5,7 +5,7 @@ Data indexer and API service for Near protocol networks
 ## Requirements
 
 - PostgreSQL 10.x+
-- Go 1.14
+- Go 1.14+
 
 ## Installation
 
@@ -13,7 +13,7 @@ Please see the sections below for all available methods of installation.
 
 ### Binary Releases
 
-*Not available yet*
+See [Github Releases](https://github.com/figment-networks/near-indexer/releases) page for details.
 
 ### Docker
 
@@ -50,15 +50,18 @@ near-indexer -c path/to/config.json -cmd=COMMAND
 
 Available commands:
 
-- `status`  - Print out current indexer and node status
-- `migrate` - Perform database migration
-- `sync`    - Run a one-time indexer sync (for testing purposes)
-- `worker`  - Run the continuos chain indexing worker
-- `server`  - Run the indexer HTTP API server
+| Name      | Description
+|-----------|-----------------------------------------------------
+| `status`  | Print out current indexer and node status
+| `migrate` | Perform database migration
+| `sync`    | Run a one-time indexer sync (for testing purposes)
+| `worker`  | Start the indexer sync worker
+| `server`  | Start the indexer API server
+| `reset`   | Reset the database
 
 ## Configuration
 
-You can configure the service using either a config file or environment variables.
+You can configure the service using a config file or environment variables.
 
 ### Config File
 
@@ -70,9 +73,10 @@ Example:
   "rpc_endpoint": "http://YOUR_NODE_RPC_IP:PORT",
   "server_addr": "127.0.0.1",
   "server_port": 8081,
-  "database_url": "postgres://user:pass@host/dbname",
+  "database_url": "postgres://user:pass@host/dbname?sslmode=mode",
   "sync_interval": "500ms",
   "cleanup_interval": "10m",
+  "cleanup_threshold": 3600,
   "start_height": 0,
   "rollbar_token": "rollbar access token",
   "rollbar_namespace": "rollbar app name"
@@ -81,7 +85,7 @@ Example:
 
 ### Environment Variables
 
-| Name                | Description             | Default Value
+| Name                 | Description             | Default Value
 |----------------------|-------------------------|-----------------
 | `APP_ENV`            | Application environment | `development`
 | `DATABASE_URL`       | PostgreSQL database URL | REQUIRED
@@ -91,6 +95,7 @@ Example:
 | `SERVER_PORT`        | Server listen port      | `8081`
 | `SYNC_INTERVAL`      | Data sync interval      | `500ms`
 | `CLEANUP_INTERVAL`   | Data cleanup interval   | `10m`
+| `CLEANUP_THRESHOLD`  | Max number of heights   | `3600`
 | `DEBUG`              | Turn on debugging mode  | `false`
 | `ROLLBAR_TOKEN`      | Rollbar access token    |
 | `ROLLBACK_NAMESPACE` | Rollbar app name        |
@@ -116,7 +121,7 @@ Perform the initial sync:
 near-indexer -config path/to/config.josn -cmd=sync
 ```
 
-If previous steps did not produce any error you can start the indexer worker:
+If previous steps did not produce any errors you can start the indexer worker:
 
 ```bash
 near-indexer -config path/to/config.json -cmd=worker

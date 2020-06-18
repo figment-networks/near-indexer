@@ -33,7 +33,7 @@ type Config struct {
 	StartHeight      uint64 `json:"start_height" envconfig:"START_HEIGHT"`
 	SyncInterval     string `json:"sync_interval" envconfig:"SYNC_INTERVAL" default:"500ms"`
 	CleanupInterval  string `json:"cleanup_interval" envconfig:"CLEANUP_INTERVAL" default:"10m"`
-	CleanupThreshold int    `json:"cleanup_threshold" envconfig:"CLEANUP_THRESHOLD" default:"1000"`
+	CleanupThreshold int    `json:"cleanup_threshold" envconfig:"CLEANUP_THRESHOLD" default:"3600"`
 	DatabaseURL      string `json:"database_url" envconfig:"DATABASE_URL"`
 	DumpDir          string `json:"dump_dir" envconfig:"DUMP_DIR"`
 	Debug            bool   `json:"debug" envconfig:"DEBUG"`
