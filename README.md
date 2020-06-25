@@ -1,6 +1,8 @@
-# near-indexer
+# near-indexer ![CI](https://github.com/figment-networks/near-indexer/workflows/CI/badge.svg)
 
 Data indexer and API service for Near protocol networks
+
+*Project is under active development*
 
 ## Requirements
 
