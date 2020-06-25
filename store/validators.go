@@ -59,6 +59,10 @@ func (s ValidatorsStore) Cleanup(maxHeight uint64) error {
 	return s.db.Delete(s.model, "height < ?", maxHeight).Error
 }
 
+func (s ValidatorsStore) CleanupCounts() error {
+	return s.db.Exec(sqlCleanupValidatorCounts).Error
+}
+
 var (
 	sqlValidatorCountsForInterval = `
 		SELECT
@@ -87,4 +91,13 @@ var (
 			updated_at
 		)
 		VALUES @values`
+
+	sqlCleanupValidatorCounts = `
+		DELETE FROM
+			validator_counts
+		WHERE
+			time <= (
+				SELECT DATE_TRUNC('d', MAX(time))::timestamp - interval '48' hour
+				FROM validator_counts
+			)`
 )

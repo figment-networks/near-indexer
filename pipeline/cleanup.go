@@ -28,5 +28,9 @@ func RunCleanup(cfg *config.Config, db *store.Store) error {
 		log.Println("validators cleanup error:", err)
 	}
 
+	if err := db.Validators.CleanupCounts(); err != nil {
+		log.Println("validator counts cleanup error:", err)
+	}
+
 	return nil
 }

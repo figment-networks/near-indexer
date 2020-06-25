@@ -63,6 +63,8 @@ func startCommand(cfg *config.Config, name string) error {
 		return runSync(cfg)
 	case "status":
 		return startStatus(cfg)
+	case "cleanup":
+		return startCleanup(cfg)
 	case "reset":
 		return startReset(cfg)
 	default:
