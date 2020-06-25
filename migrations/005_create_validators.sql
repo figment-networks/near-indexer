@@ -1,6 +1,6 @@
 -- +goose Up
 CREATE TABLE validators (
-  id              BIGSERIAL NOT NULL,
+  id              BIGSERIAL NOT NULL PRIMARY KEY,
   height          INTEGER NOT NULL,
   time            TIMESTAMP WITH TIME ZONE NOT NULL,
   account_id      VARCHAR NOT NULL,
@@ -11,9 +11,7 @@ CREATE TABLE validators (
   stake           VARCHAR,
   efficiency      NUMERIC,
   created_at      TIMESTAMP WITH TIME ZONE NOT NULL,
-  updated_at      TIMESTAMP WITH TIME ZONE NOT NULL,
-
-  PRIMARY KEY (time, id)
+  updated_at      TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE INDEX idx_validators_account_id
@@ -22,8 +20,8 @@ CREATE INDEX idx_validators_account_id
 CREATE INDEX idx_validators_height
   ON validators(height);
 
-CREATE iNDEX idx_validators_height_time
-  ON validators(height, time DESC);
+CREATE iNDEX idx_validators_time
+  ON validators(time DESC);
 
 -- +goose Down
 DROP TABLE validators;

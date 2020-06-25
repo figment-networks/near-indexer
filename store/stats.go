@@ -92,8 +92,8 @@ var (
 		SELECT
 			DATE_TRUNC('@bucket', time) AS time,
 			'@bucket' AS bucket,
-			MIN(total_count), MAX(total_count), ROUND(AVG(total_count), 2),
-			MIN(active_count), MAX(active_count), ROUND(AVG(active_count), 2),
+			MIN(total_count),   MAX(total_count),   ROUND(AVG(total_count), 2),
+			MIN(active_count),  MAX(active_count),  ROUND(AVG(active_count), 2),
 			MIN(slashed_count), MAX(slashed_count), ROUND(AVG(slashed_count), 2)
 		FROM
 			validator_counts

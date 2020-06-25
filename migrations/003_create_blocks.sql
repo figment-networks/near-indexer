@@ -1,6 +1,6 @@
 -- +goose Up
 CREATE TABLE blocks (
-  id                  BIGSERIAL NOT NULL,
+  id                  BIGSERIAL NOT NULL PRIMARY KEY,
   height              INTEGER NOT NULL,
   time                TIMESTAMP WITH TIME ZONE NOT NULL,
   hash                VARCHAR NOT NULL,
@@ -18,16 +18,17 @@ CREATE TABLE blocks (
   transactions_count  INTEGER,
   app_version         VARCHAR,
   created_at          TIMESTAMP WITH TIME ZONE NOT NULL,
-  updated_at          TIMESTAMP WITH TIME ZONE NOT NULL,
-
-  PRIMARY KEY (id, time)
+  updated_at          TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE INDEX idx_blocks_hash
-  ON blocks(time, hash);
+  ON blocks(hash);
 
 CREATE INDEX idx_blocks_height
-  ON blocks(time, height);
+  ON blocks(height);
+
+CREATE INDEX idx_blocks_time
+  ON blocks(time);
 
 CREATE INDEX idx_blocks_producer
   ON blocks(producer);

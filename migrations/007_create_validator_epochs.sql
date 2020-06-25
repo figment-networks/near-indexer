@@ -1,15 +1,13 @@
 -- +goose Up
 CREATE TABLE validator_epochs (
-  id              BIGSERIAL NOT NULL,
+  id              BIGSERIAL NOT NULL PRIMARY KEY,
   account_id      VARCHAR NOT NULL,
   epoch           VARCHAR NOT NULL,
   last_height     INTEGER NOT NULL,
   last_time       TIMESTAMP WITH TIME ZONE NOT NULL,
   expected_blocks INTEGER NOT NULL,
   produced_blocks INTEGER NOT NULL,
-  efficiency      NUMERIC NOT NULL,
-
-  PRIMARY KEY (id)
+  efficiency      NUMERIC NOT NULL
 );
 
 CREATE INDEX idx_validator_epochs_account_id
