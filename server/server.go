@@ -175,11 +175,32 @@ func (s Server) GetValidators(c *gin.Context) {
 }
 
 func (s Server) GetValidator(c *gin.Context) {
-	validator, err := s.db.ValidatorAggs.FindBy("account_id", c.Param("id"))
+	info, err := s.db.ValidatorAggs.FindBy("account_id", c.Param("id"))
 	if shouldReturn(c, err) {
 		return
 	}
-	jsonOk(c, validator)
+
+	account, err := s.db.Accounts.FindByName(info.AccountID)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	epochs, err := s.db.ValidatorAggs.FindValidatorEpochs(info.AccountID)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	blocks, err := s.db.Blocks.Search()
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, gin.H{
+		"validator": info,
+		"account":   account,
+		"blocks":    blocks,
+		"epochs":    epochs,
+	})
 }
 
 // GetValidatorsByHeight renders the validators list for a height

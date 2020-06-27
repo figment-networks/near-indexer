@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/figment-networks/indexing-engine/store/bulk"
+	"github.com/figment-networks/indexing-engine/store/jsonquery"
 	"github.com/figment-networks/near-indexer/model"
 )
 
@@ -35,11 +36,27 @@ func (s ValidatorAggsStore) Top() ([]model.ValidatorAgg, error) {
 	return result, checkErr(err)
 }
 
+func (s ValidatorAggsStore) FindValidatorEpochs(account string) ([]model.ValidatorEpoch, error) {
+	result := []model.ValidatorEpoch{}
+
+	err := s.db.
+		Model(&model.ValidatorEpoch{}).
+		Where("account_id = ?", account).Order("last_height DESC").
+		Find(&result).
+		Error
+
+	return result, checkErr(err)
+}
+
 // FindBy returns an validator agg record for a key and value
 func (s ValidatorAggsStore) FindBy(key string, value interface{}) (*model.ValidatorAgg, error) {
 	result := &model.ValidatorAgg{}
 	err := findBy(s.db, result, key, value)
 	return result, checkErr(err)
+}
+
+func (s ValidatorAggsStore) FindDetails(id string) ([]byte, error) {
+	return jsonquery.MustObject(s.db, jsonquery.Prepare(sqlValidatorDetails), id)
 }
 
 // Upsert creates or updates and existing agg record
@@ -111,6 +128,26 @@ func (s ValidatorAggsStore) BulkUpsert(records []model.ValidatorAgg) error {
 }
 
 var (
+	sqlValidatorDetails = `
+		SELECT
+			validator_aggregates.*,
+			{{ array }}
+				SELECT
+					validator_epochs.epoch,
+					validator_epochs.last_height,
+					validator_epochs.last_time,
+					validator_epochs.expected_blocks,
+					validator_epochs.produced_blocks,
+					validator_epochs.efficiency
+			{{ end_array }} AS epochs
+		FROM
+			validator_aggregates
+		LEFT JOIN validator_epochs
+			ON validator_epochs.account_id = validator_aggregates.account_id
+		WHERE
+			validator_aggregates.account_id = ?
+		LIMIT 1`
+
 	sqlValidatorEpochsUpsert = `
 		INSERT INTO validator_epochs (
 			account_id,

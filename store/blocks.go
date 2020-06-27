@@ -61,7 +61,7 @@ func (s BlocksStore) Search() ([]model.Block, error) {
 
 	err := s.db.
 		Order("height DESC").
-		Limit(25).
+		Limit(50).
 		Find(&result).
 		Error
 

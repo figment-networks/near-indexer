@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
-	github.com/figment-networks/indexing-engine v0.1.5
+	github.com/figment-networks/indexing-engine v0.1.6
 	github.com/gin-contrib/pprof v1.3.0
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-sql-driver/mysql v1.5.0 // indirect

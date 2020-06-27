@@ -27,12 +27,16 @@ func (ValidatorAgg) TableName() string {
 }
 
 type ValidatorEpoch struct {
-	ID             int64
-	AccountID      string
-	Epoch          string
-	LastHeight     types.Height
-	LastTime       time.Time
-	ExpectedBlocks int
-	ProducedBlocks int
-	Efficiency     float64
+	ID             int64        `json:"-"`
+	AccountID      string       `json:"-"`
+	Epoch          string       `json:"epoch"`
+	LastHeight     types.Height `json:"last_height"`
+	LastTime       time.Time    `json:"last_time"`
+	ExpectedBlocks int          `json:"expected_blocks"`
+	ProducedBlocks int          `json:"produced_blocks"`
+	Efficiency     float64      `json:"efficiency"`
+}
+
+func (ValidatorEpoch) TableName() string {
+	return "validator_epochs"
 }
