@@ -13,7 +13,8 @@ func (s HeightsStore) Last() (*model.Height, error) {
 
 	err := s.db.
 		Order("height DESC").
-		First(result).
+		Limit(1).
+		Take(&result).
 		Error
 
 	return result, checkErr(err)
