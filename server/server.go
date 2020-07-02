@@ -185,7 +185,7 @@ func (s Server) GetValidator(c *gin.Context) {
 		return
 	}
 
-	epochs, err := s.db.ValidatorAggs.FindValidatorEpochs(info.AccountID)
+	epochs, err := s.db.ValidatorAggs.FindValidatorEpochs(info.AccountID, 30)
 	if shouldReturn(c, err) {
 		return
 	}

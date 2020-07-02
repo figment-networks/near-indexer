@@ -36,12 +36,13 @@ func (s ValidatorAggsStore) Top() ([]model.ValidatorAgg, error) {
 	return result, checkErr(err)
 }
 
-func (s ValidatorAggsStore) FindValidatorEpochs(account string) ([]model.ValidatorEpoch, error) {
+func (s ValidatorAggsStore) FindValidatorEpochs(account string, limit int) ([]model.ValidatorEpoch, error) {
 	result := []model.ValidatorEpoch{}
 
 	err := s.db.
 		Model(&model.ValidatorEpoch{}).
 		Where("account_id = ?", account).Order("last_height DESC").
+		Limit(limit).
 		Find(&result).
 		Error
 
