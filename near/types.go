@@ -60,7 +60,7 @@ type BlockHeader struct {
 	OutcomeRoot        string        `json:"outcome_root"`
 	ChunksIncluded     int           `json:"chunks_included"`
 	ChallengesRoot     string        `json:"challenges_root"`
-	Timestamp          int64         `json:"timestamp"`
+	Timestamp          string        `json:"timestamp"`
 	RandomValue        string        `json:"random_value"`
 	ValidatorProposals []interface{} `json:"validator_proposals"`
 	ChunkMask          []bool        `json:"chunk_mask"`

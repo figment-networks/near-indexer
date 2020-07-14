@@ -11,7 +11,7 @@ import (
 func Validator(block *near.Block, v *near.Validator) (*model.Validator, error) {
 	result := &model.Validator{
 		Height:         types.Height(block.Header.Height),
-		Time:           util.ParseTime(block.Header.Timestamp),
+		Time:           util.ParseTimeFromString(block.Header.Timestamp),
 		AccountID:      v.AccountID,
 		Epoch:          block.Header.EpochID,
 		ExpectedBlocks: v.NumExpectedBlocks,
@@ -26,7 +26,7 @@ func Validator(block *near.Block, v *near.Validator) (*model.Validator, error) {
 // ValidatorAgg constructs a new validator record from chain input
 func ValidatorAgg(block *near.Block, v *near.Validator) (*model.ValidatorAgg, error) {
 	height := types.Height(block.Header.Height)
-	time := util.ParseTime(block.Header.Timestamp)
+	time := util.ParseTimeFromString(block.Header.Timestamp)
 
 	result := &model.ValidatorAgg{
 		StartHeight:    height,
