@@ -10,7 +10,7 @@ import (
 // AccountFromValidator constructs an account from the validator data
 func AccountFromValidator(block *near.Block, input *near.Validator) (*model.Account, error) {
 	height := types.Height(block.Header.Height)
-	time := util.ParseTimeFromString(block.Header.Timestamp)
+	time := util.ParseTime(block.Header.Timestamp)
 
 	acc := &model.Account{
 		Name:           input.AccountID,

@@ -1,0 +1,40 @@
+{
+  "id": "dontcare",
+  "jsonrpc": "2.0",
+  "result": {
+    "chain_id": "testnet",
+    "latest_protocol_version": 30,
+    "protocol_version": 29,
+    "rpc_addr": "0.0.0.0:3030",
+    "sync_info": {
+      "latest_block_hash": "EUbqkM9kGbBBYVBuJcMfu6UzjYz93y7yDoKVB1M7X3VB",
+      "latest_block_height": 10885359,
+      "latest_block_time": "2020-07-31T03:39:42.911378Z",
+      "latest_state_root": "2UGqW7RqQyhGJ8Kbtnbs6CHAyW9asdKCKTEzejJCFeM4",
+      "syncing": true
+    },
+    "validator_account_id": null,
+    "validators": [
+      {
+        "account_id": "node1",
+        "is_slashed": false
+      },
+      {
+        "account_id": "node0",
+        "is_slashed": false
+      },
+      {
+        "account_id": "node3",
+        "is_slashed": false
+      },
+      {
+        "account_id": "node2",
+        "is_slashed": false
+      }
+    ],
+    "version": {
+      "build": "b249e545-modified",
+      "version": "1.8.0-rc.3"
+    }
+  }
+}

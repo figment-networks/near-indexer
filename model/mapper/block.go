@@ -12,7 +12,7 @@ func Block(block *near.Block) (*model.Block, error) {
 	h := block.Header
 
 	record := &model.Block{
-		Time:            util.ParseTimeFromString(h.Timestamp),
+		Time:            util.ParseTime(h.Timestamp),
 		Height:          types.Height(h.Height),
 		Producer:        block.Author,
 		Hash:            h.Hash,

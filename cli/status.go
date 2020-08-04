@@ -42,6 +42,7 @@ func startStatus(cfg *config.Config) error {
 
 	fmt.Println("=== Node Status ===")
 	fmt.Println("Chain:", status.ChainID)
+	fmt.Println("Version:", status.Version)
 	fmt.Println("Syncing:", info.Syncing)
 	fmt.Println("Last height:", status.SyncInfo.LatestBlockHeight)
 	fmt.Println("Last hash:", status.SyncInfo.LatestBlockHash)
