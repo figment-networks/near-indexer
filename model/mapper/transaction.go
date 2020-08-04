@@ -11,7 +11,7 @@ import (
 func Transaction(block *near.Block, input *near.Transaction) (*model.Transaction, error) {
 	t := &model.Transaction{
 		Height:    types.Height(block.Header.Height),
-		Time:      util.ParseTimeFromString(block.Header.Timestamp),
+		Time:      util.ParseTime(block.Header.Timestamp),
 		Signer:    input.SignerID,
 		SignerKey: input.PublicKey,
 		Receiver:  input.ReceiverID,
