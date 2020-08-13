@@ -15,22 +15,22 @@ const (
 )
 
 type Action struct {
-	Type string
-	Data interface{}
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
 }
 
 type CreateAccountAction struct {
 }
 
 type DeployContractAction struct {
-	Code []byte `json:"code"`
+	// Code []byte `json:"code"` // skipped due to large payloads
 }
 
 type FunctionCallAction struct {
-	Args       string `json:"args"`
-	Deposit    string `json:"deposit"`
-	Gas        int64  `json:"gas"`
 	MethodName string `json:"method_name"`
+	// Args       string `json:"args,omitempty"` // skipped due to large payloads
+	Deposit string `json:"deposit"`
+	Gas     int64  `json:"gas"`
 }
 
 type TransferAction struct {

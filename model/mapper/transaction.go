@@ -2,7 +2,7 @@ package mapper
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/model/types"
@@ -24,16 +24,18 @@ func Transaction(block *near.Block, input *near.TransactionDetails) (*model.Tran
 		Receiver:  tx.ReceiverID,
 		Signature: tx.Signature,
 		Amount:    types.NewAmount("0"),
+		GasBurnt:  fmt.Sprintf("%v", input.TransactionOutcome.Outcome.GasBurnt),
 	}
 
-	rawActions, err := json.Marshal(tx.Actions)
-	if err != nil {
-		log.Println("cant marshal actions:", err)
-	} else {
-		t.Actions = rawActions
+	if actions := near.DecodeActions(&tx); len(actions) > 0 {
+		reencoded, err := json.Marshal(actions)
+		if err != nil {
+			return nil, err
+		}
+		t.Actions = reencoded
 	}
 
-	return t, nil
+	return t, t.Validate()
 }
 
 // Transactions constructs a set of transactions from the chain input

@@ -45,6 +45,8 @@ func DecodeActions(t *Transaction) []Action {
 					dst = decodeAction(buf, &AddKeyAction{})
 				case ActionDeleteKey:
 					dst = decodeAction(buf, &DeleteKeyAction{})
+				case ActionDeleteAccount:
+					dst = decodeAction(buf, &DeleteAccountAction{})
 				case ActionDeployContract:
 					dst = decodeAction(buf, &DeployContractAction{})
 				default:

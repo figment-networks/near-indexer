@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 )
 
@@ -23,6 +24,16 @@ func NewAmount(src string) Amount {
 		src = "0"
 	}
 	return Amount{src}
+}
+
+// NewInt64Amount returns a new amount for the given int64 value
+func NewInt64Amount(val int64) Amount {
+	amount := Amount{}
+	if err := amount.Scan(val); err != nil {
+		log.Println("===>", val)
+		panic(err)
+	}
+	return amount
 }
 
 // MarshalJSON returns a JSON representation of amount

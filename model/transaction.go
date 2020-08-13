@@ -19,7 +19,13 @@ type Transaction struct {
 	Signature string       `json:"signature"`
 	Receiver  string       `json:"receiver"`
 	Amount    types.Amount `json:"amount"`
+	GasBurnt  string       `json:"gas_burnt"`
 	Actions   []byte       `json:"actions"`
+}
+
+type TransactionAction struct {
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
 }
 
 // Validate returns an error if transaction is invalid
