@@ -23,8 +23,10 @@ type Context struct {
 	Run                *model.Run
 	Lag                uint64
 
-	Block      *near.Block
-	Validators []near.Validator
+	Block        *near.Block
+	Validators   []near.Validator
+	Chunks       []near.ChunkDetails
+	Transactions []near.TransactionDetails
 
 	shouldAbort bool
 	lastErr     error
