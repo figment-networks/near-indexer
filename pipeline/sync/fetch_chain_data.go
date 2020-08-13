@@ -18,8 +18,11 @@ func FetchChainData(c *Context) {
 		return
 	}
 
-	fetchChunksData(c)
-	fetchTransactionsData(c)
+	// Chunks might be included into blocks multiple times but only applied once
+	if c.Block.Header.ChunksIncluded > 0 {
+		fetchChunksData(c)
+		fetchTransactionsData(c)
+	}
 }
 
 func fetchBlockData(wg *sync.WaitGroup, c *Context) {
