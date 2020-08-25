@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 )
 
@@ -29,10 +28,7 @@ func NewAmount(src string) Amount {
 // NewInt64Amount returns a new amount for the given int64 value
 func NewInt64Amount(val int64) Amount {
 	amount := Amount{}
-	if err := amount.Scan(val); err != nil {
-		log.Println("===>", val)
-		panic(err)
-	}
+	amount.Scan(val)
 	return amount
 }
 
