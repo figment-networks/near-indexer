@@ -20,6 +20,7 @@ type Store struct {
 	Accounts      AccountsStore
 	Validators    ValidatorsStore
 	ValidatorAggs ValidatorAggsStore
+	Transactions  TransactionsStore
 	Stats         StatsStore
 }
 
@@ -53,6 +54,7 @@ func (s *Store) ResetAll() error {
 		"TRUNCATE TABLE validator_aggregates",
 		"TRUNCATE TABLE runs",
 		"TRUNCATE TABLE heights",
+		"TRUNCATE TABLE transactions",
 	}
 
 	for _, q := range queries {
@@ -81,6 +83,7 @@ func New(connStr string) (*Store, error) {
 		Accounts:      AccountsStore{scoped(conn, model.Account{})},
 		Validators:    ValidatorsStore{scoped(conn, model.Validator{})},
 		ValidatorAggs: ValidatorAggsStore{scoped(conn, model.ValidatorAgg{})},
+		Transactions:  TransactionsStore{scoped(conn, model.Transaction{})},
 		Stats:         StatsStore{baseStore{db: conn}},
 	}, nil
 }

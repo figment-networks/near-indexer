@@ -25,6 +25,13 @@ func NewAmount(src string) Amount {
 	return Amount{src}
 }
 
+// NewInt64Amount returns a new amount for the given int64 value
+func NewInt64Amount(val int64) Amount {
+	amount := Amount{}
+	amount.Scan(val)
+	return amount
+}
+
 // MarshalJSON returns a JSON representation of amount
 func (a Amount) MarshalJSON() ([]byte, error) {
 	// Following code will render both raw and formatted values

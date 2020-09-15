@@ -1,6 +1,8 @@
 package sync
 
 import (
+	"log"
+
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/model/mapper"
 )
@@ -12,6 +14,11 @@ func ProcessChainData(c *Context) {
 	}
 
 	if err := processValidatorsData(c); err != nil {
+		c.Abort(err)
+		return
+	}
+
+	if err := processTransactionsData(c); err != nil {
 		c.Abort(err)
 		return
 	}
@@ -92,6 +99,21 @@ func processValidatorsData(c *Context) error {
 	}
 	if err := c.DB.Accounts.BulkUpsert(accountRecords); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func processTransactionsData(c *Context) error {
+	transactions, err := mapper.Transactions(c.Block, c.Transactions)
+	if err != nil {
+		return err
+	}
+
+	for _, tx := range transactions {
+		if err := c.DB.Transactions.Create(&tx); err != nil {
+			log.Println("cant create transaction:", err)
+		}
 	}
 
 	return nil

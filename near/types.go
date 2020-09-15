@@ -5,18 +5,6 @@ import (
 	"time"
 )
 
-const (
-	// https://docs.near.org/docs/concepts/transaction
-	ActionCreateAccount  = "CreateAccount"  // to make a new account (for a person, company, contract, car, refrigerator, etc)
-	ActionDeployContract = "DeployContract" // to deploy a new contract (with its own account)
-	ActionFunctionCall   = "FunctionCall"   // to invoke a method on a contract (with budget for compute and storage)
-	ActionTransfer       = "Transfer"       // to transfer tokens from one account to another
-	ActionStake          = "Stake"          // to express interest in becoming a proof-of-stake validator at the next available opportunity
-	ActionAddKey         = "AddKey"         // to add a key to an existing account (either FullAccess or FunctionCall access)
-	ActionDeleteKey      = "DeleteKey"      // to delete an existing key from an account
-	ActionDeleteAccount  = "DeleteAccount"  // to delete an account (and transfer balance to a beneficiary account)
-)
-
 type Version struct {
 	Version string `json:"version"`
 	Build   string `json:"build"`
@@ -110,7 +98,6 @@ type Account struct {
 	BlockHash     string `json:"block_hash"`
 }
 
-// Transaction is a collection of Actions augmented with critical information
 type Transaction struct {
 	Hash       string        `json:"hash"`
 	Nonce      int           `json:"nonce"`
@@ -119,17 +106,6 @@ type Transaction struct {
 	Signature  string        `json:"signature"`
 	SignerID   string        `json:"signer_id"`
 	Actions    []interface{} `json:"actions"`
-}
-
-type Action struct {
-	FunctionCall FunctionCall `json:"function_call"`
-}
-
-type FunctionCall struct {
-	Args       string `json:"args"`
-	Deposit    string `json:"deposit"`
-	Gas        int64  `json:"gas"`
-	MethodName string `json:"method_name"`
 }
 
 type Validator struct {
@@ -143,21 +119,19 @@ type Validator struct {
 }
 
 type ReceiptsOutcome struct {
-	BlockHash string `json:"block_hash"`
-	ID        string `json:"id"`
-	Outcome   struct {
-		GasBurnt   int64         `json:"gas_burnt"`
-		Logs       []interface{} `json:"logs"`
-		ReceiptIds []interface{} `json:"receipt_ids"`
-		Status     struct {
-			SuccessValue string `json:"SuccessValue"`
-		} `json:"status"`
-	} `json:"outcome"`
+	BlockHash string  `json:"block_hash"`
+	ID        string  `json:"id"`
+	Outcome   Outcome `json:"outcome"`
 }
 
 type Status struct {
 	SuccessValue     string `json:"SuccessValue"`
 	SuccessReceiptID string `json:"SuccessReceiptId"`
+}
+
+type ActionError struct {
+	Index int         `json:"index"`
+	Kind  interface{} `json:"kind"`
 }
 
 type Outcome struct {
@@ -189,17 +163,13 @@ type ChunkDetails struct {
 	Transactions []Transaction `json:"transactions"`
 }
 
-type Transfer struct {
-	Deposit string `json:"deposit"`
-}
-
-type Stake struct {
-	PublicKey string `json:"public_key"`
-	Amount    string `json:"stake"`
-}
-
 type Fisher struct {
 	AccountID string `json:"account_id"`
 	PublicKey string `json:"public_key"`
 	Stake     string `json:"stake"`
+}
+
+type AccessKey struct {
+	Nonce      int         `json:"nonce"`
+	Permission interface{} `json:"permission"`
 }
