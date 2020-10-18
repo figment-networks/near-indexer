@@ -15,7 +15,7 @@ build: migrations
 
 # Generate static migrations file
 migrations:
-	go-assets-builder migrations -p migrations -o migrations/migrations.go
+	go-assets-builder store/migrations -p migrations -o store/migrations/migrations.go
 
 # Install third-party tools
 setup:
