@@ -47,14 +47,14 @@ func (s *Store) SetDebugMode(enabled bool) {
 // ResetAll performs a full database reset without dropping any objects
 func (s *Store) ResetAll() error {
 	queries := []string{
-		"TRUNCATE TABLE blocks",
-		"TRUNCATE TABLE validators",
-		"TRUNCATE TABLE validator_counts",
-		"TRUNCATE TABLE validator_epochs",
-		"TRUNCATE TABLE validator_aggregates",
-		"TRUNCATE TABLE runs",
-		"TRUNCATE TABLE heights",
-		"TRUNCATE TABLE transactions",
+		"TRUNCATE TABLE blocks RESTART IDENTITY",
+		"TRUNCATE TABLE validators RESTART IDENTITY",
+		"TRUNCATE TABLE validator_counts RESTART IDENTITY",
+		"TRUNCATE TABLE validator_epochs RESTART IDENTITY",
+		"TRUNCATE TABLE validator_aggregates RESTART IDENTITY",
+		"TRUNCATE TABLE runs RESTART IDENTITY",
+		"TRUNCATE TABLE heights RESTART IDENTITY",
+		"TRUNCATE TABLE transactions RESTART IDENTITY",
 	}
 
 	for _, q := range queries {

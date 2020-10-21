@@ -4,7 +4,9 @@ import (
 	"time"
 
 	"github.com/figment-networks/indexing-engine/store/bulk"
+
 	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/store/queries"
 )
 
 // AccountsStore handles operations on account
@@ -41,7 +43,7 @@ func (s AccountsStore) Upsert(acc *model.Account) error {
 func (s AccountsStore) BulkUpsert(records []model.Account) error {
 	t := time.Now()
 
-	return s.Import(sqlAccountsBulkUpsert, len(records), func(i int) bulk.Row {
+	return s.Import(queries.AccountsImport, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
 			r.Name,
@@ -56,26 +58,3 @@ func (s AccountsStore) BulkUpsert(records []model.Account) error {
 		}
 	})
 }
-
-var (
-	sqlAccountsBulkUpsert = `
-		INSERT INTO accounts (
-			name,
-			start_height,
-			start_time,
-			last_height,
-			last_time,
-			balance,
-			staking_balance,
-			created_at,
-			updated_at
-		)
-		VALUES @values
-		ON CONFLICT (name) DO UPDATE
-		SET
-			last_height     = excluded.last_height,
-			last_time       = excluded.last_time,
-			balance         = excluded.balance,
-			staking_balance = excluded.staking_balance,
-			updated_at      = excluded.updated_at`
-)

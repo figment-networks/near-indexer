@@ -6,6 +6,7 @@ import (
 	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/indexing-engine/store/jsonquery"
 	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/store/queries"
 )
 
 type ValidatorAggsStore struct {
@@ -57,7 +58,7 @@ func (s ValidatorAggsStore) FindBy(key string, value interface{}) (*model.Valida
 }
 
 func (s ValidatorAggsStore) FindDetails(id string) ([]byte, error) {
-	return jsonquery.MustObject(s.db, jsonquery.Prepare(sqlValidatorDetails), id)
+	return jsonquery.MustObject(s.db, jsonquery.Prepare(queries.ValidatorAggDetails), id)
 }
 
 // Upsert creates or updates and existing agg record
@@ -87,7 +88,7 @@ func (s ValidatorAggsStore) Upsert(record *model.ValidatorAgg) error {
 }
 
 func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch) error {
-	return s.Import(sqlValidatorEpochsUpsert, len(records), func(i int) bulk.Row {
+	return s.Import(queries.ValidatorEpochsImport, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
 			r.AccountID,
@@ -103,13 +104,13 @@ func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch
 
 // UpdateCountsForHeight creates a count tracking record for a given height
 func (s ValidatorAggsStore) UpdateCountsForHeight(height uint64) error {
-	return s.db.Exec(sqlValidatorCountsUpsert, height).Error
+	return s.db.Exec(queries.ValidatorCountsImport, height).Error
 }
 
 func (s ValidatorAggsStore) BulkUpsert(records []model.ValidatorAgg) error {
 	t := time.Now()
 
-	return s.Import(sqlValidatorAggsBulkUpsert, len(records), func(i int) bulk.Row {
+	return s.Import(queries.ValidatorAggImport, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
 			r.StartHeight,
@@ -127,96 +128,3 @@ func (s ValidatorAggsStore) BulkUpsert(records []model.ValidatorAgg) error {
 		}
 	})
 }
-
-var (
-	sqlValidatorDetails = `
-		SELECT
-			validator_aggregates.*,
-			{{ array }}
-				SELECT
-					validator_epochs.epoch,
-					validator_epochs.last_height,
-					validator_epochs.last_time,
-					validator_epochs.expected_blocks,
-					validator_epochs.produced_blocks,
-					validator_epochs.efficiency
-			{{ end_array }} AS epochs
-		FROM
-			validator_aggregates
-		LEFT JOIN validator_epochs
-			ON validator_epochs.account_id = validator_aggregates.account_id
-		WHERE
-			validator_aggregates.account_id = ?
-		LIMIT 1`
-
-	sqlValidatorEpochsUpsert = `
-		INSERT INTO validator_epochs (
-			account_id,
-			epoch,
-			last_height,
-			last_time,
-			expected_blocks,
-			produced_blocks,
-			efficiency
-		)
-		VALUES @values
-		ON CONFLICT (account_id, epoch) DO UPDATE
-		SET
-			last_height     = excluded.last_height,
-			last_time       = excluded.last_time,
-			expected_blocks = excluded.expected_blocks,
-			produced_blocks = excluded.produced_blocks,
-			efficiency      = excluded.efficiency;
-	`
-
-	sqlValidatorCountsUpsert = `
-		INSERT INTO validator_counts (
-  		height,
-  		time,
-  		total_count,
-  		active_count,
-  		slashed_count
-		)
-		SELECT
-  		blocks.height,
-  		blocks.time,
-  		(SELECT COUNT(1) FROM validators WHERE validators.height = blocks.height) total_validators,
-  		(SELECT COUNT(1) FROM validators WHERE validators.height = blocks.height AND slashed = false AND efficiency > 0) active_validators,
-  		(SELECT COUNT(1) FROM validators WHERE validators.height = blocks.height AND slashed = true) slashed_validators
-		FROM
-			blocks
-		WHERE
-			blocks.height = $1
-		ON CONFLICT (height) DO UPDATE
-		SET
-		  time          = excluded.time,
-		  total_count   = excluded.total_count,
-		  active_count  = excluded.active_count,
-		  slashed_count = excluded.slashed_count;`
-
-	sqlValidatorAggsBulkUpsert = `
-		INSERT INTO validator_aggregates(
-			start_height,
-			start_time,
-			last_height,
-			last_time,
-			account_id,
-			expected_blocks,
-			produced_blocks,
-			slashed,
-			stake,
-			efficiency,
-			created_at,
-			updated_at
-		)
-		VALUES @values
-		ON CONFLICT(account_id) DO UPDATE
-		SET
-			last_height     = excluded.last_height,
-			last_time       = excluded.last_time,
-			expected_blocks = COALESCE((SELECT SUM(expected_blocks) FROM validator_epochs WHERE account_id = excluded.account_id LIMIT 1), 0),
-			produced_blocks = COALESCE((SELECT SUM(produced_blocks) FROM validator_epochs WHERE account_id = excluded.account_id LIMIT 1), 0),
-			efficiency      = COALESCE((SELECT AVG(efficiency) FROM validator_epochs WHERE account_id = excluded.account_id LIMIT 1), 0),
-			slashed         = excluded.slashed,
-			updated_at      = excluded.updated_at`
-)

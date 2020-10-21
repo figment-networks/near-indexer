@@ -4,6 +4,7 @@ import (
 	"github.com/figment-networks/indexing-engine/store/jsonquery"
 
 	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/store/queries"
 )
 
 // BlocksStore handles operations on blocks
@@ -70,41 +71,10 @@ func (s BlocksStore) Search() ([]model.Block, error) {
 
 // BlockTimes returns recent blocks averages
 func (s BlocksStore) BlockTimes(limit int64) ([]byte, error) {
-	return jsonquery.MustObject(s.db, sqlBlockTimes, limit)
+	return jsonquery.MustObject(s.db, queries.BlockTimes, limit)
 }
 
 // BlockStats returns block stats for a given interval
 func (s BlocksStore) BlockStats(interval, period string) ([]byte, error) {
-	return jsonquery.MustArray(s.db, sqlBlocksTimesInterval, interval, period)
+	return jsonquery.MustArray(s.db, queries.BlockTimesInterval, interval, period)
 }
-
-const (
-	sqlBlockTimes = `
-		SELECT
-			MIN(height) start_height,
-			MAX(height) end_height,
-			MIN(time) start_time,
-			MAX(time) end_time,
-			COUNT(*) count,
-			EXTRACT(EPOCH FROM MAX(time) - MIN(time)) AS diff,
-			EXTRACT(EPOCH FROM ((MAX(time) - MIN(time)) / COUNT(*))) AS avg
-		FROM (
-			SELECT height, time
-			FROM blocks
-			ORDER BY height DESC
-			LIMIT ?
-		) t`
-
-	sqlBlocksTimesInterval = `
-		SELECT
-			time AS time_interval,
-			blocks_count AS count,
-			block_time_avg AS avg
-		FROM
-			block_stats
-		WHERE
-			bucket = $1
-		ORDER BY
-			time DESC
-		LIMIT $2`
-)

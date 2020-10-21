@@ -1,6 +1,9 @@
 package store
 
-import "github.com/figment-networks/near-indexer/model"
+import (
+	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/store/queries"
+)
 
 // HeightsStore handles operations on heights
 type HeightsStore struct {
@@ -38,18 +41,9 @@ func (s HeightsStore) StatusCounts() ([]model.HeightStatusCount, error) {
 	result := []model.HeightStatusCount{}
 
 	err := s.db.
-		Raw(sqlHeightsReport).
+		Raw(queries.HeightsReport).
 		Scan(&result).
 		Error
 
 	return result, err
 }
-
-var (
-	sqlHeightsReport = `
-		SELECT status, COUNT(1) AS num
-		FROM heights
-		WHERE status != ''
-		GROUP BY status
-		ORDER BY num DESC`
-)

@@ -1,4 +1,4 @@
-.PHONY: setup build migrations test fmt docker docker-build docker-push
+.PHONY: setup build migrations queries test fmt docker docker-build docker-push
 
 PROJECT      ?= near-indexer
 GIT_COMMIT   ?= $(shell git rev-parse HEAD)
@@ -7,9 +7,10 @@ DOCKER_IMAGE ?= figmentnetworks/${PROJECT}
 DOCKER_TAG   ?= latest
 
 # Build the binary
-build: migrations
+build: migrations queries
 	go build \
 		-ldflags "\
+			-s -w \
 			-X github.com/figment-networks/${PROJECT}/config.GitCommit=${GIT_COMMIT} \
 			-X github.com/figment-networks/${PROJECT}/config.GoVersion=${GO_VERSION}"
 
@@ -17,9 +18,15 @@ build: migrations
 migrations:
 	go-assets-builder store/migrations -p migrations -o store/migrations/migrations.go
 
+# Embed SQL queries
+queries:
+	sqlembed -path=./store/queries -package=queries > ./store/queries/queries.go
+	go fmt ./store/queries/queries.go
+
 # Install third-party tools
 setup:
 	go get -u github.com/jessevdk/go-assets-builder
+	go get -u github.com/sosedoff/sqlembed
 
 # Run tests
 test:
