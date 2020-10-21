@@ -13,6 +13,7 @@ import (
 
 const (
 	methodStatus         = "status"
+	methodNetworkInfo    = "network_info"
 	methodBlock          = "block"
 	methodChunk          = "chunk"
 	methodValidators     = "validators"
@@ -130,6 +131,12 @@ func (c Client) GenesisRecords(limit, offset int) (result GenesisRecords, err er
 // Status returns current status of the node
 func (c Client) Status() (status NodeStatus, err error) {
 	err = c.Call(methodStatus, nil, &status)
+	return
+}
+
+// NetworkInfo returns current status of the network
+func (c Client) NetworkInfo() (info NetworkInfo, err error) {
+	err = c.Call(methodNetworkInfo, nil, &info)
 	return
 }
 

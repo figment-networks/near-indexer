@@ -173,3 +173,20 @@ type AccessKey struct {
 	Nonce      int         `json:"nonce"`
 	Permission interface{} `json:"permission"`
 }
+
+type NetworkInfo struct {
+	NumActivePeers int `json:"num_active_peers"`
+	MaxPeersCount  int `json:"peer_max_count"`
+
+	KnownProducers []struct {
+		ID        string  `json:"id"`
+		Address   string  `json:"addr"`
+		AccountID *string `json:"account_id"`
+	} `json:"known_producers"`
+
+	ActivePeers []struct {
+		ID        string  `json:"id"`
+		Address   string  `json:"addr"`
+		AccountID *string `json:"account_id"`
+	} `json:"active_peers"`
+}
