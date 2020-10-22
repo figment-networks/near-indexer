@@ -2,19 +2,19 @@ package sync
 
 import (
 	"log"
-	"sync"
 )
 
 func FetchChainData(c *Context) {
-	wg := &sync.WaitGroup{}
-	wg.Add(2)
-
-	go fetchBlockData(wg, c)
-	go fetchValidatorsData(wg, c)
-
-	wg.Wait()
-
+	fetchBlockData(c)
+	if c.IsAborted() {
+		return
+	}
 	if c.Block == nil {
+		return
+	}
+
+	fetchValidatorsData(c)
+	if c.IsAborted() {
 		return
 	}
 
@@ -25,9 +25,7 @@ func FetchChainData(c *Context) {
 	}
 }
 
-func fetchBlockData(wg *sync.WaitGroup, c *Context) {
-	defer wg.Done()
-
+func fetchBlockData(c *Context) {
 	block, err := c.Client.BlockByHeight(c.BlockHeight)
 	if err != nil {
 		c.Abort(err)
@@ -36,9 +34,7 @@ func fetchBlockData(wg *sync.WaitGroup, c *Context) {
 	c.Block = &block
 }
 
-func fetchValidatorsData(wg *sync.WaitGroup, c *Context) {
-	defer wg.Done()
-
+func fetchValidatorsData(c *Context) {
 	validators, err := c.Client.ValidatorsByHeight(c.BlockHeight)
 	if err != nil {
 		c.Abort(err)
