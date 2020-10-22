@@ -30,6 +30,7 @@ func processBlockData(c *Context) error {
 		return err
 	}
 	record.AppVersion = c.Status.Version.String()
+	record.TransactionsCount = len(c.Transactions)
 
 	// TODO: Do not remove the block
 	if err := c.DB.Blocks.DeleteByHeight(c.BlockHeight); err != nil {
