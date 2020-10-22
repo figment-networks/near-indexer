@@ -149,6 +149,8 @@ near-indexer -config path/to/config.json -cmd=server
 | GET    | /validators                     | List of chain validators
 | GET    | /validator_times_interval       | Active validator stats
 | GET    | /accounts/:id                   | Account details by ID or Key
+| GET    | /transactions                   | List of transactions
+| GET    | /transactions/:hash             | Find transaction by hash
 
 ## License
 
