@@ -24,6 +24,7 @@ type Context struct {
 	Lag                uint64
 
 	Block        *near.Block
+	BlockChanges []near.BlockChange
 	Validators   []near.Validator
 	Chunks       []near.ChunkDetails
 	Transactions []near.TransactionDetails

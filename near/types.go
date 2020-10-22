@@ -190,3 +190,13 @@ type NetworkInfo struct {
 		AccountID *string `json:"account_id"`
 	} `json:"active_peers"`
 }
+
+type BlockChange struct {
+	Type    string `json:"type"`
+	Account string `json:"account_id"`
+}
+
+type BlockChangesResponse struct {
+	BlockHash string        `json:"block_hash"`
+	Changes   []BlockChange `json:"changes"`
+}

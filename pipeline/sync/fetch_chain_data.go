@@ -18,6 +18,11 @@ func FetchChainData(c *Context) {
 		return
 	}
 
+	fetchBlockChangesData(c)
+	if c.IsAborted() {
+		return
+	}
+
 	// Chunks might be included into blocks multiple times but only applied once
 	if c.Block.Header.ChunksIncluded > 0 {
 		fetchChunksData(c)
@@ -32,6 +37,15 @@ func fetchBlockData(c *Context) {
 		return
 	}
 	c.Block = &block
+}
+
+func fetchBlockChangesData(c *Context) {
+	changes, err := c.Client.BlockChanges(c.BlockHeight)
+	if err != nil {
+		c.Abort(err)
+		return
+	}
+	c.BlockChanges = changes.Changes
 }
 
 func fetchValidatorsData(c *Context) {

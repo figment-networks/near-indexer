@@ -22,6 +22,7 @@ const (
 	methodGasPrice       = "gas_price"
 	methodGenesisConfig  = "EXPERIMENTAL_genesis_config"
 	methodGenesisRecords = "EXPERIMENTAL_genesis_records"
+	methodChangesInBlock = "EXPERIMENTAL_changes_in_block"
 )
 
 var (
@@ -225,4 +226,10 @@ func (c Client) ValidatorsByHeight(height uint64) ([]Validator, error) {
 		return nil, err
 	}
 	return result.CurrentValidators, nil
+}
+
+// BlockChanges returns a collection of change events in the block
+func (c Client) BlockChanges(block interface{}) (result BlockChangesResponse, err error) {
+	err = c.Call(methodChangesInBlock, map[string]interface{}{"block_id": block}, &result)
+	return result, err
 }
