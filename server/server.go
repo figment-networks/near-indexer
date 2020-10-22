@@ -242,7 +242,17 @@ func (s Server) GetValidatorTimesInterval(c *gin.Context) {
 
 // GetTransactions returns a list of transactions that match query
 func (s Server) GetTransactions(c *gin.Context) {
-	txs, err := s.db.Transactions.Recent(100)
+	var (
+		txs []model.Transaction
+		err error
+	)
+
+	if blockHash := c.Query("block_hash"); blockHash != "" {
+		txs, err = s.db.Transactions.FindByBlock(blockHash)
+	} else {
+		txs, err = s.db.Transactions.Recent(100)
+	}
+
 	if shouldReturn(c, err) {
 		return
 	}
