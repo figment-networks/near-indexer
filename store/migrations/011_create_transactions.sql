@@ -3,7 +3,7 @@ CREATE TABLE transactions (
   id         SERIAL NOT NULL PRIMARY KEY,
   hash       TEXT NOT NULL,
   block_hash TEXT NOT NULL,
-  height     DOUBLE PRECISION NOT NULL,
+  height     INTEGER NOT NULL,
   time       TIMESTAMP WITH TIME ZONE NOT NULL,
   signer     VARCHAR,
   signer_key VARCHAR,

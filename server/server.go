@@ -41,6 +41,7 @@ func New(cfg *config.Config, db *store.Store) Server {
 	router.GET("/validators", s.GetValidators)
 	router.GET("/validators/:id", s.GetValidator)
 	router.GET("/validator_times_interval", s.GetValidatorTimesInterval)
+	router.GET("/transactions", s.GetTransactions)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
 
@@ -239,8 +240,24 @@ func (s Server) GetValidatorTimesInterval(c *gin.Context) {
 	jsonOk(c, result)
 }
 
+// GetTransactions returns a list of transactions that match query
+func (s Server) GetTransactions(c *gin.Context) {
+	txs, err := s.db.Transactions.Recent(100)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, txs)
+}
+
 // GetTransaction returns a transaction details
 func (s Server) GetTransaction(c *gin.Context) {
+	tx, err := s.db.Transactions.FindByHash(c.Param("id"))
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, tx)
 }
 
 // GetAccount returns an account by name
