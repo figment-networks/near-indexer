@@ -17,6 +17,7 @@ type ValidatorAgg struct {
 	LastTime       time.Time    `json:"last_time"`
 	ExpectedBlocks int          `json:"expected_blocks"`
 	ProducedBlocks int          `json:"produced_blocks"`
+	Active         bool         `json:"active"`
 	Slashed        bool         `json:"slashed"`
 	Stake          types.Amount `json:"stake"`
 	Efficiency     float64      `json:"efficiency"`
@@ -24,19 +25,4 @@ type ValidatorAgg struct {
 
 func (ValidatorAgg) TableName() string {
 	return "validator_aggregates"
-}
-
-type ValidatorEpoch struct {
-	ID             int64        `json:"-"`
-	AccountID      string       `json:"-"`
-	Epoch          string       `json:"epoch"`
-	LastHeight     types.Height `json:"last_height"`
-	LastTime       time.Time    `json:"last_time"`
-	ExpectedBlocks int          `json:"expected_blocks"`
-	ProducedBlocks int          `json:"produced_blocks"`
-	Efficiency     float64      `json:"efficiency"`
-}
-
-func (ValidatorEpoch) TableName() string {
-	return "validator_epochs"
 }

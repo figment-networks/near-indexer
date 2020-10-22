@@ -38,6 +38,8 @@ func ValidatorAgg(block *near.Block, v *near.Validator) (*model.ValidatorAgg, er
 		ProducedBlocks: v.NumProducedBlocks,
 		Stake:          types.NewAmount(v.Stake),
 		Efficiency:     util.Percentage(v.NumExpectedBlocks, v.NumProducedBlocks),
+		Active:         true,
+		Slashed:        v.IsSlashed,
 	}
 
 	return result, nil

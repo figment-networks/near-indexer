@@ -110,6 +110,11 @@ func (s ValidatorAggsStore) UpdateCountsForHeight(height uint64) error {
 func (s ValidatorAggsStore) BulkUpsert(records []model.ValidatorAgg) error {
 	t := time.Now()
 
+	// Mark all validators as inactive
+	if err := s.db.Exec("UPDATE validator_aggregates SET active = false").Error; err != nil {
+		return err
+	}
+
 	return s.Import(queries.ValidatorAggImport, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
@@ -123,6 +128,7 @@ func (s ValidatorAggsStore) BulkUpsert(records []model.ValidatorAgg) error {
 			r.Slashed,
 			r.Stake,
 			r.Efficiency,
+			r.Active,
 			t,
 			t,
 		}
