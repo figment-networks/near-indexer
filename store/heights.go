@@ -47,3 +47,9 @@ func (s HeightsStore) StatusCounts() ([]model.HeightStatusCount, error) {
 
 	return result, err
 }
+
+// Cleanup removes heights records before maxHeight
+func (s HeightsStore) Cleanup(maxHeight uint64) (int64, error) {
+	result := s.db.Delete(s.model, "height <= ?", maxHeight)
+	return result.RowsAffected, result.Error
+}

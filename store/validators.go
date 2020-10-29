@@ -56,8 +56,9 @@ func (s ValidatorsStore) CountsForInterval(interval, period string) ([]byte, err
 }
 
 // Cleanup removes any records before a certain height
-func (s ValidatorsStore) Cleanup(maxHeight uint64) error {
-	return s.db.Delete(s.model, "height < ?", maxHeight).Error
+func (s ValidatorsStore) Cleanup(maxHeight uint64) (int64, error) {
+	result := s.db.Delete(s.model, "height <= ?", maxHeight)
+	return result.RowsAffected, result.Error
 }
 
 func (s ValidatorsStore) CleanupCounts() error {

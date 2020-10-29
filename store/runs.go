@@ -9,8 +9,9 @@ type RunsStore struct {
 }
 
 // Cleanup removes any runs with a height lower than the provided one
-func (s RunsStore) Cleanup(maxHeight uint64) error {
-	return s.db.Delete(s.model, "height < ?", maxHeight).Error
+func (s RunsStore) Cleanup(maxHeight uint64) (int64, error) {
+	result := s.db.Delete(s.model, "height <= ?", maxHeight)
+	return result.RowsAffected, result.Error
 }
 
 // Last returns the last run
