@@ -47,6 +47,13 @@ func NewClient(endpoint string) *Client {
 	}
 }
 
+func NewClientWithHTTP(endpoint string, httpClient *http.Client) *Client {
+	return &Client{
+		endpoint: endpoint,
+		client:   httpClient,
+	}
+}
+
 func (c *Client) log(args ...interface{}) {
 	if c.debug {
 		log.Println(args...)
