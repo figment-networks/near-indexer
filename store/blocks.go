@@ -43,6 +43,19 @@ func (s BlocksStore) FindByHeight(height uint64) (*model.Block, error) {
 	return s.FindBy("height", height)
 }
 
+// FindPrevious returns a block prior to the given height
+func (s BlocksStore) FindPrevious(height uint64) (*model.Block, error) {
+	block := &model.Block{}
+
+	err := s.db.
+		Order("height DESC").
+		Limit(1).
+		Find(block, "height < ?", height).
+		Error
+
+	return block, checkErr(err)
+}
+
 // Recent returns the most recent block
 func (s BlocksStore) Recent() (*model.Block, error) {
 	block := &model.Block{}
