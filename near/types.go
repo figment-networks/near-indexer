@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+var (
+	EmptyTxRoot = "11111111111111111111111111111111"
+)
+
 type Version struct {
 	Version string `json:"version"`
 	Build   string `json:"build"`
@@ -36,56 +40,56 @@ type Block struct {
 }
 
 type BlockHeader struct {
-	Height                uint64        `json:"height"`
-	EpochID               string        `json:"epoch_id"`
-	NextEpochID           string        `json:"next_epoch_id"`
-	Hash                  string        `json:"hash"`
-	PrevHash              string        `json:"prev_hash"`
-	PrevStateRoot         string        `json:"prev_state_root"`
-	ChunkReceiptsRoot     string        `json:"chunk_receipts_root"`
-	ChunkHeadersRoot      string        `json:"chunk_headers_root"`
-	ChunkTxRoot           string        `json:"chunk_tx_root"`
-	OutcomeRoot           string        `json:"outcome_root"`
-	ChunksIncluded        int           `json:"chunks_included"`
-	ChallengesRoot        string        `json:"challenges_root"`
-	Timestamp             int64         `json:"timestamp"`
-	TimestampNanosec      string        `json:"timestamp_nanosec"`
-	RandomValue           string        `json:"random_value"`
-	ValidatorProposals    []interface{} `json:"validator_proposals"`
-	ChunkMask             []bool        `json:"chunk_mask"`
-	GasPrice              string        `json:"gas_price"`
-	RentPaid              string        `json:"rent_paid"`
-	ValidatorReward       string        `json:"validator_reward"`
-	TotalSupply           string        `json:"total_supply"`
-	ChallengesResult      []interface{} `json:"challenges_result"`
-	LastFinalBlock        string        `json:"last_final_block"`
-	LastDsFinalBlock      string        `json:"last_ds_final_block"`
-	NextBpHash            string        `json:"next_bp_hash"`
-	BlockMerkleRoot       string        `json:"block_merkle_root"`
-	Approvals             []interface{} `json:"approvals"`
-	Signature             string        `json:"signature"`
-	LatestProtocolVersion int           `json:"latest_protocol_version"`
+	Height                uint64              `json:"height"`
+	EpochID               string              `json:"epoch_id"`
+	NextEpochID           string              `json:"next_epoch_id"`
+	Hash                  string              `json:"hash"`
+	PrevHash              string              `json:"prev_hash"`
+	PrevStateRoot         string              `json:"prev_state_root"`
+	ChunkReceiptsRoot     string              `json:"chunk_receipts_root"`
+	ChunkHeadersRoot      string              `json:"chunk_headers_root"`
+	ChunkTxRoot           string              `json:"chunk_tx_root"`
+	OutcomeRoot           string              `json:"outcome_root"`
+	ChunksIncluded        int                 `json:"chunks_included"`
+	ChallengesRoot        string              `json:"challenges_root"`
+	Timestamp             int64               `json:"timestamp"`
+	TimestampNanosec      string              `json:"timestamp_nanosec"`
+	RandomValue           string              `json:"random_value"`
+	ValidatorProposals    []ValidatorProposal `json:"validator_proposals"`
+	ChunkMask             []bool              `json:"chunk_mask"`
+	GasPrice              string              `json:"gas_price"`
+	RentPaid              string              `json:"rent_paid"`
+	ValidatorReward       string              `json:"validator_reward"`
+	TotalSupply           string              `json:"total_supply"`
+	ChallengesResult      []interface{}       `json:"challenges_result"`
+	LastFinalBlock        string              `json:"last_final_block"`
+	LastDsFinalBlock      string              `json:"last_ds_final_block"`
+	NextBpHash            string              `json:"next_bp_hash"`
+	BlockMerkleRoot       string              `json:"block_merkle_root"`
+	Approvals             []interface{}       `json:"approvals"`
+	Signature             string              `json:"signature"`
+	LatestProtocolVersion int                 `json:"latest_protocol_version"`
 }
 
 type BlockChunk struct {
-	ChunkHash            string        `json:"chunk_hash"`
-	PrevBlockHash        string        `json:"prev_block_hash"`
-	OutcomeRoot          string        `json:"outcome_root"`
-	PrevStateRoot        string        `json:"prev_state_root"`
-	EncodedMerkleRoot    string        `json:"encoded_merkle_root"`
-	EncodedLength        int           `json:"encoded_length"`
-	HeightCreated        uint64        `json:"height_created"`
-	HeightIncluded       uint64        `json:"height_included"`
-	ShardID              int           `json:"shard_id"`
-	GasUsed              int           `json:"gas_used"`
-	GasLimit             int64         `json:"gas_limit"`
-	RentPaid             string        `json:"rent_paid"`
-	ValidatorReward      string        `json:"validator_reward"`
-	BalanceBurnt         string        `json:"balance_burnt"`
-	OutgoingReceiptsRoot string        `json:"outgoing_receipts_root"`
-	TxRoot               string        `json:"tx_root"`
-	ValidatorProposals   []interface{} `json:"validator_proposals"`
-	Signature            string        `json:"signature"`
+	ChunkHash            string              `json:"chunk_hash"`
+	PrevBlockHash        string              `json:"prev_block_hash"`
+	OutcomeRoot          string              `json:"outcome_root"`
+	PrevStateRoot        string              `json:"prev_state_root"`
+	EncodedMerkleRoot    string              `json:"encoded_merkle_root"`
+	EncodedLength        int                 `json:"encoded_length"`
+	HeightCreated        uint64              `json:"height_created"`
+	HeightIncluded       uint64              `json:"height_included"`
+	ShardID              int                 `json:"shard_id"`
+	GasUsed              int                 `json:"gas_used"`
+	GasLimit             int64               `json:"gas_limit"`
+	RentPaid             string              `json:"rent_paid"`
+	ValidatorReward      string              `json:"validator_reward"`
+	BalanceBurnt         string              `json:"balance_burnt"`
+	OutgoingReceiptsRoot string              `json:"outgoing_receipts_root"`
+	TxRoot               string              `json:"tx_root"`
+	ValidatorProposals   []ValidatorProposal `json:"validator_proposals"`
+	Signature            string              `json:"signature"`
 }
 
 type Account struct {
@@ -125,8 +129,9 @@ type ReceiptsOutcome struct {
 }
 
 type Status struct {
-	SuccessValue     string `json:"SuccessValue"`
-	SuccessReceiptID string `json:"SuccessReceiptId"`
+	SuccessValue     *string     `json:"SuccessValue"`
+	SuccessReceiptID *string     `json:"SuccessReceiptId"`
+	Failure          interface{} `json:"Failure"`
 }
 
 type ActionError struct {
@@ -199,4 +204,47 @@ type BlockChange struct {
 type BlockChangesResponse struct {
 	BlockHash string        `json:"block_hash"`
 	Changes   []BlockChange `json:"changes"`
+}
+
+type ValidatorProposal struct {
+	AccountID string `json:"account_id"`
+	PublicKey string `json:"public_key"`
+	Stake     string `json:"stake"`
+}
+
+type ValidatorKickout struct {
+	Account string        `json:"account_id"`
+	Reason  KickoutReason `json:"reason"`
+}
+
+type ValidatorsResponse struct {
+	EpochStartHeight     uint64              `json:"epoch_start_height"`
+	CurrentValidators    []Validator         `json:"current_validators"`
+	CurrentProposales    []ValidatorProposal `json:"current_proposals"`
+	NextValidators       []Validator         `json:"next_validators"`
+	PreviousEpochKickout []ValidatorKickout  `json:"prev_epoch_kickout"`
+}
+
+type DelegationsResponse struct {
+	BlockHash   string `json:"block_hash"`
+	BlockHeight uint64 `json:"block_height"`
+	Result      []byte `json:"result"`
+}
+
+type Delegation struct {
+	Account         string `json:"account_id"`
+	UnstakedBalance string `json:"unstaked_balance"`
+	StakedBalance   string `json:"staked_balance"`
+	CanWithdraw     bool   `json:"can_withdraw"`
+}
+
+type QueryResponse struct {
+	BlockHash   string `json:"block_hash"`
+	BlockHeight uint64 `json:"block_height"`
+	Result      []byte `json:"result"`
+}
+
+type RewardFee struct {
+	Numerator   int `json:"numerator"`
+	Denominator int `json:"denominator"`
 }

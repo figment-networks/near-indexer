@@ -1,14 +1,14 @@
 package near
 
 import (
-	"net/http"
-	"time"
+	"encoding/base64"
+	"encoding/json"
 )
 
-func reqWithTiming(c *http.Client, req *http.Request) (*http.Response, time.Duration, error) {
-	ts := time.Now()
-	resp, err := c.Do(req)
-	te := time.Since(ts)
-
-	return resp, te, err
+func argsToBase64(input interface{}) (string, error) {
+	data, err := json.Marshal(input)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(data), nil
 }

@@ -33,6 +33,7 @@ type Config struct {
 	ServerPort       int    `json:"server_port" envconfig:"SERVER_PORT" default:"8081"`
 	StartHeight      uint64 `json:"start_height" envconfig:"START_HEIGHT"`
 	SyncInterval     string `json:"sync_interval" envconfig:"SYNC_INTERVAL" default:"500ms"`
+	SyncBatchSize    int    `json:"sync_batch_size" envconfig:"SYNC_BATCH_SIZE" default:"10"`
 	CleanupInterval  string `json:"cleanup_interval" envconfig:"CLEANUP_INTERVAL" default:"10m"`
 	CleanupThreshold int    `json:"cleanup_threshold" envconfig:"CLEANUP_THRESHOLD" default:"3600"`
 	DatabaseURL      string `json:"database_url" envconfig:"DATABASE_URL"`

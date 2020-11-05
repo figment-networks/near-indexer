@@ -16,5 +16,8 @@ CREATE INDEX idx_validator_epochs_account_id
 CREATE UNIQUE INDEX idx_validator_epochs_account_epoch
   ON validator_epochs(account_id, epoch);
 
+CREATE INDEX idx_validator_epochs_last_height
+  ON validator_epochs(account_id, last_height);
+
 -- +goose Down
 DROP TABLE validator_aggregates;

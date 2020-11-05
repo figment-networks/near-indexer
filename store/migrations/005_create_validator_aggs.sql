@@ -9,8 +9,10 @@ CREATE TABLE validator_aggregates (
   expected_blocks INTEGER NOT NULL,
   produced_blocks INTEGER NOT NULL,
   slashed         BOOLEAN,
+  active          BOOLEAN,
   stake           VARCHAR,
   efficiency      NUMERIC,
+  reward_fee      INTEGER,
   created_at      TIMESTAMP WITH TIME ZONE NOT NULL,
   updated_at      TIMESTAMP WITH TIME ZONE NOT NULL
 );

@@ -11,6 +11,7 @@ CREATE TABLE transactions (
   signature  VARCHAR,
   amount     VARCHAR,
   gas_burnt  VARCHAR,
+  success    BOOLEAN,
   actions    JSONB,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL

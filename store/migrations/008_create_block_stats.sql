@@ -7,7 +7,8 @@ CREATE TABLE block_stats (
   bucket              e_interval NOT NULL,
 
   blocks_count        INTEGER,
-  block_time_avg      NUMERIC
+  block_time_avg      NUMERIC,
+  validators_count    INTEGER
 );
 
 CREATE UNIQUE INDEX idx_block_stats_bucket

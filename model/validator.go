@@ -19,6 +19,7 @@ type Validator struct {
 	Slashed        bool         `json:"slashed"`
 	Stake          types.Amount `json:"stake"`
 	Efficiency     float64      `json:"efficiency"`
+	RewardFee      int          `json:"reward_fee"`
 }
 
 func (Validator) TableName() string {

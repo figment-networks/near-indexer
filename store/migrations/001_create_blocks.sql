@@ -16,9 +16,8 @@ CREATE TABLE blocks (
   signature           VARCHAR,
   chunks_count        INTEGER,
   transactions_count  INTEGER,
-  app_version         VARCHAR,
-  created_at          TIMESTAMP WITH TIME ZONE NOT NULL,
-  updated_at          TIMESTAMP WITH TIME ZONE NOT NULL
+  approvals_count     INTEGER,
+  created_at          TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE INDEX idx_blocks_hash
@@ -32,6 +31,9 @@ CREATE INDEX idx_blocks_time
 
 CREATE INDEX idx_blocks_producer
   ON blocks(producer);
+
+CREATE INDEX idx_blocks_epoch
+  ON blocks(epoch);
 
 -- +goose Down
 DROP TABLE blocks;

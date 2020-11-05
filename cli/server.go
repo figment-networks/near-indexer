@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/figment-networks/near-indexer/config"
+	"github.com/figment-networks/near-indexer/near"
 	"github.com/figment-networks/near-indexer/server"
 )
 
@@ -16,7 +17,9 @@ func startServer(cfg *config.Config) error {
 	}
 	defer db.Close()
 
-	srv := server.New(cfg, db)
+	rpc := near.DefaultClient(cfg.RPCEndpoint)
+
+	srv := server.New(cfg, db, rpc)
 
 	log.Println("Starting server on", cfg.ListenAddr())
 	return srv.Run(cfg.ListenAddr())

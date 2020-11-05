@@ -12,7 +12,7 @@ SELECT
 FROM
 	blocks
 WHERE
-	time >= $1 AND time <= $2
+  time >= DATE_TRUNC('@bucket', $1::timestamp) AND time <= DATE_TRUNC('@bucket', $2::timestamp)
 GROUP BY
 	DATE_TRUNC('@bucket', time)
 

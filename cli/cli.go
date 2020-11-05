@@ -9,6 +9,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/server"
 	"github.com/figment-networks/near-indexer/store"
@@ -33,6 +35,13 @@ func Run() {
 	cfg, err := initConfig(configPath)
 	if err != nil {
 		terminate(err)
+	}
+
+	switch cfg.LogLevel {
+	case "debug":
+		logrus.SetLevel(logrus.DebugLevel)
+	case "info":
+		logrus.SetLevel(logrus.InfoLevel)
 	}
 
 	config.InitRollbar(cfg)
@@ -113,7 +122,9 @@ func initStore(cfg *config.Config) (*store.Store, error) {
 		return nil, err
 	}
 
-	db.SetDebugMode(cfg.Debug)
+	if cfg.LogLevel == "debug" {
+		db.SetDebugMode(true)
+	}
 
 	return db, nil
 }

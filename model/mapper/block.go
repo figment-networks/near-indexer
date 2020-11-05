@@ -23,6 +23,7 @@ func Block(block *near.Block) (*model.Block, error) {
 		Signature:       h.Signature,
 		Epoch:           h.EpochID,
 		ChunksCount:     h.ChunksIncluded,
+		ApprovalsCount:  len(block.Header.Approvals),
 		GasPrice:        types.NewAmount(h.GasPrice),
 		GasLimit:        0, // TODO: calculate this
 		GasUsed:         0, // TODO: calculate this

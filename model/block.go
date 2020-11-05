@@ -8,11 +8,9 @@ import (
 )
 
 type Block struct {
-	Model
-
+	ID                int64        `json:"-"`
 	Height            types.Height `json:"height"`
 	Time              time.Time    `json:"time"`
-	AppVersion        string       `json:"app_version"`
 	Producer          string       `json:"producer"`
 	Hash              string       `json:"hash"`
 	PrevHash          string       `json:"prev_hash"`
@@ -26,6 +24,8 @@ type Block struct {
 	Signature         string       `json:"signature"`
 	ChunksCount       int          `json:"chunks_count"`
 	TransactionsCount int          `json:"transactions_count"`
+	ApprovalsCount    int          `json:"approvals_count"`
+	CreatedAt         time.Time    `json:"created_at"`
 }
 
 // Validate returns an error if block data is invalid
@@ -34,13 +34,13 @@ func (b Block) Validate() error {
 		return errors.New("hash is required")
 	}
 	if b.Producer == "" {
-		return errors.New("procucer is required")
+		return errors.New("producer is required")
 	}
 	if !b.Height.Valid() {
 		return errors.New("height is invalid")
 	}
-	if b.Time.Year() == 1 {
-		return errors.New("time is invalid")
+	if b.Time.IsZero() {
+		return errors.New("block time is required")
 	}
 	return nil
 }

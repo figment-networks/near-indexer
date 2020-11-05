@@ -29,10 +29,10 @@ func (s ValidatorsStore) ByHeight(height types.Height) ([]model.Validator, error
 }
 
 // BulkInsert creates new validators or updates existing ones
-func (s ValidatorsStore) BulkInsert(records []model.Validator) error {
+func (s ValidatorsStore) Import(records []model.Validator) error {
 	t := time.Now()
 
-	return s.Import(queries.ValidatorsImport, len(records), func(i int) bulk.Row {
+	return s.bulkImport(queries.ValidatorsImport, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
 			r.Height,

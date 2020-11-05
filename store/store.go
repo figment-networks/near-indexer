@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/jinzhu/gorm"
@@ -14,14 +15,14 @@ import (
 type Store struct {
 	db *gorm.DB
 
-	Runs          RunsStore
-	Heights       HeightsStore
 	Blocks        BlocksStore
+	Epochs        EpochsStore
 	Accounts      AccountsStore
 	Validators    ValidatorsStore
 	ValidatorAggs ValidatorAggsStore
 	Transactions  TransactionsStore
 	Stats         StatsStore
+	Events        EventsStore
 }
 
 // Test checks the connection status
@@ -46,19 +47,21 @@ func (s *Store) SetDebugMode(enabled bool) {
 
 // ResetAll performs a full database reset without dropping any objects
 func (s *Store) ResetAll() error {
-	queries := []string{
-		"TRUNCATE TABLE blocks RESTART IDENTITY",
-		"TRUNCATE TABLE validators RESTART IDENTITY",
-		"TRUNCATE TABLE validator_counts RESTART IDENTITY",
-		"TRUNCATE TABLE validator_epochs RESTART IDENTITY",
-		"TRUNCATE TABLE validator_aggregates RESTART IDENTITY",
-		"TRUNCATE TABLE runs RESTART IDENTITY",
-		"TRUNCATE TABLE heights RESTART IDENTITY",
-		"TRUNCATE TABLE transactions RESTART IDENTITY",
+	tables := []string{
+		"blocks",
+		"epochs",
+		"validators",
+		"validator_aggregates",
+		"validator_epochs",
+		"validator_counts",
+		"transactions",
+		"events",
 	}
 
-	for _, q := range queries {
-		log.Println("executing", q)
+	for _, table := range tables {
+		log.Println("truncating table", table)
+
+		q := fmt.Sprintf("TRUNCATE TABLE %s RESTART IDENTITY;", table)
 		if err := s.db.Exec(q).Error; err != nil {
 			return err
 		}
@@ -77,13 +80,13 @@ func New(connStr string) (*Store, error) {
 	return &Store{
 		db: conn,
 
-		Heights:       HeightsStore{scoped(conn, model.Height{})},
-		Runs:          RunsStore{scoped(conn, model.Run{})},
 		Blocks:        BlocksStore{scoped(conn, model.Block{})},
+		Epochs:        EpochsStore{scoped(conn, model.Epoch{})},
 		Accounts:      AccountsStore{scoped(conn, model.Account{})},
 		Validators:    ValidatorsStore{scoped(conn, model.Validator{})},
 		ValidatorAggs: ValidatorAggsStore{scoped(conn, model.ValidatorAgg{})},
 		Transactions:  TransactionsStore{scoped(conn, model.Transaction{})},
+		Events:        EventsStore{scoped(conn, model.Event{})},
 		Stats:         StatsStore{baseStore{db: conn}},
 	}, nil
 }

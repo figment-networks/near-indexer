@@ -18,9 +18,10 @@ type Transaction struct {
 	SignerKey string       `json:"signer_key"`
 	Signature string       `json:"signature"`
 	Receiver  string       `json:"receiver"`
-	Amount    types.Amount `json:"amount"`
+	Amount    types.Amount `json:"-"`
 	GasBurnt  string       `json:"gas_burnt"`
-	Actions   []byte       `json:"actions"`
+	Actions   []byte       `json:"-"`
+	Success   bool         `json:"success"`
 }
 
 type TransactionAction struct {

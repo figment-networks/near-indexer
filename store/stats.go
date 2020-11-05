@@ -18,15 +18,20 @@ type StatsStore struct {
 	baseStore
 }
 
-// CreateBlockStats populates block stats for a time bucket
-func (s StatsStore) CreateBlockStats(bucket string, ts time.Time) error {
-	start, end, err := s.getTimeRange(bucket, ts)
-	if err != nil {
-		return err
-	}
-	query := s.prepareBucket(queries.StatsCreateBlocks, bucket)
+type HeightRange struct {
+	Start uint64
+	End   uint64
+}
 
-	return s.db.Exec(query, start, end).Error
+type TimeRange struct {
+	Start time.Time
+	End   time.Time
+}
+
+// CreateBlockStats populates block stats for given block height range
+func (s StatsStore) CreateBlockStats(bucket string, timeRange TimeRange) error {
+	query := s.prepareBucket(queries.StatsCreateBlocks, bucket)
+	return s.db.Exec(query, timeRange.Start, timeRange.End).Error
 }
 
 // CreateValidatorsStats populates validators stats for a time bucket

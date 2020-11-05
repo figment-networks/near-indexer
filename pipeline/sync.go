@@ -1,42 +1,58 @@
 package pipeline
 
 import (
-	"log"
+	"context"
+	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/near"
-	"github.com/figment-networks/near-indexer/pipeline/sync"
 	"github.com/figment-networks/near-indexer/store"
 )
 
-type Task struct {
-	Name    string
-	Handler sync.HandlerFunc
-}
+func RunSync(cfg *config.Config, db *store.Store, client *near.Client) (int, error) {
+	startTime := time.Now()
+	payload := &Payload{}
+	logger := logrus.StandardLogger()
 
-func RunSync(cfg *config.Config, db *store.Store, client *near.Client) (uint64, error) {
-	ctx := sync.NewContext(db, client)
-	ctx.DefaultStartHeight = cfg.StartHeight
-
-	tasks := []Task{
-		{"create_height", sync.CreateHeight},
-		{"create_run", sync.CreateRun},
-		{"fetch_data", sync.FetchChainData},
-		{"process_data", sync.ProcessChainData},
-		{"finish_height", sync.FinishHeight},
+	switch cfg.LogLevel {
+	case "debug":
+		logger.SetLevel(logrus.DebugLevel)
+	default:
+		logger.SetLevel(logrus.InfoLevel)
 	}
 
-	for _, task := range tasks {
-		task.Handler(ctx)
+	defer func() {
+		logrus.
+			WithField("duration", time.Since(startTime).Milliseconds()).
+			WithField("from", payload.StartHeight).
+			WithField("to", payload.EndHeight).
+			WithField("lag", payload.Lag).
+			WithField("heights", len(payload.Heights)).
+			Info("sync finished")
+	}()
 
-		if ctx.IsAborted() {
-			if ctx.LastError() != nil {
-				log.Printf("aborted on %s with error: %s", task.Name, ctx.LastError())
-			}
-			sync.FinishHeight(ctx)
+	fetcherTask := NewFetcherTask(db, client, cfg, logger)
+	parserTask := NewParserTask(db, logger)
+	persistorTask := NewPersistorTask(db, logger)
+	analyzerTask := NewAnalyzerTask(db, logger)
+
+	tasks := []func(context.Context, *Payload) error{
+		fetcherTask.Run,
+		parserTask.Run,
+		persistorTask.Run,
+		analyzerTask.Run,
+	}
+
+	var err error
+
+	for _, task := range tasks {
+		if err = task(context.Background(), payload); err != nil {
+			logger.WithError(err).Error("task failed with error")
 			break
 		}
 	}
 
-	return ctx.Lag, ctx.LastError()
+	return payload.Lag, err
 }

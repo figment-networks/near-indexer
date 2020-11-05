@@ -18,8 +18,9 @@ func AccountFromValidator(block *near.Block, input *near.Validator) (*model.Acco
 		StartTime:      time,
 		LastHeight:     height,
 		LastTime:       time,
-		Balance:        types.NewAmount(""), // TODO: where's validator balance?
+		Balance:        types.NewAmount(""), // balance is obtained via separate rpc call
 		StakingBalance: types.NewAmount(input.Stake),
 	}
+
 	return acc, acc.Validate()
 }
