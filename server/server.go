@@ -48,6 +48,7 @@ func New(cfg *config.Config, db *store.Store, rpc *near.Client) Server {
 	router.GET("/validators", s.GetValidators)
 	router.GET("/validators/:id", s.GetValidator)
 	router.GET("/validators/:id/epochs", s.GetValidatorEpochs)
+	router.GET("/validators/:id/events", s.GetValidatorEvents)
 	router.GET("/validator_times_interval", s.GetValidatorTimesInterval)
 	router.GET("/transactions", s.GetTransactions)
 	router.GET("/transactions/:id", s.GetTransaction)
@@ -80,6 +81,7 @@ func (s Server) GetEndpoints(c *gin.Context) {
 			"/validators":            "List all validators",
 			"/validators/:id":        "Get validator details",
 			"/validators/:id/epochs": "Get validator epochs performance",
+			"/validators/:id/events": "Get validator events",
 			"/transactions":          "List all recent transactions",
 			"/transactions/:id":      "Get transaction details",
 			"/accounts/:id":          "Get accoun details",
@@ -263,6 +265,31 @@ func (s Server) GetValidatorEpochs(c *gin.Context) {
 	jsonOk(c, result)
 }
 
+// GetValidatorEvents returns validator events
+func (s Server) GetValidatorEvents(c *gin.Context) {
+	validator, err := s.db.ValidatorAggs.FindBy("account_id", c.Param("id"))
+	if shouldReturn(c, err) {
+		return
+	}
+
+	search := store.EventsSearch{
+		ItemID:   validator.AccountID,
+		ItemType: "validator",
+	}
+
+	if err := c.Bind(&search); err != nil {
+		badRequest(c, err)
+		return
+	}
+
+	events, err := s.db.Events.Search(search)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, events)
+}
+
 // GetValidator returns validator details
 func (s Server) GetValidator(c *gin.Context) {
 	info, err := s.db.ValidatorAggs.FindBy("account_id", c.Param("id"))
@@ -289,11 +316,20 @@ func (s Server) GetValidator(c *gin.Context) {
 		return
 	}
 
+	events, err := s.db.Events.Search(store.EventsSearch{
+		ItemID:   info.AccountID,
+		ItemType: "validator",
+	})
+	if shouldReturn(c, err) {
+		return
+	}
+
 	jsonOk(c, gin.H{
 		"validator": info,
 		"account":   account,
 		"blocks":    blocks,
 		"epochs":    epochs,
+		"events":    events.Records,
 	})
 }
 
