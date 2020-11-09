@@ -11,6 +11,7 @@ type Pagination struct {
 
 type PaginatedResult struct {
 	Page    uint        `json:"page"`
+	Pages   uint        `json:"pages"`
 	Limit   uint        `json:"limit"`
 	Count   uint        `json:"count"`
 	Records interface{} `json:"records"`
@@ -27,4 +28,15 @@ func (p *Pagination) Validate() error {
 		p.Limit = paginationLimit
 	}
 	return nil
+}
+
+func (p *PaginatedResult) Update() *PaginatedResult {
+	if p.Pages == 0 && p.Count > 0 {
+		pages := p.Count / p.Limit
+		if pages*p.Limit < p.Count {
+			pages++
+		}
+		p.Pages = pages
+	}
+	return p
 }

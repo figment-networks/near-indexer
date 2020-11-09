@@ -5,15 +5,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/near"
 	"github.com/figment-networks/near-indexer/pipeline"
 	"github.com/figment-networks/near-indexer/store"
-	"github.com/sirupsen/logrus"
 )
 
 func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) context.CancelFunc {
-	wg.Add(1)
 	ctx, cancel := context.WithCancel(context.Background())
 	timer := time.NewTimer(cfg.SyncDuration())
 	busy := false
@@ -50,7 +50,6 @@ func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) co
 }
 
 func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) context.CancelFunc {
-	wg.Add(1)
 	ctx, cancel := context.WithCancel(context.Background())
 	ticker := time.NewTicker(cfg.CleanupDuration())
 
@@ -73,11 +72,11 @@ func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store)
 	return cancel
 }
 
-func startWorker(cfg *config.Config) error {
-	logrus.Info("log level:", cfg.LogLevel)
-	logrus.Info("using rpc endpoint: ", cfg.RPCEndpoint)
-	logrus.Info("sync will run every: ", cfg.SyncInterval)
-	logrus.Info("cleanup will run every: ", cfg.CleanupInterval)
+func startWorker(cfg *config.Config, logger *logrus.Logger) error {
+	logger.Info("log level:", cfg.LogLevel)
+	logger.Info("using rpc endpoint: ", cfg.RPCEndpoint)
+	logger.Info("sync will run every: ", cfg.SyncInterval)
+	logger.Info("cleanup will run every: ", cfg.CleanupInterval)
 
 	db, err := initStore(cfg)
 	if err != nil {
@@ -86,13 +85,14 @@ func startWorker(cfg *config.Config) error {
 	defer db.Close()
 
 	wg := &sync.WaitGroup{}
+	wg.Add(2)
 
 	cancelSync := startSyncWorker(wg, cfg, db)
 	cancelCleanup := startCleanupWorker(wg, cfg, db)
 
 	s := <-initSignals()
+	logger.Info("received signal: ", s)
 
-	logrus.Info("received signal: ", s)
 	cancelSync()
 	cancelCleanup()
 

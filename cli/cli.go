@@ -18,9 +18,11 @@ import (
 
 // Run executes the command line interface
 func Run() {
-	var configPath string
-	var runCommand string
-	var showVersion bool
+	var (
+		configPath  string
+		runCommand  string
+		showVersion bool
+	)
 
 	flag.BoolVar(&showVersion, "v", false, "Show application version")
 	flag.StringVar(&configPath, "config", "", "Path to config")
@@ -37,12 +39,7 @@ func Run() {
 		terminate(err)
 	}
 
-	switch cfg.LogLevel {
-	case "debug":
-		logrus.SetLevel(logrus.DebugLevel)
-	case "info":
-		logrus.SetLevel(logrus.InfoLevel)
-	}
+	logger := initLogger(cfg)
 
 	config.InitRollbar(cfg)
 	defer config.TrackRecovery()
@@ -55,19 +52,19 @@ func Run() {
 		initProfiler()
 	}
 
-	if err := startCommand(cfg, runCommand); err != nil {
+	if err := startCommand(cfg, logger, runCommand); err != nil {
 		terminate(err)
 	}
 }
 
-func startCommand(cfg *config.Config, name string) error {
+func startCommand(cfg *config.Config, logger *logrus.Logger, name string) error {
 	switch name {
 	case "migrate", "migrate:up", "migrate:down", "migrate:redo":
 		return startMigrations(name, cfg)
 	case "server":
 		return startServer(cfg)
 	case "worker":
-		return startWorker(cfg)
+		return startWorker(cfg, logger)
 	case "sync":
 		return runSync(cfg)
 	case "status":
@@ -114,6 +111,19 @@ func initConfig(path string) (*config.Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func initLogger(cfg *config.Config) *logrus.Logger {
+	logger := logrus.StandardLogger()
+
+	switch cfg.LogLevel {
+	case "debug":
+		logrus.SetLevel(logrus.DebugLevel)
+	case "info":
+		logrus.SetLevel(logrus.InfoLevel)
+	}
+
+	return logger
 }
 
 func initStore(cfg *config.Config) (*store.Store, error) {

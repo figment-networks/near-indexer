@@ -62,10 +62,12 @@ func (s EventsStore) Search(search EventsSearch) (*PaginatedResult, error) {
 		return nil, err
 	}
 
-	return &PaginatedResult{
+	result := &PaginatedResult{
 		Page:    search.Page,
 		Limit:   search.Limit,
 		Count:   count,
 		Records: events,
-	}, nil
+	}
+
+	return result.Update(), nil
 }
