@@ -30,7 +30,8 @@ func (p *Pagination) Validate() error {
 	return nil
 }
 
-func (p *PaginatedResult) Update() *PaginatedResult {
+// update recalculates the total number of pages based on record count
+func (p *PaginatedResult) update() *PaginatedResult {
 	if p.Pages == 0 && p.Count > 0 {
 		pages := p.Count / p.Limit
 		if pages*p.Limit < p.Count {

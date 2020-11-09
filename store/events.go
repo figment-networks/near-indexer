@@ -69,5 +69,5 @@ func (s EventsStore) Search(search EventsSearch) (*PaginatedResult, error) {
 		Records: events,
 	}
 
-	return result.Update(), nil
+	return result.update(), nil
 }
