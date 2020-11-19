@@ -9,6 +9,7 @@ import (
 func runSync(cfg *config.Config) error {
 	client := near.DefaultClient(cfg.RPCEndpoint)
 	client.SetDebug(true)
+	client.SetTimeout(cfg.RPCClientTimeout())
 
 	db, err := initStore(cfg)
 	if err != nil {

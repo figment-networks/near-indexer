@@ -36,7 +36,7 @@ var (
 
 var (
 	defaultClient = &http.Client{
-		Timeout: time.Second * 10,
+		Timeout: time.Second * 15,
 		Transport: &http.Transport{
 			MaxConnsPerHost:     250,
 			MaxIdleConnsPerHost: 250,
@@ -64,6 +64,10 @@ func NewClient(endpoint string, httpClient *http.Client) *Client {
 		endpoint: endpoint,
 		client:   httpClient,
 	}
+}
+
+func (c *Client) SetTimeout(dur time.Duration) {
+	c.client.Timeout = dur
 }
 
 func (c *Client) handleServerError(err *json2.Error) error {

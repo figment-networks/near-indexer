@@ -20,6 +20,7 @@ func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) co
 
 	client := near.DefaultClient(cfg.RPCEndpoint)
 	client.SetDebug(cfg.Debug)
+	client.SetTimeout(cfg.RPCClientTimeout())
 
 	go func() {
 		defer func() {

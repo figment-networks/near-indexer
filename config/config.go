@@ -23,12 +23,14 @@ var (
 	errSyncIntervalInvalid     = errors.New("Sync interval is invalid")
 	errCleanupIntervalRequired = errors.New("Cleanup interval is required")
 	errCleanupIntervalInvalid  = errors.New("Cleanup interval is invalid")
+	errRPCTimeoutInvalid       = errors.New("RPC timeout interval is invalid")
 )
 
 // Config holds the configration data
 type Config struct {
 	AppEnv           string `json:"app_env" envconfig:"APP_ENV" default:"development"`
 	RPCEndpoint      string `json:"rpc_endpoint" envconfig:"NEAR_RPC_ENDPOINT"`
+	RPCTimeout       string `json:"rpc_timeout" envconfig:"NEAR_RPC_TIMEOUT" default:"15s"`
 	ServerAddr       string `json:"server_addr" envconfig:"SERVER_ADDR" default:"0.0.0.0"`
 	ServerPort       int    `json:"server_port" envconfig:"SERVER_PORT" default:"8081"`
 	StartHeight      uint64 `json:"start_height" envconfig:"START_HEIGHT"`
@@ -47,6 +49,7 @@ type Config struct {
 
 	syncDuration    time.Duration
 	cleanupDuration time.Duration
+	rpcTimeout      time.Duration
 }
 
 // Validate returns an error if config is invalid
@@ -78,6 +81,12 @@ func (c *Config) Validate() error {
 	}
 	c.cleanupDuration = d
 
+	rpcTimeout, err := time.ParseDuration(c.RPCTimeout)
+	if err != nil {
+		return errRPCTimeoutInvalid
+	}
+	c.rpcTimeout = rpcTimeout
+
 	return nil
 }
 
@@ -104,6 +113,11 @@ func (c *Config) SyncDuration() time.Duration {
 // CleanupDuration returns the parsed duration for the cleanup pipeline
 func (c *Config) CleanupDuration() time.Duration {
 	return c.cleanupDuration
+}
+
+// RPCClientTimeout returns the timeout value for RPC calls
+func (c *Config) RPCClientTimeout() time.Duration {
+	return c.rpcTimeout
 }
 
 // New returns a new config
