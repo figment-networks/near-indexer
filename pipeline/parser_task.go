@@ -102,7 +102,7 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 
 		if len(h.PreviousEpochKickOut) > 0 {
 			for _, kick := range h.PreviousEpochKickOut {
-				event, err := mapper.ValidatorKickout(h.Block, &kick)
+				event, err := mapper.ValidatorKickoutEvent(h.Block, &kick)
 				if err != nil {
 					return err
 				}

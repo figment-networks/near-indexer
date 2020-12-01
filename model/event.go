@@ -11,6 +11,7 @@ const (
 	ScopeStaking           = "staking"
 	ActionValidatorAdded   = "joined_active_set"
 	ActionValidatorRemoved = "left_active_set"
+	ActionValidatorKicked  = "kicked"
 	ItemTypeValidator      = "validator"
 )
 

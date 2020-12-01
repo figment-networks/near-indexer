@@ -32,17 +32,23 @@ func (t AnalyzerTask) Run(ctx context.Context, payload *Payload) error {
 	}
 
 	for _, h := range payload.Heights {
+		// Do not process any of events until epoch is complete
 		if h.CurrentEpoch {
 			continue
 		}
-		if len(h.PreviousValidators) == 0 && len(h.Validators) == 0 {
+
+		numPrev := len(h.PreviousValidators)
+		numCurrent := len(h.Validators)
+
+		if numPrev == 0 && numCurrent == 0 {
 			continue
 		}
 
 		t.logger.WithFields(logrus.Fields{
-			"previous": len(h.PreviousValidators),
-			"current":  len(h.Validators),
-		}).Info("validator set changed")
+			"previous": numPrev,
+			"current":  numCurrent,
+			"diff":     numCurrent - numPrev,
+		}).Info("validator set has changed")
 
 		previousIds := map[string]bool{}
 		currentIds := map[string]bool{}
@@ -51,12 +57,20 @@ func (t AnalyzerTask) Run(ctx context.Context, payload *Payload) error {
 			previousIds[v.AccountID] = true
 		}
 
-		// Find new validators in the set
 		for _, v := range h.Validators {
 			currentIds[v.AccountID] = true
 			if !previousIds[v.AccountID] {
 				t.logger.WithField("account", v.AccountID).Info("validator added to active set")
 				if err := t.createValidatorAddEvent(h.Block, &v); err != nil {
+					return err
+				}
+			}
+		}
+
+		for _, v := range h.PreviousValidators {
+			if !currentIds[v.AccountID] {
+				t.logger.WithField("account", v.AccountID).Info("validator removed from active set")
+				if err := t.createValidatorRemoveEvent(h.Block, &v); err != nil {
 					return err
 				}
 			}
@@ -68,8 +82,16 @@ func (t AnalyzerTask) Run(ctx context.Context, payload *Payload) error {
 
 func (t AnalyzerTask) createValidatorAddEvent(block *near.Block, validator *near.Validator) error {
 	event, err := mapper.ValidatorAddEvent(block, validator)
-	if err != nil {
-		return err
+	if err == nil {
+		err = t.db.Events.Create(event)
 	}
-	return t.db.Events.Create(event)
+	return err
+}
+
+func (t AnalyzerTask) createValidatorRemoveEvent(block *near.Block, validator *near.Validator) error {
+	event, err := mapper.ValidatorRemoveEvent(block, validator)
+	if err == nil {
+		err = t.db.Events.Create(event)
+	}
+	return err
 }

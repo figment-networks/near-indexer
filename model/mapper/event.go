@@ -28,8 +28,27 @@ func ValidatorAddEvent(block *near.Block, validator *near.Validator) (*model.Eve
 	return event, event.Validate()
 }
 
-// ValidatorKickout generates an event from validator kickout record
-func ValidatorKickout(block *near.Block, kick *near.ValidatorKickout) (*model.Event, error) {
+// ValidatorRemoveEvent generates an event for validator removal from set
+func ValidatorRemoveEvent(block *near.Block, validator *near.Validator) (*model.Event, error) {
+	event := &model.Event{
+		Scope:       model.ScopeStaking,
+		Action:      model.ActionValidatorRemoved,
+		BlockHeight: block.Header.Height,
+		BlockTime:   util.ParseTime(block.Header.Timestamp),
+		Epoch:       block.Header.EpochID,
+		ItemID:      validator.AccountID,
+		ItemType:    model.ItemTypeValidator,
+		Metadata: types.Map{
+			"stake": validator.Stake,
+		},
+		CreatedAt: time.Now(),
+	}
+
+	return event, event.Validate()
+}
+
+// ValidatorKickoutEvent generates an event from validator kickout record
+func ValidatorKickoutEvent(block *near.Block, kick *near.ValidatorKickout) (*model.Event, error) {
 	metadata := types.NewMap()
 
 	switch kick.Reason.Name {
@@ -53,7 +72,7 @@ func ValidatorKickout(block *near.Block, kick *near.ValidatorKickout) (*model.Ev
 
 	event := &model.Event{
 		Scope:       model.ScopeStaking,
-		Action:      model.ActionValidatorRemoved,
+		Action:      model.ActionValidatorKicked,
 		BlockHeight: block.Header.Height,
 		BlockTime:   util.ParseTime(block.Header.Timestamp),
 		Epoch:       block.Header.EpochID,

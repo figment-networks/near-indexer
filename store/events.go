@@ -12,6 +12,7 @@ type EventsSearch struct {
 
 	ItemID   string `form:"item_id"`
 	ItemType string `form:"item_type"`
+	Action   string `form:"action"`
 	Height   uint64 `form:"height"`
 }
 
@@ -43,6 +44,9 @@ func (s EventsStore) Search(search EventsSearch) (*PaginatedResult, error) {
 	}
 	if search.Height > 0 {
 		scope = scope.Where("block_height = ?", search.Height)
+	}
+	if search.Action != "" {
+		scope = scope.Where("action = ?", search.Action)
 	}
 
 	var count uint
