@@ -31,11 +31,6 @@ func (s BlocksStore) FindBy(key string, value interface{}) (*model.Block, error)
 	return result, checkErr(err)
 }
 
-// FindByID returns a block with matching ID
-func (s BlocksStore) FindByID(id int64) (*model.Block, error) {
-	return s.FindBy("id", id)
-}
-
 // FindByHash returns a block with the matching hash
 func (s BlocksStore) FindByHash(hash string) (*model.Block, error) {
 	return s.FindBy("hash", hash)
@@ -43,7 +38,7 @@ func (s BlocksStore) FindByHash(hash string) (*model.Block, error) {
 
 // FindByHeight returns a block with the matching height
 func (s BlocksStore) FindByHeight(height uint64) (*model.Block, error) {
-	return s.FindBy("height", height)
+	return s.FindBy("id", height)
 }
 
 // FindPrevious returns a block prior to the given height
@@ -51,9 +46,9 @@ func (s BlocksStore) FindPrevious(height uint64) (*model.Block, error) {
 	block := &model.Block{}
 
 	err := s.db.
-		Order("height DESC").
+		Order("id DESC").
 		Limit(1).
-		Find(block, "height < ?", height).
+		Find(block, "id < ?", height).
 		Error
 
 	return block, checkErr(err)
@@ -64,7 +59,7 @@ func (s BlocksStore) Last() (*model.Block, error) {
 	block := &model.Block{}
 
 	err := s.db.
-		Order("height DESC").
+		Order("id DESC").
 		Limit(1).
 		Find(&block).
 		Error
@@ -77,7 +72,7 @@ func (s BlocksStore) LastInEpoch(epoch string) (*model.Block, error) {
 	block := &model.Block{}
 
 	err := s.db.
-		Order("height DESC").
+		Order("id DESC").
 		Limit(1).
 		Take(&block, "epoch = ?", epoch).
 		Error
@@ -90,7 +85,7 @@ func (s BlocksStore) Search() ([]model.Block, error) {
 	result := []model.Block{}
 
 	err := s.db.
-		Order("height DESC").
+		Order("id DESC").
 		Limit(50).
 		Find(&result).
 		Error
@@ -104,8 +99,8 @@ func (s BlocksStore) BlockTimes(limit int64) ([]byte, error) {
 }
 
 // BlockStats returns block stats for a given interval
-func (s BlocksStore) BlockStats(interval, period string) ([]byte, error) {
-	return jsonquery.MustArray(s.db, queries.BlockTimesInterval, interval, period)
+func (s BlocksStore) BlockStats(bucket string, limit uint) ([]byte, error) {
+	return jsonquery.MustArray(s.db, queries.BlocksTimeStats, bucket, limit)
 }
 
 // Import creates block records in batch
@@ -116,19 +111,15 @@ func (s BlocksStore) Import(records []model.Block) error {
 		r := records[i]
 
 		return bulk.Row{
-			r.Height,
+			r.ID,
 			r.Time,
 			r.Hash,
-			r.PrevHash,
 			r.Producer,
 			r.Epoch,
 			r.GasPrice,
 			r.GasLimit,
 			r.GasUsed,
-			r.RentPaid,
-			r.ValidatorReward,
 			r.TotalSupply,
-			r.Signature,
 			r.ChunksCount,
 			r.TransactionsCount,
 			r.ApprovalsCount,

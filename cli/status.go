@@ -43,10 +43,10 @@ func startStatus(cfg *config.Config) error {
 	lastBlock, err := db.Blocks.Last()
 	if err == nil {
 		table.AppendBulk([][]string{
-			{"Indexer Block Height", fmt.Sprintf("%v", lastBlock.Height)},
+			{"Indexer Block Height", fmt.Sprintf("%v", lastBlock.ID)},
 			{"Indexer Block Hash", lastBlock.Hash},
 			{"Indexer Block Time", lastBlock.Time.UTC().Format(time.RFC3339)},
-			{"Indexer Lag", fmt.Sprintf("%v", status.SyncInfo.LatestBlockHeight-uint64(lastBlock.Height))},
+			{"Indexer Lag", fmt.Sprintf("%v", status.SyncInfo.LatestBlockHeight-uint64(lastBlock.ID))},
 		})
 	} else {
 		if err == store.ErrNotFound {

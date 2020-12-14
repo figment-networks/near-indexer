@@ -30,11 +30,5 @@ func (acc Account) Validate() error {
 	if acc.StartTime.Year() == 1 {
 		return errors.New("start time is invalid")
 	}
-	if !acc.Balance.Valid() {
-		return errors.New("balance is required")
-	}
-	if !acc.StakingBalance.Valid() {
-		return errors.New("staking balance is invalid")
-	}
 	return nil
 }

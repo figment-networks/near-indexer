@@ -1,27 +1,35 @@
 package model
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
 	"github.com/figment-networks/near-indexer/model/types"
 )
 
+var (
+	errTxHeightInvalid   = errors.New("height is invalid")
+	errTxTimeInvalid     = errors.New("time is invalid")
+	errTxHashInvalid     = errors.New("hash is invalid")
+	errTxSenderInvalid   = errors.New("sender is invalid")
+	errTxReceiverInvalid = errors.New("receiver is invalid")
+)
+
 type Transaction struct {
 	Model
 
-	Time      time.Time    `json:"time"`
-	Height    types.Height `json:"height"`
-	Hash      string       `json:"hash"`
-	BlockHash string       `json:"block_hash"`
-	Signer    string       `json:"signer"`
-	SignerKey string       `json:"signer_key"`
-	Signature string       `json:"signature"`
-	Receiver  string       `json:"receiver"`
-	Amount    types.Amount `json:"-"`
-	GasBurnt  string       `json:"gas_burnt"`
-	Actions   []byte       `json:"-"`
-	Success   bool         `json:"success"`
+	Time         time.Time       `json:"time"`
+	Height       types.Height    `json:"height"`
+	Hash         string          `json:"hash"`
+	BlockHash    string          `json:"block_hash"`
+	Sender       string          `json:"sender"`
+	Receiver     string          `json:"receiver"`
+	Amount       types.Amount    `json:"-"`
+	GasBurnt     string          `json:"gas_burnt"`
+	Actions      json.RawMessage `json:"actions"`
+	ActionsCount int             `json:"actions_count"`
+	Success      bool            `json:"success"`
 }
 
 type TransactionAction struct {
@@ -32,16 +40,19 @@ type TransactionAction struct {
 // Validate returns an error if transaction is invalid
 func (t Transaction) Validate() error {
 	if !t.Height.Valid() {
-		return errors.New("height is invalid")
+		return errTxHeightInvalid
 	}
 	if t.Time.IsZero() {
-		return errors.New("time is invalid")
+		return errTxTimeInvalid
 	}
 	if t.Hash == "" {
-		return errors.New("hash is required")
+		return errTxHashInvalid
 	}
-	if t.Signer == "" {
-		return errors.New("signer is required")
+	if t.Sender == "" {
+		return errTxSenderInvalid
+	}
+	if t.Receiver == "" {
+		return errTxReceiverInvalid
 	}
 	return nil
 }

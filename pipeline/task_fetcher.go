@@ -13,8 +13,9 @@ import (
 	"github.com/figment-networks/near-indexer/store"
 )
 
+// FetcherTask performs fetching data from the network node
 type FetcherTask struct {
-	rpc    *near.Client
+	rpc    near.Client
 	db     *store.Store
 	logger *logrus.Logger
 
@@ -22,9 +23,10 @@ type FetcherTask struct {
 	startHeight uint64
 }
 
+// NewFetcherTask returns a new data fetcher task
 func NewFetcherTask(
 	db *store.Store,
-	rpc *near.Client,
+	rpc near.Client,
 	config *config.Config,
 	logger *logrus.Logger,
 ) FetcherTask {
@@ -37,8 +39,19 @@ func NewFetcherTask(
 	}
 }
 
+// Name returns the task name
+func (t FetcherTask) Name() string {
+	return analyzerTaskName
+}
+
+// ShouldRun returns true if there any heights to process
+func (t FetcherTask) ShouldRun(payload *Payload) bool {
+	return true
+}
+
+// Run executes the data fetching
 func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
-	defer logTaskDuration(FetcherTaskName, time.Now())
+	defer logTaskDuration(t, time.Now())
 
 	var (
 		lastHeight  uint64
@@ -53,7 +66,7 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 		t.logger.WithError(err).Error("cant fetch current block")
 		return err
 	}
-	payload.CurrentBlock = &currentBlock
+	payload.Tip = &currentBlock
 
 	// Fetch last indexed block
 	lastBlock, err := t.db.Blocks.Last()
@@ -61,7 +74,7 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 		return nil
 	}
 	if lastBlock != nil {
-		lastHeight = uint64(lastBlock.Height)
+		lastHeight = uint64(lastBlock.ID)
 		lastEpoch = lastBlock.Epoch
 	}
 
@@ -88,8 +101,11 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 	}
 
 	// Fetch all heights data concurrenly
-	t.fetchHeights(startHeight, endHeight, payload)
+	if err := t.fetchHeights(startHeight, endHeight, payload); err != nil {
+		return err
+	}
 
+	var prevBlock *near.Block
 	for dataIdx, data := range payload.Heights {
 		// Skip any heights with missing or non-existent blocks
 		if data.Skip {
@@ -102,20 +118,26 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 		}
 
 		if data.Block.Header.EpochID != lastEpoch {
-			t.logger.
-				WithField("from", lastEpoch).
-				WithField("to", data.Block.Header.EpochID).
-				WithField("height", data.Block.Header.Height).
-				Info("epoch changed")
+			t.logger.WithFields(logrus.Fields{
+				"epoch_from": lastEpoch,
+				"epoch_to":   data.Block.Header.EpochID,
+				"block_from": lastHeight,
+				"block_to":   data.Block.Header.Height,
+			}).Info("epoch changed")
 
+			// Find the last block in the previous epoch
 			var lastBlockOfEpoch *near.Block
-			for _, innerData := range payload.Heights {
-				if innerData.Block == nil {
-					continue
-				}
-				if innerData.Block.Header.EpochID == lastEpoch {
-					lastBlockOfEpoch = innerData.Block
-					break
+			if prevBlock != nil {
+				lastBlockOfEpoch = prevBlock
+			} else {
+				for _, innerData := range payload.Heights {
+					if innerData.Block == nil {
+						continue
+					}
+					if innerData.Block.Header.EpochID == lastEpoch {
+						lastBlockOfEpoch = innerData.Block
+						break
+					}
 				}
 			}
 
@@ -123,13 +145,14 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 				t.logger.WithField("epoch", lastEpoch).Info("no block with last epoch in scope, fetching from db")
 				epochBlock, err := t.db.Blocks.LastInEpoch(lastEpoch)
 				if err == nil {
-					logrus.Info("no last block in epoch found!!!")
+					logrus.WithField("epoch", lastEpoch).Info("last block found")
 					lastBlockOfEpoch = &near.Block{
 						Header: near.BlockHeader{
-							Height: uint64(epochBlock.Height),
+							Height: uint64(epochBlock.ID),
 						},
 					}
 				} else {
+					logrus.WithField("epoch", lastEpoch).Info("no last block in db for epoch")
 					if err != store.ErrNotFound {
 						return err
 					}
@@ -152,7 +175,7 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 				}
 			}
 
-			logrus.WithField("height", data.Height).Info("fetching validators")
+			logrus.WithField("height", data.Height).Info("fetching current validators")
 			validators, err := t.rpc.ValidatorsByHeight(data.Height)
 			if err != nil {
 				return err
@@ -164,14 +187,11 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 				data.PreviousValidators = previousValidators.CurrentValidators
 				data.PreviousBlock = lastBlockOfEpoch
 			}
-
-			lastEpoch = data.Block.Header.EpochID
 		} else {
 			isLastInBatch := dataIdx == len(payload.Heights)-1
 
 			// Fetch validators in the current epoch in the last height of the batch
 			if currentBlock.Header.EpochID == data.Block.Header.EpochID && isLastInBatch {
-				logrus.WithField("height", data.Height).Debug("fetching validators")
 				validators, err := t.rpc.ValidatorsByHeight(data.Height)
 				if err != nil {
 					return err
@@ -180,13 +200,17 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 				data.CurrentEpoch = true
 			}
 		}
+
+		prevBlock = data.Block
+		lastEpoch = data.Block.Header.EpochID
+		lastHeight = data.Block.Header.Height
 	}
 
 	return nil
 }
 
 // fetchHeight retrieves heights data in parallel
-func (t FetcherTask) fetchHeights(startHeight, endHeight uint64, payload *Payload) {
+func (t FetcherTask) fetchHeights(startHeight, endHeight uint64, payload *Payload) error {
 	count := int(endHeight - startHeight)
 	payloads := make([]*HeightPayload, count)
 
@@ -206,11 +230,14 @@ func (t FetcherTask) fetchHeights(startHeight, endHeight uint64, payload *Payloa
 
 	payload.Heights = []*HeightPayload{}
 	for _, p := range payloads {
+		// Do not include payloads that should be skipped (missing/non-existent block)
 		if p.Skip {
 			continue
 		}
+
+		// Terminate with first height error
 		if p.Error != nil {
-			continue
+			return p.Error
 		}
 
 		payload.Heights = append(payload.Heights, p)
@@ -225,6 +252,8 @@ func (t FetcherTask) fetchHeights(startHeight, endHeight uint64, payload *Payloa
 		payload.StartHeight = startHeight
 		payload.EndHeight = endHeight
 	}
+
+	return nil
 }
 
 // fetchHeightData retrieves all the data for a given height

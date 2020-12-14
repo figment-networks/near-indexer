@@ -1,6 +1,10 @@
 package store
 
-import "github.com/figment-networks/near-indexer/model"
+import (
+	"github.com/figment-networks/indexing-engine/store/bulk"
+	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/store/queries"
+)
 
 // EventsStore manages events records
 type EventsStore struct {
@@ -74,4 +78,22 @@ func (s EventsStore) Search(search EventsSearch) (*PaginatedResult, error) {
 	}
 
 	return result.update(), nil
+}
+
+func (s EventsStore) Import(records []model.Event) error {
+	return s.bulkImport(queries.EventsImport, len(records), func(i int) bulk.Row {
+		r := records[i]
+
+		return bulk.Row{
+			r.Scope,
+			r.Action,
+			r.BlockHeight,
+			r.BlockTime,
+			r.Epoch,
+			r.ItemID,
+			r.ItemType,
+			r.Metadata,
+			r.CreatedAt,
+		}
+	})
 }

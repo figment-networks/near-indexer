@@ -1,7 +1,6 @@
 -- +goose Up
 CREATE TABLE IF NOT EXISTS epochs (
-  id                 SERIAL NOT NULL PRIMARY KEY,
-  uuid               TEXT NOT NULL,
+  id                 TEXT NOT NULL PRIMARY KEY,
   start_height       INTEGER NOT NULL,
   start_time         TIMESTAMP WITH TIME ZONE NOT NULL,
   end_height         INTEGER NOT NULL,
@@ -11,8 +10,11 @@ CREATE TABLE IF NOT EXISTS epochs (
   average_efficiency NUMERIC
 );
 
-CREATE UNIQUE INDEX idx_epochs_uuid
-  ON epochs(uuid);
+CREATE INDEX idx_epochs_start_time
+  ON epochs(start_time);
+
+CREATE INDEX idx_epochs_start_height
+  ON epochs(start_height);
 
 -- +goose Down
 DROP TABLE epochs IF EXISTS;

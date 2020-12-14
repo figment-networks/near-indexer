@@ -84,3 +84,24 @@ func ValidatorKickoutEvent(block *near.Block, kick *near.ValidatorKickout) (*mod
 
 	return event, event.Validate()
 }
+
+func ValidatorStakingBalanceChangeEvent(block *near.Block, validator *near.Validator, before *types.Amount, after *types.Amount) (*model.Event, error) {
+	metadata := types.NewMap()
+	metadata["before"] = before.String()
+	metadata["after"] = after.String()
+	metadata["diff"] = after.Sub(*before).String()
+
+	event := &model.Event{
+		Scope:       model.ScopeStaking,
+		Action:      model.ActionBalanceChanged,
+		BlockHeight: block.Header.Height,
+		BlockTime:   util.ParseTime(block.Header.Timestamp),
+		Epoch:       block.Header.EpochID,
+		ItemID:      validator.AccountID,
+		ItemType:    model.ItemTypeValidator,
+		Metadata:    metadata,
+		CreatedAt:   time.Now(),
+	}
+
+	return event, nil
+}

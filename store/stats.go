@@ -28,15 +28,35 @@ type TimeRange struct {
 	End   time.Time
 }
 
+func (t TimeRange) FullRange(bucket string) (time.Time, time.Time, error) {
+	now := time.Now()
+
+	fromStart, _, err := getTimeRange(bucket, t.Start)
+	if err != nil {
+		return now, now, err
+	}
+
+	_, toEnd, err := getTimeRange(bucket, t.End)
+	if err != nil {
+		return now, now, err
+	}
+
+	return fromStart, toEnd, nil
+}
+
 // CreateBlockStats populates block stats for given block height range
 func (s StatsStore) CreateBlockStats(bucket string, timeRange TimeRange) error {
+	timeFrom, timeTo, err := timeRange.FullRange(bucket)
+	if err != nil {
+		return err
+	}
 	query := s.prepareBucket(queries.StatsCreateBlocks, bucket)
-	return s.db.Exec(query, timeRange.Start, timeRange.End).Error
+	return s.db.Exec(query, timeFrom, timeTo).Error
 }
 
 // CreateValidatorsStats populates validators stats for a time bucket
 func (s StatsStore) CreateValidatorsStats(bucket string, ts time.Time) error {
-	start, end, err := s.getTimeRange(bucket, ts)
+	start, end, err := getTimeRange(bucket, ts)
 	if err != nil {
 		return err
 	}
@@ -46,7 +66,7 @@ func (s StatsStore) CreateValidatorsStats(bucket string, ts time.Time) error {
 }
 
 // getTimeRange returns the start/end time for a given time bucket
-func (s StatsStore) getTimeRange(bucket string, ts time.Time) (start time.Time, end time.Time, err error) {
+func getTimeRange(bucket string, ts time.Time) (start time.Time, end time.Time, err error) {
 	switch bucket {
 	case BucketHour:
 		start, end = util.HourInterval(ts)

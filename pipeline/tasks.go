@@ -1,21 +1,28 @@
 package pipeline
 
 import (
+	"context"
 	"time"
 
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	FetcherTaskName   = "fetcher"
-	ParserTaskName    = "parser"
-	PersistorTaskName = "persistor"
-	AnalyzerTaskName  = "analyzer"
+	fetcherTaskName   = "fetcher"
+	parserTaskName    = "parser"
+	persistorTaskName = "persistor"
+	analyzerTaskName  = "analyzer"
 )
 
-func logTaskDuration(name string, ts time.Time) {
+type Task interface {
+	Name() string
+	ShouldRun(*Payload) bool
+	Run(context.Context, *Payload) error
+}
+
+func logTaskDuration(t Task, ts time.Time) {
 	logrus.
-		WithField("task", name).
+		WithField("task", t.Name()).
 		WithField("duration", time.Since(ts).Milliseconds()).
 		Debug("task finished")
 }

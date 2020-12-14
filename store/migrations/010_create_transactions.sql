@@ -1,20 +1,19 @@
 -- +goose Up
 CREATE TABLE transactions (
-  id         SERIAL NOT NULL PRIMARY KEY,
-  hash       TEXT NOT NULL,
-  block_hash TEXT NOT NULL,
-  height     INTEGER NOT NULL,
-  time       TIMESTAMP WITH TIME ZONE NOT NULL,
-  signer     VARCHAR,
-  signer_key VARCHAR,
-  receiver   VARCHAR,
-  signature  VARCHAR,
-  amount     VARCHAR,
-  gas_burnt  VARCHAR,
-  success    BOOLEAN,
-  actions    JSONB,
-  created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+  id            SERIAL NOT NULL PRIMARY KEY,
+  hash          TEXT NOT NULL,
+  block_hash    TEXT NOT NULL,
+  height        INTEGER NOT NULL,
+  time          TIMESTAMP WITH TIME ZONE NOT NULL,
+  sender        VARCHAR,
+  receiver      VARCHAR,
+  amount        VARCHAR,
+  gas_burnt     VARCHAR,
+  success       BOOLEAN,
+  actions       JSONB,
+  actions_count INTEGER,
+  created_at    TIMESTAMP WITH TIME ZONE NOT NULL,
+  updated_at    TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE INDEX idx_transactions_block_hash
@@ -29,8 +28,8 @@ CREATE INDEX idx_transactions_height
 CREATE INDEX idx_transactions_time
   ON transactions(time);
 
-CREATE INDEX idx_transactions_signer
-  ON transactions(signer);
+CREATE INDEX idx_transactions_sender
+  ON transactions(sender);
 
 CREATE INDEX idx_transactions_receiver
   ON transactions(receiver);

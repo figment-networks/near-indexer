@@ -13,12 +13,14 @@ func RunCleanup(cfg *config.Config, db *store.Store) error {
 		return err
 	}
 
-	maxHeight := uint64(lastBlock.Height) - uint64(cfg.CleanupThreshold)
+	maxHeight := uint64(lastBlock.ID) - uint64(cfg.CleanupThreshold)
 	if maxHeight == 0 {
 		log.Println("nothing to cleanup")
 		return nil
 	}
 	log.Println("starting cleanup, max height:", maxHeight, "threshold:", cfg.CleanupThreshold)
+
+	return nil
 
 	if numRows, err := db.Validators.Cleanup(maxHeight); err == nil {
 		log.Println("validators removed:", numRows)

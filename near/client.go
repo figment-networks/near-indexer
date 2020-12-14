@@ -2,6 +2,7 @@ package near
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -45,80 +46,62 @@ var (
 )
 
 // Client interacts with the node RPC API
-type Client struct {
-	endpoint string
-	client   *http.Client
+type Client interface {
+	SetTimeout(time.Duration)
+	SetDebug(bool)
+
+	Call(string, interface{}, interface{}) error
+	GenesisConfig() (GenesisConfig, error)
+	GenesisRecords(int, int) (GenesisRecords, error)
+	Status() (NodeStatus, error)
+	NetworkInfo() (NetworkInfo, error)
+	CurrentBlock() (Block, error)
+	BlockByHeight(uint64) (Block, error)
+	BlockByHash(string) (Block, error)
+	Chunk(string) (ChunkDetails, error)
+	Account(id string) (Account, error)
+	Transaction(string) (TransactionDetails, error)
+	GasPrice(string) (string, error)
+	CurrentValidators() (*ValidatorsResponse, error)
+	ValidatorsByHeight(uint64) (*ValidatorsResponse, error)
+	BlockChanges(interface{}) (BlockChangesResponse, error)
+	RewardFee(string) (*RewardFee, error)
+	Delegations(string, uint64, uint64) ([]Delegation, error)
 }
 
-// DefaultClient returns a new default RPC client
-func DefaultClient(endpoint string) *Client {
-	return &Client{
+// DefaultClient returns a new default RPc client
+func DefaultClient(endpoint string) Client {
+	return &client{
 		endpoint: endpoint,
 		client:   defaultClient,
 	}
 }
 
-// NewClient returns a new RPC client with overrides
-func NewClient(endpoint string, httpClient *http.Client) *Client {
-	return &Client{
+// NewClient returns a new RPc client with overrides
+func NewClient(endpoint string, httpClient *http.Client) Client {
+	return &client{
 		endpoint: endpoint,
 		client:   httpClient,
 	}
 }
 
-func (c *Client) SetTimeout(dur time.Duration) {
+type client struct {
+	endpoint string
+	client   *http.Client
+}
+
+// SetTimeout changes the client timeout
+func (c *client) SetTimeout(dur time.Duration) {
 	c.client.Timeout = dur
 }
 
-func (c *Client) handleServerError(err *json2.Error) error {
-	if err.Code == json2.E_SERVER {
-		if msg, ok := err.Data.(string); ok {
-			msg = strings.ToLower(msg)
-
-			if strings.Contains(msg, "db not found error") {
-				return ErrBlockNotFound
-			}
-			if strings.Contains(msg, "block missing") {
-				return ErrBlockMissing
-			}
-		}
-	}
-	return errors.New(err.Message)
-}
-
-func (c *Client) handleRPCError(err error, method string, params interface{}) error {
-	if err != nil {
-		switch err.(type) {
-		case *json2.Error:
-			e := err.(*json2.Error)
-
-			logrus.WithFields(logrus.Fields{
-				"code":    e.Code,
-				"message": e.Message,
-				"data":    e.Data,
-				"method":  method,
-				"params":  params,
-			}).Debug("rpc service error")
-
-			return c.handleServerError(e)
-
-		default:
-			logrus.WithFields(logrus.Fields{
-				"method": method,
-				"params": params,
-			}).WithError(err).Debug("rpc service error")
-		}
-	}
-	return err
-}
-
 // SetDebug changes the debug mode
-func (c *Client) SetDebug(val bool) {
+func (c *client) SetDebug(val bool) {
 	logrus.SetLevel(logrus.DebugLevel)
 }
 
 // Call executes a RPC transaction
-func (c Client) Call(method string, args interface{}, out interface{}) error {
+func (c client) Call(method string, args interface{}, out interface{}) error {
 	data, err := json2.EncodeClientRequest(method, args)
 	if err != nil {
 		return err
@@ -149,13 +132,13 @@ func (c Client) Call(method string, args interface{}, out interface{}) error {
 }
 
 // GenesisConfig returns the chain genesis configuration
-func (c Client) GenesisConfig() (result GenesisConfig, err error) {
+func (c client) GenesisConfig() (result GenesisConfig, err error) {
 	err = c.Call(methodGenesisConfig, nil, &result)
 	return
 }
 
 // GenesisRecords returns the chain genesis records
-func (c Client) GenesisRecords(limit, offset int) (result GenesisRecords, err error) {
+func (c client) GenesisRecords(limit, offset int) (result GenesisRecords, err error) {
 	args := map[string]interface{}{
 		"limit":  limit,
 		"offset": offset,
@@ -165,33 +148,33 @@ func (c Client) GenesisRecords(limit, offset int) (result GenesisRecords, err er
 }
 
 // Status returns current status of the node
-func (c Client) Status() (status NodeStatus, err error) {
+func (c client) Status() (status NodeStatus, err error) {
 	err = c.Call(methodStatus, nil, &status)
 	return
 }
 
 // NetworkInfo returns current status of the network
-func (c Client) NetworkInfo() (info NetworkInfo, err error) {
+func (c client) NetworkInfo() (info NetworkInfo, err error) {
 	err = c.Call(methodNetworkInfo, nil, &info)
 	return
 }
 
 // CurrentBlock returns the latest available block
-func (c Client) CurrentBlock() (block Block, err error) {
+func (c client) CurrentBlock() (block Block, err error) {
 	params := map[string]interface{}{"finality": "final"}
 	err = c.Call(methodBlock, params, &block)
 	return
 }
 
 // BlockByHeight returns a block for a given height
-func (c Client) BlockByHeight(height uint64) (block Block, err error) {
+func (c client) BlockByHeight(height uint64) (block Block, err error) {
 	params := map[string]interface{}{"block_id": height}
 	err = c.Call(methodBlock, params, &block)
 	return
 }
 
 // BlockByHash returns a block for a given hash
-func (c Client) BlockByHash(hash string) (block Block, err error) {
+func (c client) BlockByHash(hash string) (block Block, err error) {
 	params := map[string]interface{}{"block_id": hash}
 	err = c.Call(methodBlock, params, &block)
 
@@ -199,14 +182,14 @@ func (c Client) BlockByHash(hash string) (block Block, err error) {
 }
 
 // Chunk returns block chunk details by hash
-func (c Client) Chunk(hash string) (chunk ChunkDetails, err error) {
+func (c client) Chunk(hash string) (chunk ChunkDetails, err error) {
 	params := []string{hash}
 	err = c.Call(methodChunk, params, &chunk)
 	return
 }
 
 // Account returns an account by id
-func (c Client) Account(id string) (acc Account, err error) {
+func (c client) Account(id string) (acc Account, err error) {
 	params := map[string]string{
 		"request_type": "view_account",
 		"finality":     "final",
@@ -217,7 +200,7 @@ func (c Client) Account(id string) (acc Account, err error) {
 }
 
 // Transaction returns a transaction by hash
-func (c Client) Transaction(id string) (tran TransactionDetails, err error) {
+func (c client) Transaction(id string) (tran TransactionDetails, err error) {
 	// NOTE: There's a bug in docs/rpc where it says the second param is optional,
 	// however it really requires it and will return an error when it's missing.
 	args := []interface{}{id, "near"}
@@ -226,7 +209,7 @@ func (c Client) Transaction(id string) (tran TransactionDetails, err error) {
 }
 
 // GasPrice returns the current gas price
-func (c Client) GasPrice(block string) (string, error) {
+func (c client) GasPrice(block string) (string, error) {
 	result := GasPriceDetails{}
 	args := []interface{}{nil}
 
@@ -235,7 +218,7 @@ func (c Client) GasPrice(block string) (string, error) {
 }
 
 // CurrentValidators returns the current validators
-func (c Client) CurrentValidators() (*ValidatorsResponse, error) {
+func (c client) CurrentValidators() (*ValidatorsResponse, error) {
 	result := &ValidatorsResponse{}
 	params := []interface{}{nil}
 
@@ -246,7 +229,7 @@ func (c Client) CurrentValidators() (*ValidatorsResponse, error) {
 }
 
 // ValidatorsByHeight returns validators for a given height
-func (c Client) ValidatorsByHeight(height uint64) (*ValidatorsResponse, error) {
+func (c client) ValidatorsByHeight(height uint64) (*ValidatorsResponse, error) {
 	result := &ValidatorsResponse{}
 	params := []interface{}{height}
 
@@ -257,13 +240,13 @@ func (c Client) ValidatorsByHeight(height uint64) (*ValidatorsResponse, error) {
 }
 
 // BlockChanges returns a collection of change events in the block
-func (c Client) BlockChanges(block interface{}) (result BlockChangesResponse, err error) {
+func (c client) BlockChanges(block interface{}) (result BlockChangesResponse, err error) {
 	err = c.Call(methodChangesInBlock, map[string]interface{}{"block_id": block}, &result)
 	return result, err
 }
 
 // RewardFee returns a reward fee for an account
-func (c Client) RewardFee(account string) (*RewardFee, error) {
+func (c client) RewardFee(account string) (*RewardFee, error) {
 	callArgs, err := argsToBase64(map[string]interface{}{})
 	if err != nil {
 		return nil, err
@@ -288,7 +271,7 @@ func (c Client) RewardFee(account string) (*RewardFee, error) {
 }
 
 // Delegations returns a list of delegations for a given account
-func (c Client) Delegations(account string, fromIndex uint64, limit uint64) ([]Delegation, error) {
+func (c client) Delegations(account string, fromIndex uint64, limit uint64) ([]Delegation, error) {
 	callArgs, err := argsToBase64(map[string]interface{}{
 		"from_index": fromIndex,
 		"limit":      limit,
@@ -321,10 +304,60 @@ func (c Client) Delegations(account string, fromIndex uint64, limit uint64) ([]D
 	return delegations, nil
 }
 
+func (c client) handleServerError(err *json2.Error) error {
+	if err.Code == json2.E_SERVER {
+		if msg, ok := err.Data.(string); ok {
+			msg = strings.ToLower(msg)
+
+			if strings.Contains(msg, "db not found error") {
+				return ErrBlockNotFound
+			}
+			if strings.Contains(msg, "block missing") {
+				return ErrBlockMissing
+			}
+		}
+	}
+	return errors.New(err.Message)
+}
+
+func (c client) handleRPCError(err error, method string, params interface{}) error {
+	if err != nil {
+		switch err.(type) {
+		case *json2.Error:
+			e := err.(*json2.Error)
+
+			logrus.WithFields(logrus.Fields{
+				"code":    e.Code,
+				"message": e.Message,
+				"data":    e.Data,
+				"method":  method,
+				"params":  params,
+			}).Debug("rpc service error")
+
+			return c.handleServerError(e)
+
+		default:
+			logrus.WithFields(logrus.Fields{
+				"method": method,
+				"params": params,
+			}).WithError(err).Debug("rpc service error")
+		}
+	}
+	return err
+}
+
 func reqWithTiming(c *http.Client, req *http.Request) (*http.Response, time.Duration, error) {
 	ts := time.Now()
 	resp, err := c.Do(req)
 	te := time.Since(ts)
 
 	return resp, te, err
+}
+
+func argsToBase64(input interface{}) (string, error) {
+	data, err := json.Marshal(input)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(data), nil
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/model"
@@ -17,21 +18,23 @@ import (
 type Server struct {
 	router *gin.Engine
 	db     *store.Store
-	rpc    *near.Client
+	rpc    near.Client
 }
 
 // New returns a new server
-func New(cfg *config.Config, db *store.Store, rpc *near.Client) Server {
-	router := gin.Default()
+func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Client) Server {
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(requestLogger(logger))
+
+	if cfg.RollbarToken != "" {
+		router.Use(RollbarMiddleware())
+	}
 
 	s := Server{
 		router: router,
 		db:     db,
 		rpc:    rpc,
-	}
-
-	if cfg.RollbarToken != "" {
-		router.Use(RollbarMiddleware())
 	}
 
 	router.GET("/", s.GetEndpoints)
@@ -44,7 +47,7 @@ func New(cfg *config.Config, db *store.Store, rpc *near.Client) Server {
 	router.GET("/blocks", s.GetBlocks)
 	router.GET("/blocks/:id", s.GetBlock)
 	router.GET("/block_times", s.GetBlockTimes)
-	router.GET("/block_times_interval", s.GetBlockTimesInterval)
+	router.GET("/block_stats", s.GetBlockStats)
 	router.GET("/validators", s.GetValidators)
 	router.GET("/validators/:id", s.GetValidator)
 	router.GET("/validators/:id/epochs", s.GetValidatorEpochs)
@@ -116,7 +119,7 @@ func (s Server) GetStatus(c *gin.Context) {
 
 	if block, err := s.db.Blocks.Last(); err == nil {
 		data["last_block_time"] = block.Time
-		data["last_block_height"] = block.Height
+		data["last_block_height"] = block.ID
 
 		if time.Since(block.Time).Seconds() <= 300 {
 			data["sync_status"] = "current"
@@ -140,7 +143,7 @@ func (s Server) GetHeight(c *gin.Context) {
 		return
 	}
 	jsonOk(c, gin.H{
-		"height": block.Height,
+		"height": block.ID,
 		"time":   block.Time,
 	})
 }
@@ -218,16 +221,19 @@ func (s Server) GetBlockTimes(c *gin.Context) {
 	jsonOk(c, result)
 }
 
-// GetBlockTimesInterval returns average block times for a given time period
-func (s Server) GetBlockTimesInterval(c *gin.Context) {
-	params := timesIntervalParams{}
+// GetBlockStats returns block stats for a given time bucket
+func (s Server) GetBlockStats(c *gin.Context) {
+	params := statsParams{}
 	if err := c.BindQuery(&params); err != nil {
 		badRequest(c, err)
 		return
 	}
-	params.setDefaults()
+	if err := params.Validate(); err != nil {
+		badRequest(c, err)
+		return
+	}
 
-	result, err := s.db.Blocks.BlockStats(params.Interval, params.Period)
+	result, err := s.db.Blocks.BlockStats(params.Bucket, params.Limit)
 	if shouldReturn(c, err) {
 		return
 	}
@@ -341,7 +347,7 @@ func (s Server) GetValidatorsByHeight(c *gin.Context) {
 		if shouldReturn(c, err) {
 			return
 		}
-		height = block.Height
+		height = block.ID
 	}
 
 	validators, err := s.db.Validators.ByHeight(height)
@@ -354,14 +360,17 @@ func (s Server) GetValidatorsByHeight(c *gin.Context) {
 
 // GetValidatorTimesInterval returns active validators count over period of time
 func (s Server) GetValidatorTimesInterval(c *gin.Context) {
-	params := timesIntervalParams{}
+	params := statsParams{}
 	if err := c.BindQuery(&params); err != nil {
 		badRequest(c, err)
 		return
 	}
-	params.setDefaults()
+	if err := params.Validate(); err != nil {
+		badRequest(c, err)
+		return
+	}
 
-	result, err := s.db.Validators.CountsForInterval(params.Interval, params.Period)
+	result, err := s.db.Validators.CountsForInterval(params.Bucket, params.Limit)
 	if shouldReturn(c, err) {
 		return
 	}

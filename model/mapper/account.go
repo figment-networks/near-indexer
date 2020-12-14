@@ -18,7 +18,6 @@ func AccountFromValidator(block *near.Block, input *near.Validator) (*model.Acco
 		StartTime:      time,
 		LastHeight:     height,
 		LastTime:       time,
-		Balance:        types.NewAmount(""), // balance is obtained via separate rpc call
 		StakingBalance: types.NewAmount(input.Stake),
 	}
 

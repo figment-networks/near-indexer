@@ -7,21 +7,24 @@ import (
 	"github.com/figment-networks/near-indexer/model/types"
 )
 
+var (
+	errBlockInvalidHeight   = errors.New("height is invalid")
+	errBlockInvalidHash     = errors.New("hash is invalid")
+	errBlockInvalidProducer = errors.New("producer is invalid")
+	errBlockInvalidTime     = errors.New("block time is required")
+	errBlockInvalidEpoch    = errors.New("epoch is invalid")
+)
+
 type Block struct {
-	ID                int64        `json:"-"`
-	Height            types.Height `json:"height"`
+	ID                types.Height `json:"id"`
 	Time              time.Time    `json:"time"`
 	Producer          string       `json:"producer"`
 	Hash              string       `json:"hash"`
-	PrevHash          string       `json:"prev_hash"`
 	Epoch             string       `json:"epoch"`
 	GasPrice          types.Amount `json:"gas_price"`
-	GasLimit          int          `json:"gas_allowed"`
-	GasUsed           int          `json:"gas_used"`
-	RentPaid          types.Amount `json:"rent_paid"`
-	ValidatorReward   types.Amount `json:"validator_reward"`
+	GasLimit          uint         `json:"gas_allowed"`
+	GasUsed           uint         `json:"gas_used"`
 	TotalSupply       types.Amount `json:"total_supply"`
-	Signature         string       `json:"signature"`
 	ChunksCount       int          `json:"chunks_count"`
 	TransactionsCount int          `json:"transactions_count"`
 	ApprovalsCount    int          `json:"approvals_count"`
@@ -30,17 +33,20 @@ type Block struct {
 
 // Validate returns an error if block data is invalid
 func (b Block) Validate() error {
+	if !b.ID.Valid() {
+		return errBlockInvalidHeight
+	}
 	if b.Hash == "" {
-		return errors.New("hash is required")
+		return errBlockInvalidHash
 	}
 	if b.Producer == "" {
-		return errors.New("producer is required")
+		return errBlockInvalidProducer
 	}
-	if !b.Height.Valid() {
-		return errors.New("height is invalid")
+	if b.Epoch == "" {
+		return errBlockInvalidEpoch
 	}
 	if b.Time.IsZero() {
-		return errors.New("block time is required")
+		return errBlockInvalidTime
 	}
 	return nil
 }

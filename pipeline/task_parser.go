@@ -10,11 +10,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// ParserTask performs raw block data parsing
 type ParserTask struct {
 	db     *store.Store
 	logger *logrus.Logger
 }
 
+// NewParserTask returns a new parser task
 func NewParserTask(db *store.Store, logger *logrus.Logger) ParserTask {
 	return ParserTask{
 		db:     db,
@@ -22,18 +24,21 @@ func NewParserTask(db *store.Store, logger *logrus.Logger) ParserTask {
 	}
 }
 
-func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
-	defer logTaskDuration(ParserTaskName, time.Now())
+// ShouldRun returns true if there any heights to process
+func (t ParserTask) ShouldRun(payload *Payload) bool {
+	return len(payload.Heights) > 0
+}
 
-	if len(payload.Heights) == 0 {
-		return nil
-	}
+// Name returns the task name
+func (t ParserTask) Name() string {
+	return parserTaskName
+}
+
+// Run executes the parser task
+func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
+	defer logTaskDuration(t, time.Now())
 
 	for _, h := range payload.Heights {
-		if h.Block == nil {
-			continue
-		}
-
 		parsed := &ParsedPayload{}
 		h.Parsed = parsed
 
@@ -44,11 +49,11 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 		parsed.Block = block
 
 		epoch := &model.Epoch{
-			UUID:            h.Block.Header.EpochID,
+			ID:              h.Block.Header.EpochID,
 			StartTime:       block.Time,
-			StartHeight:     uint64(block.Height),
+			StartHeight:     uint64(block.ID),
 			EndTime:         block.Time,
-			EndHeight:       uint64(block.Height),
+			EndHeight:       uint64(block.ID),
 			ValidatorsCount: 0,
 		}
 		parsed.Epoch = epoch
@@ -80,6 +85,7 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 				ExpectedBlocks: validator.ExpectedBlocks,
 				ProducedBlocks: validator.ProducedBlocks,
 				Efficiency:     validator.Efficiency,
+				StakingBalance: validator.Stake,
 			})
 		}
 
@@ -97,6 +103,7 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 				ExpectedBlocks: validator.ExpectedBlocks,
 				ProducedBlocks: validator.ProducedBlocks,
 				Efficiency:     validator.Efficiency,
+				StakingBalance: validator.Stake,
 			})
 		}
 
@@ -120,6 +127,8 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			return err
 		}
 		parsed.Transactions = append(parsed.Transactions, transactions...)
+		block.TransactionsCount = len(transactions)
+		parsed.Block.TransactionsCount = len(transactions)
 	}
 
 	return nil

@@ -6,14 +6,14 @@ import (
 )
 
 type Epoch struct {
-	ID              uint      `json:"-"`
-	UUID            string    `json:"id"`
-	StartHeight     uint64    `json:"start_height"`
-	StartTime       time.Time `json:"start_time"`
-	EndHeight       uint64    `json:"end_height"`
-	EndTime         time.Time `json:"end_time"`
-	BlocksCount     uint      `json:"blocks_count"`
-	ValidatorsCount uint      `json:"validators_count"`
+	ID                string    `json:"id"`
+	StartHeight       uint64    `json:"start_height"`
+	StartTime         time.Time `json:"start_time"`
+	EndHeight         uint64    `json:"end_height"`
+	EndTime           time.Time `json:"end_time"`
+	BlocksCount       uint      `json:"blocks_count"`
+	ValidatorsCount   uint      `json:"validators_count"`
+	AverageEfficiency float64   `json:"average_efficiency"`
 }
 
 func (Epoch) TableName() string {
@@ -21,7 +21,7 @@ func (Epoch) TableName() string {
 }
 
 func (e Epoch) Validate() error {
-	if e.UUID == "" {
+	if e.ID == "" {
 		return errors.New("uuid is not provided")
 	}
 	if e.StartHeight == 0 {

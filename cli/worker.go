@@ -74,7 +74,7 @@ func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store)
 }
 
 func startWorker(cfg *config.Config, logger *logrus.Logger) error {
-	logger.Info("log level:", cfg.LogLevel)
+	logger.Info("log level: ", cfg.LogLevel)
 	logger.Info("using rpc endpoint: ", cfg.RPCEndpoint)
 	logger.Info("sync will run every: ", cfg.SyncInterval)
 	logger.Info("cleanup will run every: ", cfg.CleanupInterval)

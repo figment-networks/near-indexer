@@ -51,8 +51,8 @@ func (s ValidatorsStore) Import(records []model.Validator) error {
 }
 
 // CountsForInterval returns validator counts for a period of time
-func (s ValidatorsStore) CountsForInterval(interval, period string) ([]byte, error) {
-	return jsonquery.MustArray(s.db, queries.ValidatorsCountsForInterval, interval, period)
+func (s ValidatorsStore) CountsForInterval(bucket string, limit uint) ([]byte, error) {
+	return jsonquery.MustArray(s.db, queries.ValidatorsCountsForInterval, bucket, limit)
 }
 
 // Cleanup removes any records before a certain height

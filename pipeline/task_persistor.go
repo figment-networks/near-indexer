@@ -9,11 +9,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// PersistorTask saves the processed data in the database
 type PersistorTask struct {
 	db     *store.Store
 	logger *logrus.Logger
 }
 
+// NewPersistorTask returns a new persistor task
 func NewPersistorTask(db *store.Store, logger *logrus.Logger) PersistorTask {
 	return PersistorTask{
 		db:     db,
@@ -21,12 +23,19 @@ func NewPersistorTask(db *store.Store, logger *logrus.Logger) PersistorTask {
 	}
 }
 
-func (t PersistorTask) Run(ctx context.Context, payload *Payload) error {
-	defer logTaskDuration(PersistorTaskName, time.Now())
+// Name returns the task name
+func (t PersistorTask) Name() string {
+	return persistorTaskName
+}
 
-	if len(payload.Heights) == 0 {
-		return nil
-	}
+// ShouldRun returns true if there any heights to process
+func (t PersistorTask) ShouldRun(payload *Payload) bool {
+	return len(payload.Heights) > 0
+}
+
+// Run executes the persistor task
+func (t PersistorTask) Run(ctx context.Context, payload *Payload) error {
+	defer logTaskDuration(t, time.Now())
 
 	blocks := []model.Block{}
 	transactions := []model.Transaction{}
@@ -41,8 +50,8 @@ func (t PersistorTask) Run(ctx context.Context, payload *Payload) error {
 		blocks = append(blocks, *h.Parsed.Block)
 		transactions = append(transactions, h.Parsed.Transactions...)
 
-		if !epochIds[h.Parsed.Epoch.UUID] {
-			epochIds[h.Parsed.Epoch.UUID] = true
+		if !epochIds[h.Parsed.Epoch.ID] {
+			epochIds[h.Parsed.Epoch.ID] = true
 			epochs = append(epochs, *h.Parsed.Epoch)
 		}
 	}
@@ -86,7 +95,7 @@ func (t PersistorTask) Run(ctx context.Context, payload *Payload) error {
 	}
 
 	lastHeight := payload.Heights[len(payload.Heights)-1]
-	payload.Lag = int(payload.CurrentBlock.Header.Height - uint64(lastHeight.Height))
+	payload.Lag = int(payload.Tip.Header.Height - uint64(lastHeight.Height))
 
 	return nil
 }
@@ -133,13 +142,14 @@ func (t PersistorTask) processHeight(h *HeightPayload, parsed *ParsedPayload) er
 }
 
 func (t PersistorTask) createStats(payload *Payload) error {
-	timeRange := store.TimeRange{
-		Start: payload.StartTime,
-		End:   payload.EndTime,
-	}
-
 	for _, bucket := range []string{store.BucketHour, store.BucketDay} {
 		t.logger.WithField("bucket", bucket).Debug("creating block stats")
+
+		timeRange := store.TimeRange{
+			Start: payload.StartTime,
+			End:   payload.EndTime,
+		}
+
 		if err := t.db.Stats.CreateBlockStats(bucket, timeRange); err != nil {
 			return err
 		}

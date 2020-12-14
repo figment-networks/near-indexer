@@ -78,12 +78,14 @@ func (s ValidatorAggsStore) PaginateValidatorEpochs(account string, pagination P
 		return nil, err
 	}
 
-	return &PaginatedResult{
+	paginatedResult := &PaginatedResult{
 		Page:    pagination.Page,
 		Limit:   pagination.Limit,
 		Count:   count,
 		Records: result,
-	}, nil
+	}
+
+	return paginatedResult.update(), nil
 }
 
 // FindBy returns an validator agg record for a key and value
@@ -105,6 +107,7 @@ func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch
 			r.ExpectedBlocks,
 			r.ProducedBlocks,
 			r.Efficiency,
+			r.StakingBalance,
 		}
 	})
 }

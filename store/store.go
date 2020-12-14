@@ -48,12 +48,14 @@ func (s *Store) SetDebugMode(enabled bool) {
 // ResetAll performs a full database reset without dropping any objects
 func (s *Store) ResetAll() error {
 	tables := []string{
+		"accounts",
 		"blocks",
+		"block_stats",
 		"epochs",
 		"validators",
 		"validator_aggregates",
 		"validator_epochs",
-		"validator_counts",
+		"validator_stats",
 		"transactions",
 		"events",
 	}

@@ -62,7 +62,7 @@ func startCommand(cfg *config.Config, logger *logrus.Logger, name string) error 
 	case "migrate", "migrate:up", "migrate:down", "migrate:redo":
 		return startMigrations(name, cfg)
 	case "server":
-		return startServer(cfg)
+		return startServer(cfg, logger)
 	case "worker":
 		return startWorker(cfg, logger)
 	case "sync":

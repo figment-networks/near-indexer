@@ -1,12 +1,12 @@
 WITH epoch_stats AS (
   SELECT
     epoch,
-    MIN(time) start_time,
-    MIN(height) start_height,
-    MAX(time) end_time,
-    MAX(height) end_height,
-    COUNT(1) blocks_count,
-    COUNT(DISTINCT producer) validators_count
+    MIN(time) AS start_time,
+    MIN(id) AS start_height,
+    MAX(time) AS end_time,
+    MAX(id) AS end_height,
+    COUNT(1) AS blocks_count,
+    COUNT(DISTINCT producer) AS validators_count
   FROM
     blocks
   WHERE
@@ -28,4 +28,4 @@ SET
 FROM
   epoch_stats
 WHERE
-  epochs.uuid = epoch_stats.epoch
+  epochs.id = epoch_stats.epoch

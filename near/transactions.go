@@ -65,19 +65,17 @@ func DecodeActions(t *Transaction) []Action {
 	result := make([]Action, len(t.Actions))
 
 	for idx, act := range t.Actions {
-		switch act.(type) {
+		switch data := act.(type) {
 		case string:
-			name := act.(string)
-			switch name {
+			switch data {
 			case ActionCreateAccount:
-				result[idx].Type = name
+				result[idx].Type = data
 				result[idx].Data = &CreateAccountAction{}
 			default:
-				panic(fmt.Sprintf("unhandled action type: %v", name))
+				panic(fmt.Sprintf("unhandled action type: %v", data))
 			}
 		case map[string]interface{}:
-			actmap := act.(map[string]interface{})
-			for k, v := range actmap {
+			for k, v := range data {
 				var dst interface{}
 				var buf json.RawMessage
 

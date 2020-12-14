@@ -18,7 +18,7 @@ func (s EpochsStore) FindByID(id string) (*model.Epoch, error) {
 
 	err := s.db.
 		Model(epoch).
-		Take(epoch, "uuid = ?", id).
+		Take(epoch, "id = ?", id).
 		Error
 
 	return epoch, checkErr(err)
@@ -30,7 +30,7 @@ func (s EpochsStore) Recent(limit int) ([]model.Epoch, error) {
 
 	err := s.db.
 		Model(&model.Epoch{}).
-		Order("id DESC").
+		Order("start_height DESC").
 		Limit(limit).
 		Find(&epochs).
 		Error
@@ -47,11 +47,14 @@ func (s EpochsStore) Import(records []model.Epoch) error {
 		r := records[i]
 
 		return bulk.Row{
-			r.UUID,
+			r.ID,
 			r.StartHeight,
 			r.StartTime,
 			r.EndHeight,
 			r.EndTime,
+			r.BlocksCount,
+			r.ValidatorsCount,
+			r.AverageEfficiency,
 		}
 	})
 }

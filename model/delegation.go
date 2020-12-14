@@ -22,11 +22,5 @@ func (d Delegation) Validate() error {
 	if d.Account == "" {
 		return errors.New("account is required")
 	}
-	if !d.StakedBalance.Valid() {
-		return errors.New("staked balance is invalid")
-	}
-	if !d.UnstakedBalance.Valid() {
-		return errors.New("unstaked balance is invalid")
-	}
 	return nil
 }

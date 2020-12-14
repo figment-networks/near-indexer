@@ -1,6 +1,13 @@
 package util
 
-import "time"
+import (
+	"time"
+)
+
+// ParseTime returns a timestamp from a unix ns epoch
+func ParseTime(src int64) time.Time {
+	return time.Unix(0, src)
+}
 
 // HourInterval returns a time interval for an hour
 func HourInterval(t time.Time) (time.Time, time.Time) {

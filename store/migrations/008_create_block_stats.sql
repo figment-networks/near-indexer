@@ -1,6 +1,4 @@
 -- +goose Up
-CREATE TYPE e_interval AS ENUM ('h', 'd', 'w');
-
 CREATE TABLE block_stats (
   id                  SERIAL NOT NULL PRIMARY KEY,
   time                TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -8,7 +6,8 @@ CREATE TABLE block_stats (
 
   blocks_count        INTEGER,
   block_time_avg      NUMERIC,
-  validators_count    INTEGER
+  validators_count    INTEGER,
+  transactions_count  INTEGER
 );
 
 CREATE UNIQUE INDEX idx_block_stats_bucket
@@ -16,4 +15,3 @@ CREATE UNIQUE INDEX idx_block_stats_bucket
 
 -- +goose Down
 DROP TABLE block_stats;
-DROP TYPE e_interval;

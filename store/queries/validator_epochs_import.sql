@@ -5,7 +5,8 @@ INSERT INTO validator_epochs (
 	last_time,
 	expected_blocks,
 	produced_blocks,
-	efficiency
+	efficiency,
+  staking_balance
 )
 VALUES @values
 
@@ -15,4 +16,5 @@ SET
 	last_time       = excluded.last_time,
 	expected_blocks = excluded.expected_blocks,
 	produced_blocks = excluded.produced_blocks,
-	efficiency      = ROUND(excluded.efficiency, 4);
+	efficiency      = ROUND(excluded.efficiency, 4),
+  staking_balance = excluded.staking_balance
