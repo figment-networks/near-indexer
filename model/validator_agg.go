@@ -8,8 +8,7 @@ import (
 
 // ValidatorAgg represents validator data at latest height
 type ValidatorAgg struct {
-	Model
-
+	ID             int64        `json:"-"`
 	AccountID      string       `json:"account_id"`
 	StartHeight    types.Height `json:"start_height"`
 	StartTime      time.Time    `json:"start_time"`
@@ -21,6 +20,9 @@ type ValidatorAgg struct {
 	Slashed        bool         `json:"slashed"`
 	Stake          types.Amount `json:"stake"`
 	Efficiency     float64      `json:"efficiency"`
+	RewardFee      *int         `json:"reward_fee"`
+	CreatedAt      time.Time    `json:"-"`
+	UpdatedAt      time.Time    `json:"-"`
 }
 
 func (ValidatorAgg) TableName() string {

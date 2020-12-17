@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/figment-networks/indexing-engine/store/bulk"
-	"github.com/figment-networks/indexing-engine/store/jsonquery"
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/store/queries"
 )
@@ -37,6 +36,7 @@ func (s ValidatorAggsStore) Top() ([]model.ValidatorAgg, error) {
 	return result, checkErr(err)
 }
 
+// FindValidatorEpochs returns the last N validator epochs
 func (s ValidatorAggsStore) FindValidatorEpochs(account string, limit int) ([]model.ValidatorEpoch, error) {
 	result := []model.ValidatorEpoch{}
 
@@ -50,6 +50,44 @@ func (s ValidatorAggsStore) FindValidatorEpochs(account string, limit int) ([]mo
 	return result, checkErr(err)
 }
 
+// PaginateValidatorEpochs returns a paginated search of validator epochs
+func (s ValidatorAggsStore) PaginateValidatorEpochs(account string, pagination Pagination) (*PaginatedResult, error) {
+	if err := pagination.Validate(); err != nil {
+		return nil, err
+	}
+
+	scope := s.db.
+		Model(&model.ValidatorEpoch{}).
+		Where("account_id = ?", account).
+		Order("last_height DESC")
+
+	var count uint
+	if err := scope.Count(&count).Error; err != nil {
+		return nil, err
+	}
+
+	result := []model.ValidatorEpoch{}
+
+	err := scope.
+		Offset((pagination.Page - 1) * pagination.Limit).
+		Limit(pagination.Limit).
+		Find(&result).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	paginatedResult := &PaginatedResult{
+		Page:    pagination.Page,
+		Limit:   pagination.Limit,
+		Count:   count,
+		Records: result,
+	}
+
+	return paginatedResult.update(), nil
+}
+
 // FindBy returns an validator agg record for a key and value
 func (s ValidatorAggsStore) FindBy(key string, value interface{}) (*model.ValidatorAgg, error) {
 	result := &model.ValidatorAgg{}
@@ -57,38 +95,9 @@ func (s ValidatorAggsStore) FindBy(key string, value interface{}) (*model.Valida
 	return result, checkErr(err)
 }
 
-func (s ValidatorAggsStore) FindDetails(id string) ([]byte, error) {
-	return jsonquery.MustObject(s.db, jsonquery.Prepare(queries.ValidatorAggDetails), id)
-}
-
-// Upsert creates or updates and existing agg record
-func (s ValidatorAggsStore) Upsert(record *model.ValidatorAgg) error {
-	agg, err := s.FindBy("account_id", record.AccountID)
-	if err != nil {
-		if isNotFound(err) {
-			return s.Create(record)
-		}
-		return err
-	}
-
-	// Got an older record, should skip any updates
-	if agg.LastHeight > record.LastHeight {
-		return nil
-	}
-
-	agg.LastHeight = record.LastHeight
-	agg.LastTime = record.LastTime
-	agg.ExpectedBlocks = record.ExpectedBlocks
-	agg.ProducedBlocks = record.ProducedBlocks
-	agg.Slashed = record.Slashed
-	agg.Stake = record.Stake
-	agg.Efficiency = record.Efficiency
-
-	return s.Update(agg)
-}
-
+// ImportValidatorEpochs imports validator epochs records in batch
 func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch) error {
-	return s.Import(queries.ValidatorEpochsImport, len(records), func(i int) bulk.Row {
+	return s.bulkImport(queries.ValidatorEpochsImport, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
 			r.AccountID,
@@ -98,16 +107,13 @@ func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch
 			r.ExpectedBlocks,
 			r.ProducedBlocks,
 			r.Efficiency,
+			r.StakingBalance,
 		}
 	})
 }
 
-// UpdateCountsForHeight creates a count tracking record for a given height
-func (s ValidatorAggsStore) UpdateCountsForHeight(height uint64) error {
-	return s.db.Exec(queries.ValidatorCountsImport, height).Error
-}
-
-func (s ValidatorAggsStore) BulkUpsert(records []model.ValidatorAgg) error {
+// Import create validator aggregates in batch
+func (s ValidatorAggsStore) Import(records []model.ValidatorAgg) error {
 	t := time.Now()
 
 	// Mark all validators as inactive
@@ -115,7 +121,7 @@ func (s ValidatorAggsStore) BulkUpsert(records []model.ValidatorAgg) error {
 		return err
 	}
 
-	return s.Import(queries.ValidatorAggImport, len(records), func(i int) bulk.Row {
+	return s.bulkImport(queries.ValidatorAggImport, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
 			r.StartHeight,

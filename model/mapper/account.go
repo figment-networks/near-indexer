@@ -18,8 +18,8 @@ func AccountFromValidator(block *near.Block, input *near.Validator) (*model.Acco
 		StartTime:      time,
 		LastHeight:     height,
 		LastTime:       time,
-		Balance:        types.NewAmount(""), // TODO: where's validator balance?
 		StakingBalance: types.NewAmount(input.Stake),
 	}
+
 	return acc, acc.Validate()
 }

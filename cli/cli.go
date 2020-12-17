@@ -9,16 +9,21 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/figment-networks/near-indexer/config"
+	"github.com/figment-networks/near-indexer/near"
 	"github.com/figment-networks/near-indexer/server"
 	"github.com/figment-networks/near-indexer/store"
 )
 
 // Run executes the command line interface
 func Run() {
-	var configPath string
-	var runCommand string
-	var showVersion bool
+	var (
+		configPath  string
+		runCommand  string
+		showVersion bool
+	)
 
 	flag.BoolVar(&showVersion, "v", false, "Show application version")
 	flag.StringVar(&configPath, "config", "", "Path to config")
@@ -35,6 +40,8 @@ func Run() {
 		terminate(err)
 	}
 
+	logger := initLogger(cfg)
+
 	config.InitRollbar(cfg)
 	defer config.TrackRecovery()
 
@@ -46,25 +53,25 @@ func Run() {
 		initProfiler()
 	}
 
-	if err := startCommand(cfg, runCommand); err != nil {
+	if err := startCommand(cfg, logger, runCommand); err != nil {
 		terminate(err)
 	}
 }
 
-func startCommand(cfg *config.Config, name string) error {
+func startCommand(cfg *config.Config, logger *logrus.Logger, name string) error {
 	switch name {
 	case "migrate", "migrate:up", "migrate:down", "migrate:redo":
 		return startMigrations(name, cfg)
 	case "server":
-		return startServer(cfg)
+		return startServer(cfg, logger)
 	case "worker":
-		return startWorker(cfg)
+		return startWorker(cfg, logger)
 	case "sync":
-		return runSync(cfg)
+		return runSync(cfg, logger)
 	case "status":
 		return startStatus(cfg)
 	case "cleanup":
-		return startCleanup(cfg)
+		return startCleanup(cfg, logger)
 	case "reset":
 		return startReset(cfg)
 	default:
@@ -107,13 +114,37 @@ func initConfig(path string) (*config.Config, error) {
 	return cfg, nil
 }
 
+func initLogger(cfg *config.Config) *logrus.Logger {
+	logger := logrus.StandardLogger()
+
+	switch cfg.LogLevel {
+	case "debug":
+		logrus.SetLevel(logrus.DebugLevel)
+	case "info":
+		logrus.SetLevel(logrus.InfoLevel)
+	}
+
+	return logger
+}
+
+func initClient(cfg *config.Config) near.Client {
+	client := near.DefaultClient(cfg.RPCEndpoint)
+	client.SetTimeout(cfg.RPCClientTimeout())
+	if cfg.LogLevel == "debug" {
+		client.SetDebug(true)
+	}
+	return client
+}
+
 func initStore(cfg *config.Config) (*store.Store, error) {
 	db, err := store.New(cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
 	}
 
-	db.SetDebugMode(cfg.Debug)
+	if cfg.LogLevel == "debug" {
+		db.SetDebugMode(true)
+	}
 
 	return db, nil
 }

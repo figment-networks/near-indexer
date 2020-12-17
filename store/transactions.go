@@ -1,6 +1,13 @@
 package store
 
-import "github.com/figment-networks/near-indexer/model"
+import (
+	"time"
+
+	"github.com/figment-networks/indexing-engine/store/bulk"
+
+	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/store/queries"
+)
 
 type TransactionsStore struct {
 	baseStore
@@ -45,4 +52,27 @@ func (s TransactionsStore) Recent(n int) ([]model.Transaction, error) {
 		Error
 
 	return result, checkErr(err)
+}
+
+func (s TransactionsStore) Import(records []model.Transaction) error {
+	t := time.Now()
+
+	return s.bulkImport(queries.TransactionsImport, len(records), func(i int) bulk.Row {
+		r := records[i]
+		return bulk.Row{
+			r.Hash,
+			r.BlockHash,
+			r.Height,
+			r.Time,
+			r.Sender,
+			r.Receiver,
+			r.Amount,
+			r.GasBurnt,
+			r.Success,
+			string(r.Actions),
+			r.ActionsCount,
+			t,
+			t,
+		}
+	})
 }

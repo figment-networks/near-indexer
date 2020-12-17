@@ -8,7 +8,7 @@ DOCKER_TAG   ?= latest
 
 # Build the binary
 build: migrations queries
-	go build \
+	@go build \
 		-ldflags "\
 			-s -w \
 			-X github.com/figment-networks/${PROJECT}/config.GitCommit=${GIT_COMMIT} \
@@ -16,12 +16,12 @@ build: migrations queries
 
 # Generate static migrations file
 migrations:
-	go-assets-builder store/migrations -p migrations -o store/migrations/migrations.go
+	@go-assets-builder store/migrations -p migrations -o store/migrations/migrations.go
 
 # Embed SQL queries
 queries:
-	sqlembed -path=./store/queries -package=queries > ./store/queries/queries.go
-	go fmt ./store/queries/queries.go
+	@sqlembed -path=./store/queries -package=queries > ./store/queries/queries.go
+	@go fmt ./store/queries/queries.go > /dev/null
 
 # Install third-party tools
 setup:

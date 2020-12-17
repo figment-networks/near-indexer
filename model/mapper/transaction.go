@@ -19,12 +19,11 @@ func Transaction(block *near.Block, input *near.TransactionDetails) (*model.Tran
 		BlockHash: block.Header.Hash,
 		Height:    types.Height(block.Header.Height),
 		Time:      util.ParseTime(block.Header.Timestamp),
-		Signer:    tx.SignerID,
-		SignerKey: tx.PublicKey,
+		Sender:    tx.SignerID,
 		Receiver:  tx.ReceiverID,
-		Signature: tx.Signature,
 		Amount:    types.NewAmount("0"),
 		GasBurnt:  fmt.Sprintf("%v", input.TransactionOutcome.Outcome.GasBurnt),
+		Success:   input.Status.SuccessValue != nil,
 	}
 
 	if actions := near.DecodeActions(&tx); len(actions) > 0 {
@@ -33,9 +32,15 @@ func Transaction(block *near.Block, input *near.TransactionDetails) (*model.Tran
 			return nil, err
 		}
 		t.Actions = reencoded
+		t.ActionsCount = len(actions)
 	}
 
-	return t, t.Validate()
+	if err := t.Validate(); err != nil {
+		raw, _ := json.Marshal(tx)
+		return nil, fmt.Errorf("transaction (%s) is invalid: %w", string(raw), err)
+	}
+
+	return t, nil
 }
 
 // Transactions constructs a set of transactions from the chain input
