@@ -112,11 +112,7 @@ func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch
 	})
 }
 
-// UpdateCountsForHeight creates a count tracking record for a given height
-func (s ValidatorAggsStore) UpdateCountsForHeight(height uint64) error {
-	return s.db.Exec(queries.ValidatorCountsImport, height).Error
-}
-
+// Import create validator aggregates in batch
 func (s ValidatorAggsStore) Import(records []model.ValidatorAgg) error {
 	t := time.Now()
 

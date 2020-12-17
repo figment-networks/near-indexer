@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/figment-networks/indexing-engine/store/bulk"
-	"github.com/figment-networks/indexing-engine/store/jsonquery"
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/model/types"
 	"github.com/figment-networks/near-indexer/store/queries"
@@ -28,7 +27,7 @@ func (s ValidatorsStore) ByHeight(height types.Height) ([]model.Validator, error
 	return result, err
 }
 
-// BulkInsert creates new validators or updates existing ones
+// Import creates new validators in batch
 func (s ValidatorsStore) Import(records []model.Validator) error {
 	t := time.Now()
 
@@ -48,11 +47,6 @@ func (s ValidatorsStore) Import(records []model.Validator) error {
 			t,
 		}
 	})
-}
-
-// CountsForInterval returns validator counts for a period of time
-func (s ValidatorsStore) CountsForInterval(bucket string, limit uint) ([]byte, error) {
-	return jsonquery.MustArray(s.db, queries.ValidatorsCountsForInterval, bucket, limit)
 }
 
 // Cleanup removes old validator records and keeps the N most recent ones
