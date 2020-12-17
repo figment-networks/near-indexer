@@ -52,7 +52,6 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/validators/:id", s.GetValidator)
 	router.GET("/validators/:id/epochs", s.GetValidatorEpochs)
 	router.GET("/validators/:id/events", s.GetValidatorEvents)
-	router.GET("/validator_times_interval", s.GetValidatorTimesInterval)
 	router.GET("/transactions", s.GetTransactions)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
@@ -78,7 +77,7 @@ func (s Server) GetEndpoints(c *gin.Context) {
 			"/blocks":                "Get latest blocks",
 			"/blocks/:id":            "Get block details by height or hash",
 			"/block_times":           "Get average block times",
-			"/block_times_interval":  "Get average block times for a given interval",
+			"/block_stats":           "Get block stats for a time bucket",
 			"/epochs":                "Get list of epochs",
 			"/epochs/:id":            "Get epoch details",
 			"/validators":            "List all validators",
@@ -356,26 +355,6 @@ func (s Server) GetValidatorsByHeight(c *gin.Context) {
 	}
 
 	jsonOk(c, validators)
-}
-
-// GetValidatorTimesInterval returns active validators count over period of time
-func (s Server) GetValidatorTimesInterval(c *gin.Context) {
-	params := statsParams{}
-	if err := c.BindQuery(&params); err != nil {
-		badRequest(c, err)
-		return
-	}
-	if err := params.Validate(); err != nil {
-		badRequest(c, err)
-		return
-	}
-
-	result, err := s.db.Validators.CountsForInterval(params.Bucket, params.Limit)
-	if shouldReturn(c, err) {
-		return
-	}
-
-	jsonOk(c, result)
 }
 
 // GetTransactions returns a list of transactions that match query
