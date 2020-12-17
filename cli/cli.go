@@ -12,6 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/figment-networks/near-indexer/config"
+	"github.com/figment-networks/near-indexer/near"
 	"github.com/figment-networks/near-indexer/server"
 	"github.com/figment-networks/near-indexer/store"
 )
@@ -66,11 +67,11 @@ func startCommand(cfg *config.Config, logger *logrus.Logger, name string) error 
 	case "worker":
 		return startWorker(cfg, logger)
 	case "sync":
-		return runSync(cfg)
+		return runSync(cfg, logger)
 	case "status":
 		return startStatus(cfg)
 	case "cleanup":
-		return startCleanup(cfg)
+		return startCleanup(cfg, logger)
 	case "reset":
 		return startReset(cfg)
 	default:
@@ -124,6 +125,15 @@ func initLogger(cfg *config.Config) *logrus.Logger {
 	}
 
 	return logger
+}
+
+func initClient(cfg *config.Config) near.Client {
+	client := near.DefaultClient(cfg.RPCEndpoint)
+	client.SetTimeout(cfg.RPCClientTimeout())
+	if cfg.LogLevel == "debug" {
+		client.SetDebug(true)
+	}
+	return client
 }
 
 func initStore(cfg *config.Config) (*store.Store, error) {

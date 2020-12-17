@@ -4,7 +4,6 @@ import (
 	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/store/queries"
-	"github.com/lib/pq"
 )
 
 // EpochsStore manages epochs records
@@ -38,10 +37,15 @@ func (s EpochsStore) Recent(limit int) ([]model.Epoch, error) {
 	return epochs, checkErr(err)
 }
 
-func (s EpochsStore) UpdateCounters(ids []string) error {
-	return s.db.Exec(queries.EpochsUpdateCounts, pq.Array(ids)).Error
+// UpdateCounts updates epoch counts for a given set of epoch IDs
+func (s EpochsStore) UpdateCounts(ids []string) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	return s.db.Exec(queries.EpochsUpdateCounts, ids).Error
 }
 
+// Import created epochs records in batch
 func (s EpochsStore) Import(records []model.Epoch) error {
 	return s.bulkImport(queries.EpochsImport, len(records), func(i int) bulk.Row {
 		r := records[i]

@@ -12,8 +12,5 @@ VALUES @values
 
 ON CONFLICT (id) DO UPDATE
 SET
-  end_height         = excluded.end_height,
-  end_time           = excluded.end_time,
-  blocks_count       = excluded.blocks_count,
-  validators_count   = excluded.validators_count,
-  average_efficiency = excluded.average_efficiency
+  end_height = excluded.end_height,
+  end_time   = excluded.end_time

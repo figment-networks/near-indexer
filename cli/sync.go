@@ -1,15 +1,14 @@
 package cli
 
 import (
+	"github.com/sirupsen/logrus"
+
 	"github.com/figment-networks/near-indexer/config"
-	"github.com/figment-networks/near-indexer/near"
 	"github.com/figment-networks/near-indexer/pipeline"
 )
 
-func runSync(cfg *config.Config) error {
-	client := near.DefaultClient(cfg.RPCEndpoint)
-	client.SetDebug(true)
-	client.SetTimeout(cfg.RPCClientTimeout())
+func runSync(cfg *config.Config, logger *logrus.Logger) error {
+	client := initClient(cfg)
 
 	db, err := initStore(cfg)
 	if err != nil {

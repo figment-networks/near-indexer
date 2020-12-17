@@ -82,16 +82,8 @@ func (t PersistorTask) Run(ctx context.Context, payload *Payload) error {
 		return err
 	}
 
-	epochsToUpdate := []string{}
-	for _, h := range payload.Heights {
-		if h.PreviousBlock != nil {
-			epochsToUpdate = append(epochsToUpdate, h.Block.Header.EpochID, h.Block.Header.EpochID)
-		}
-	}
-	if len(epochsToUpdate) > 0 {
-		if err := t.db.Epochs.UpdateCounters(epochsToUpdate); err != nil {
-			return err
-		}
+	if err := t.updateEpochs(payload); err != nil {
+		return err
 	}
 
 	lastHeight := payload.Heights[len(payload.Heights)-1]
@@ -135,6 +127,26 @@ func (t PersistorTask) processHeight(h *HeightPayload, parsed *ParsedPayload) er
 			if err := t.db.Events.Create(&event); err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+func (t PersistorTask) updateEpochs(payload *Payload) error {
+	epochsToUpdate := map[string]bool{}
+	for _, h := range payload.Heights {
+		if h.PreviousBlock != nil || h.CurrentEpoch {
+			epochsToUpdate[h.Block.Header.EpochID] = true
+		}
+	}
+	if len(epochsToUpdate) > 0 {
+		epochIDs := []string{}
+		for k := range epochsToUpdate {
+			epochIDs = append(epochIDs, k)
+		}
+		if err := t.db.Epochs.UpdateCounts(epochIDs); err != nil {
+			return err
 		}
 	}
 

@@ -50,7 +50,7 @@ func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) co
 	return cancel
 }
 
-func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) context.CancelFunc {
+func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store, logger *logrus.Logger) context.CancelFunc {
 	ctx, cancel := context.WithCancel(context.Background())
 	ticker := time.NewTicker(cfg.CleanupDuration())
 
@@ -63,7 +63,7 @@ func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store)
 		for {
 			select {
 			case <-ticker.C:
-				pipeline.RunCleanup(cfg, db)
+				pipeline.RunCleanup(cfg, db, logger)
 			case <-ctx.Done():
 				return
 			}
@@ -89,7 +89,7 @@ func startWorker(cfg *config.Config, logger *logrus.Logger) error {
 	wg.Add(2)
 
 	cancelSync := startSyncWorker(wg, cfg, db)
-	cancelCleanup := startCleanupWorker(wg, cfg, db)
+	cancelCleanup := startCleanupWorker(wg, cfg, db, logger)
 
 	s := <-initSignals()
 	logger.Info("received signal: ", s)

@@ -55,12 +55,8 @@ func (s ValidatorsStore) CountsForInterval(bucket string, limit uint) ([]byte, e
 	return jsonquery.MustArray(s.db, queries.ValidatorsCountsForInterval, bucket, limit)
 }
 
-// Cleanup removes any records before a certain height
-func (s ValidatorsStore) Cleanup(maxHeight uint64) (int64, error) {
-	result := s.db.Delete(s.model, "height <= ?", maxHeight)
+// Cleanup removes old validator records and keeps the N most recent ones
+func (s ValidatorsStore) Cleanup(keepHeights uint64) (int64, error) {
+	result := s.db.Exec(queries.ValidatorsCleanup, keepHeights)
 	return result.RowsAffected, result.Error
-}
-
-func (s ValidatorsStore) CleanupCounts() error {
-	return s.db.Exec(queries.ValidatorsPurgeCounts).Error
 }

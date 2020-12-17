@@ -1,35 +1,26 @@
 package pipeline
 
 import (
-	"log"
+	"github.com/sirupsen/logrus"
 
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/store"
 )
 
-func RunCleanup(cfg *config.Config, db *store.Store) error {
+// RunCleanup performs the data cleanup
+func RunCleanup(cfg *config.Config, db *store.Store, logger *logrus.Logger) error {
 	lastBlock, err := db.Blocks.Last()
 	if err != nil {
 		return err
 	}
 
-	maxHeight := uint64(lastBlock.ID) - uint64(cfg.CleanupThreshold)
-	if maxHeight == 0 {
-		log.Println("nothing to cleanup")
-		return nil
-	}
-	log.Println("starting cleanup, max height:", maxHeight, "threshold:", cfg.CleanupThreshold)
+	logger.WithField("height", lastBlock.ID).Info("starting cleanup")
 
-	return nil
-
-	if numRows, err := db.Validators.Cleanup(maxHeight); err == nil {
-		log.Println("validators removed:", numRows)
+	keepHeights := uint64(1000)
+	if numRows, err := db.Validators.Cleanup(keepHeights); err == nil {
+		logrus.WithField("count", numRows).Info("validators removed")
 	} else {
-		log.Println("validators cleanup error:", err)
-	}
-
-	if err := db.Validators.CleanupCounts(); err != nil {
-		log.Println("validator counts cleanup error:", err)
+		logrus.WithError(err).Error("validators cleanup failed")
 	}
 
 	return nil
