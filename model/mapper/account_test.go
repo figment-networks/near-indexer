@@ -29,7 +29,7 @@ func TestAccountFromValidator(t *testing.T) {
 	assert.Equal(t, validator.AccountID, acc.Name)
 	assert.Equal(t, types.Height(block.Header.Height), acc.StartHeight)
 	assert.Equal(t, types.Height(block.Header.Height), acc.LastHeight)
-	assert.Equal(t, "2020-07-30T22:39:42-05:00", acc.StartTime.Format(time.RFC3339))
-	assert.Equal(t, "2020-07-30T22:39:42-05:00", acc.LastTime.Format(time.RFC3339))
+	assert.Equal(t, "2020-07-31T03:39:42Z", acc.StartTime.UTC().Format(time.RFC3339))
+	assert.Equal(t, "2020-07-31T03:39:42Z", acc.LastTime.UTC().Format(time.RFC3339))
 	assert.Equal(t, types.NewAmount("1000"), acc.StakingBalance)
 }
