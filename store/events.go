@@ -18,6 +18,7 @@ type EventsSearch struct {
 	ItemType string `form:"item_type"`
 	Action   string `form:"action"`
 	Height   uint64 `form:"height"`
+	Epoch    string `form:"epoch"`
 }
 
 // FindByID returns an event for a given ID
@@ -51,6 +52,9 @@ func (s EventsStore) Search(search EventsSearch) (*PaginatedResult, error) {
 	}
 	if search.Action != "" {
 		scope = scope.Where("action = ?", search.Action)
+	}
+	if search.Epoch != "" {
+		scope = scope.Where("epoch = ?", search.Epoch)
 	}
 
 	var count uint
