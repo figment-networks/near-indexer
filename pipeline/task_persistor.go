@@ -136,7 +136,10 @@ func (t PersistorTask) processHeight(h *HeightPayload, parsed *ParsedPayload) er
 func (t PersistorTask) updateEpochs(payload *Payload) error {
 	epochsToUpdate := map[string]bool{}
 	for _, h := range payload.Heights {
-		if h.PreviousBlock != nil || h.CurrentEpoch {
+		if h.PreviousBlock != nil {
+			epochsToUpdate[h.PreviousBlock.Header.EpochID] = true
+		}
+		if h.CurrentEpoch {
 			epochsToUpdate[h.Block.Header.EpochID] = true
 		}
 	}
