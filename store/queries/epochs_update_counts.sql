@@ -10,7 +10,7 @@ WITH epoch_stats AS (
   FROM
     blocks
   WHERE
-    epoch IN ($1)
+    epoch IN (?)
   GROUP BY
     epoch
 )
@@ -23,7 +23,7 @@ SET
   blocks_count       = epoch_stats.blocks_count,
   validators_count   = epoch_stats.validators_count,
   average_efficiency = (
-    SELECT ROUND(COALESCE(AVG(efficiency), 0), 4) FROM validator_epochs WHERE epoch IN ($1)
+    SELECT ROUND(COALESCE(AVG(efficiency), 0), 4) FROM validator_epochs WHERE epoch = epoch_stats.epoch
   )
 FROM
   epoch_stats
