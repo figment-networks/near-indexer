@@ -4,17 +4,16 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"regexp"
+	"math/big"
 )
 
 var (
-	reTrailingZeroes = regexp.MustCompile(`\.?0*$`)
+	errInvalidAmount = errors.New("invalid amount")
 )
 
 // Amount represense a NEAR yocto
 type Amount struct {
-	raw string
+	*big.Int
 }
 
 // NewAmount returns a new amount from the given string
@@ -22,83 +21,76 @@ func NewAmount(src string) Amount {
 	if src == "" {
 		src = "0"
 	}
-	return Amount{src}
+
+	n := new(big.Int)
+	n.SetString(src, 10)
+
+	return Amount{Int: n}
 }
 
 // NewInt64Amount returns a new amount for the given int64 value
 func NewInt64Amount(val int64) Amount {
-	amount := Amount{}
-	amount.Scan(val)
-	return amount
+	n := big.NewInt(val)
+	return Amount{Int: n}
 }
 
 // MarshalJSON returns a JSON representation of amount
 func (a Amount) MarshalJSON() ([]byte, error) {
-	// Following code will render both raw and formatted values
-	// return json.Marshal(map[string]string{
-	// 	"raw":       a.raw,
-	// 	"formatted": a.String(),
-	// })
-	return json.Marshal(a.raw)
-}
-
-// Valid returns true if amount is valid
-func (a Amount) Valid() bool {
-	return a.raw != ""
-}
-
-// Raw returns a raw amount value
-func (a Amount) Raw() string {
-	return a.raw
-}
-
-// String returns a formatted amount value
-func (a Amount) String() string {
-	return a.Format(nearFractionDigits)
+	if a.Int == nil {
+		return json.Marshal(nil)
+	}
+	return json.Marshal(a.Int.String())
 }
 
 // Value returns a serialized value
 func (a Amount) Value() (driver.Value, error) {
-	return a.raw, nil
+	if a.Int != nil {
+		return a.Int.String(), nil
+	}
+	return nil, nil
+}
+
+func (a Amount) String() string {
+	if a.Int == nil {
+		return ""
+	}
+	return a.Int.String()
+}
+
+// Compare compares two amounts
+func (a Amount) Compare(b Amount) int {
+	return a.Cmp(b.Int)
+}
+
+// Sub substitutes a given amount from the current one
+func (a Amount) Sub(b Amount) Amount {
+	n := new(big.Int)
+	n.Sub(a.Int, b.Int)
+	return Amount{n}
 }
 
 // Scan assigns the value from interface
 func (a *Amount) Scan(value interface{}) error {
-	v, ok := value.(string)
-	if !ok {
-		return errors.New("invalid amount")
+	if value == nil {
+		return nil
 	}
-	a.raw = v
+
+	n := new(big.Int)
+
+	switch v := value.(type) {
+	case string:
+		n, ok := n.SetString(v, 10)
+		if !ok {
+			return errInvalidAmount
+		}
+		a.Int = n
+	case []byte:
+		n, ok := n.SetString(string(value.([]byte)), 10)
+		if !ok {
+			return errInvalidAmount
+		}
+		a.Int = n
+	}
+
 	return nil
-}
-
-// Format formats the amount with a fixed digits length
-func (a Amount) Format(digits int) string {
-	val := bigint(a.raw)
-	if val.Cmp(nearZero) == 0 {
-		return "0"
-	}
-
-	roundingExp := nearNominationExp - digits - 1
-	if roundingExp > 0 {
-		val.Add(val, &nearRoundingOffsets[roundingExp])
-	}
-
-	strval := val.String()
-
-	idx := len(strval) - nearNominationExp
-	if idx < 0 {
-		idx = 0
-	}
-
-	wholeStr := strval[0:idx]
-	fractionStr := strval[idx:]
-	fractionStr = fmt.Sprintf(nearFractionFormat, fractionStr)[0:digits]
-	fullStr := trimTrailingZeroes(wholeStr + "." + fractionStr)
-
-	return fullStr
-}
-
-func trimTrailingZeroes(src string) string {
-	return reTrailingZeroes.ReplaceAllString(src, "")
 }

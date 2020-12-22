@@ -4,10 +4,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/model/mapper"
 	"github.com/figment-networks/near-indexer/model/types"
+	"github.com/figment-networks/near-indexer/near"
 	"github.com/figment-networks/near-indexer/store"
 )
 
@@ -15,35 +18,45 @@ import (
 type Server struct {
 	router *gin.Engine
 	db     *store.Store
+	rpc    near.Client
 }
 
 // New returns a new server
-func New(cfg *config.Config, db *store.Store) Server {
-	router := gin.Default()
-
-	s := Server{
-		router: router,
-		db:     db,
-	}
+func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Client) Server {
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(requestLogger(logger))
 
 	if cfg.RollbarToken != "" {
 		router.Use(RollbarMiddleware())
 	}
 
+	s := Server{
+		router: router,
+		db:     db,
+		rpc:    rpc,
+	}
+
+	router.GET("/", s.GetEndpoints)
 	router.GET("/health", s.GetHealth)
 	router.GET("/status", s.GetStatus)
 	router.GET("/height", s.GetHeight)
+	router.GET("/epochs", s.GetEpochs)
+	router.GET("/epochs/:id", s.GetEpoch)
 	router.GET("/block", s.GetRecentBlock)
 	router.GET("/blocks", s.GetBlocks)
 	router.GET("/blocks/:id", s.GetBlock)
 	router.GET("/block_times", s.GetBlockTimes)
-	router.GET("/block_times_interval", s.GetBlockTimesInterval)
+	router.GET("/block_stats", s.GetBlockStats)
 	router.GET("/validators", s.GetValidators)
 	router.GET("/validators/:id", s.GetValidator)
-	router.GET("/validator_times_interval", s.GetValidatorTimesInterval)
+	router.GET("/validators/:id/epochs", s.GetValidatorEpochs)
+	router.GET("/validators/:id/events", s.GetValidatorEvents)
 	router.GET("/transactions", s.GetTransactions)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
+	router.GET("/delegations/:id", s.GetDelegations)
+	router.GET("/events", s.GetEvents)
 
 	return s
 }
@@ -53,12 +66,43 @@ func (s Server) Run(addr string) error {
 	return s.router.Run(addr)
 }
 
+// GetEndpoints returns a list of all available endpoints
+func (s Server) GetEndpoints(c *gin.Context) {
+	jsonOk(c, gin.H{
+		"endpoints": gin.H{
+			"/health":                "Get service health",
+			"/status":                "Get service and network status",
+			"/height":                "Get current block height",
+			"/block":                 "Get current block details",
+			"/blocks":                "Get latest blocks",
+			"/blocks/:id":            "Get block details by height or hash",
+			"/block_times":           "Get average block times",
+			"/block_stats":           "Get block stats for a time bucket",
+			"/epochs":                "Get list of epochs",
+			"/epochs/:id":            "Get epoch details",
+			"/validators":            "List all validators",
+			"/validators/:id":        "Get validator details",
+			"/validators/:id/epochs": "Get validator epochs performance",
+			"/validators/:id/events": "Get validator events",
+			"/transactions":          "List all recent transactions",
+			"/transactions/:id":      "Get transaction details",
+			"/accounts/:id":          "Get accoun details",
+			"/delegations/:id":       "Get account delegations",
+			"/events":                "Get list of events",
+		},
+	})
+}
+
 // GetHealth renders the server health status
 func (s Server) GetHealth(c *gin.Context) {
-	if err := s.db.Test(); err != nil {
+	dbErr := s.db.Test()
+	_, nodeErr := s.rpc.Status()
+
+	if dbErr != nil || nodeErr != nil {
 		jsonError(c, 500, "unhealthy")
 		return
 	}
+
 	jsonOk(c, gin.H{"healthy": true})
 }
 
@@ -72,13 +116,20 @@ func (s Server) GetStatus(c *gin.Context) {
 		"sync_status": "stale",
 	}
 
-	if block, err := s.db.Blocks.Recent(); err == nil {
+	if block, err := s.db.Blocks.Last(); err == nil {
 		data["last_block_time"] = block.Time
-		data["last_block_height"] = block.Height
+		data["last_block_height"] = block.ID
 
 		if time.Since(block.Time).Seconds() <= 300 {
 			data["sync_status"] = "current"
 		}
+	}
+
+	if status, err := s.rpc.Status(); err == nil {
+		data["network_name"] = status.ChainID
+		data["network_version"] = status.Version.Version
+		data["node_block_time"] = status.SyncInfo.LatestBlockTime.Format(time.RFC3339)
+		data["node_block_height"] = status.SyncInfo.LatestBlockHeight
 	}
 
 	jsonOk(c, data)
@@ -86,19 +137,37 @@ func (s Server) GetStatus(c *gin.Context) {
 
 // GetHeight renders the last indexed height
 func (s Server) GetHeight(c *gin.Context) {
-	block, err := s.db.Blocks.Recent()
+	block, err := s.db.Blocks.Last()
 	if shouldReturn(c, err) {
 		return
 	}
 	jsonOk(c, gin.H{
-		"height": block.Height,
+		"height": block.ID,
 		"time":   block.Time,
 	})
 }
 
+// GetEpochs returns a list of recent epochs
+func (s Server) GetEpochs(c *gin.Context) {
+	epochs, err := s.db.Epochs.Recent(100)
+	if shouldReturn(c, err) {
+		return
+	}
+	jsonOk(c, epochs)
+}
+
+// GetEpoch returns a single epoch details
+func (s Server) GetEpoch(c *gin.Context) {
+	epoch, err := s.db.Epochs.FindByID(c.Param("id"))
+	if shouldReturn(c, err) {
+		return
+	}
+	jsonOk(c, epoch)
+}
+
 // GetRecentBlock renders the last indexed block
 func (s Server) GetRecentBlock(c *gin.Context) {
-	block, err := s.db.Blocks.Recent()
+	block, err := s.db.Blocks.Last()
 	if shouldReturn(c, err) {
 		return
 	}
@@ -132,6 +201,7 @@ func (s Server) GetBlock(c *gin.Context) {
 	jsonOk(c, block)
 }
 
+// GetBlockTimes returns an average block time for the last N blocks
 func (s Server) GetBlockTimes(c *gin.Context) {
 	params := blockTimesParams{}
 
@@ -150,15 +220,19 @@ func (s Server) GetBlockTimes(c *gin.Context) {
 	jsonOk(c, result)
 }
 
-func (s Server) GetBlockTimesInterval(c *gin.Context) {
-	params := timesIntervalParams{}
+// GetBlockStats returns block stats for a given time bucket
+func (s Server) GetBlockStats(c *gin.Context) {
+	params := statsParams{}
 	if err := c.BindQuery(&params); err != nil {
 		badRequest(c, err)
 		return
 	}
-	params.setDefaults()
+	if err := params.Validate(); err != nil {
+		badRequest(c, err)
+		return
+	}
 
-	result, err := s.db.Blocks.BlockStats(params.Interval, params.Period)
+	result, err := s.db.Blocks.BlockStats(params.Bucket, params.Limit)
 	if shouldReturn(c, err) {
 		return
 	}
@@ -175,6 +249,53 @@ func (s Server) GetValidators(c *gin.Context) {
 	jsonOk(c, validators)
 }
 
+// GetValidatorEpochs returns validator epoch participation
+func (s Server) GetValidatorEpochs(c *gin.Context) {
+	validator, err := s.db.ValidatorAggs.FindBy("account_id", c.Param("id"))
+	if shouldReturn(c, err) {
+		return
+	}
+
+	pagination := store.Pagination{}
+	if err := c.Bind(&pagination); err != nil {
+		badRequest(c, err)
+		return
+	}
+
+	result, err := s.db.ValidatorAggs.PaginateValidatorEpochs(validator.AccountID, pagination)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, result)
+}
+
+// GetValidatorEvents returns validator events
+func (s Server) GetValidatorEvents(c *gin.Context) {
+	validator, err := s.db.ValidatorAggs.FindBy("account_id", c.Param("id"))
+	if shouldReturn(c, err) {
+		return
+	}
+
+	search := store.EventsSearch{
+		ItemID:   validator.AccountID,
+		ItemType: "validator",
+	}
+
+	if err := c.Bind(&search); err != nil {
+		badRequest(c, err)
+		return
+	}
+
+	events, err := s.db.Events.Search(search)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, events)
+}
+
+// GetValidator returns validator details
 func (s Server) GetValidator(c *gin.Context) {
 	info, err := s.db.ValidatorAggs.FindBy("account_id", c.Param("id"))
 	if shouldReturn(c, err) {
@@ -182,8 +303,12 @@ func (s Server) GetValidator(c *gin.Context) {
 	}
 
 	account, err := s.db.Accounts.FindByName(info.AccountID)
-	if shouldReturn(c, err) {
-		return
+	if err != nil {
+		if err != store.ErrNotFound {
+			serverError(c, err)
+			return
+		}
+		account = nil
 	}
 
 	epochs, err := s.db.ValidatorAggs.FindValidatorEpochs(info.AccountID, 30)
@@ -196,11 +321,20 @@ func (s Server) GetValidator(c *gin.Context) {
 		return
 	}
 
+	events, err := s.db.Events.Search(store.EventsSearch{
+		ItemID:   info.AccountID,
+		ItemType: "validator",
+	})
+	if shouldReturn(c, err) {
+		return
+	}
+
 	jsonOk(c, gin.H{
 		"validator": info,
 		"account":   account,
 		"blocks":    blocks,
 		"epochs":    epochs,
+		"events":    events.Records,
 	})
 }
 
@@ -208,11 +342,11 @@ func (s Server) GetValidator(c *gin.Context) {
 func (s Server) GetValidatorsByHeight(c *gin.Context) {
 	height := types.HeightFromString(c.Query("height"))
 	if height == 0 {
-		h, err := s.db.Heights.LastSuccessful()
+		block, err := s.db.Blocks.Last()
 		if shouldReturn(c, err) {
 			return
 		}
-		height = h.Height
+		height = block.ID
 	}
 
 	validators, err := s.db.Validators.ByHeight(height)
@@ -221,23 +355,6 @@ func (s Server) GetValidatorsByHeight(c *gin.Context) {
 	}
 
 	jsonOk(c, validators)
-}
-
-// GetValidatorTimesInterval returns active validators count over period of time
-func (s Server) GetValidatorTimesInterval(c *gin.Context) {
-	params := timesIntervalParams{}
-	if err := c.BindQuery(&params); err != nil {
-		badRequest(c, err)
-		return
-	}
-	params.setDefaults()
-
-	result, err := s.db.Validators.CountsForInterval(params.Interval, params.Period)
-	if shouldReturn(c, err) {
-		return
-	}
-
-	jsonOk(c, result)
 }
 
 // GetTransactions returns a list of transactions that match query
@@ -277,4 +394,35 @@ func (s Server) GetAccount(c *gin.Context) {
 		return
 	}
 	jsonOk(c, acc)
+}
+
+// GetDelegations returns list of delegations for a given account
+func (s Server) GetDelegations(c *gin.Context) {
+	rawDelegations, err := s.rpc.Delegations(c.Param("id"), 0, 10000)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	delegations, err := mapper.Delegations(rawDelegations)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, delegations)
+}
+
+// GetEvents returns a list of events
+func (s Server) GetEvents(c *gin.Context) {
+	search := store.EventsSearch{}
+	if err := c.Bind(&search); err != nil {
+		badRequest(c, err)
+		return
+	}
+
+	events, err := s.db.Events.Search(search)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, events)
 }

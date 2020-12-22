@@ -47,24 +47,27 @@ func (s baseStore) DeleteByHeight(height uint64) error {
 }
 
 // Import imports records in bulk
-func (s baseStore) Import(query string, rows int, fn bulk.RowFunc) error {
+func (s baseStore) bulkImport(query string, rows int, fn bulk.RowFunc) error {
 	return bulk.Import(s.db, query, rows, fn)
 }
 
+// scoped returns a scoped store
 func scoped(conn *gorm.DB, m interface{}) baseStore {
 	return baseStore{conn, m}
 }
 
+// isNotFound reports missing record status
 func isNotFound(err error) bool {
 	return gorm.IsRecordNotFoundError(err) || err == ErrNotFound
 }
 
+// findBy returns a single record for a given key/value filter
 func findBy(db *gorm.DB, dst interface{}, key string, value interface{}) error {
 	return db.
 		Model(dst).
 		Where(fmt.Sprintf("%s = ?", key), value).
 		Limit(1).
-		Find(dst).
+		Take(dst).
 		Error
 }
 

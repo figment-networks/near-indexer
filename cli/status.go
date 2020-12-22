@@ -2,6 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"time"
+
+	"github.com/olekukonko/tablewriter"
 
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/near"
@@ -15,46 +20,51 @@ func startStatus(cfg *config.Config) error {
 	}
 	defer db.Close()
 
-	rpc := near.NewClient(cfg.RPCEndpoint)
-	rpc.SetDebug(cfg.Debug)
-
-	height, err := db.Heights.LastSuccessful()
-	if err != nil && err != store.ErrNotFound {
-		return err
-	}
-
-	heightStatuses, err := db.Heights.StatusCounts()
-	if err != nil && err != store.ErrNotFound {
-		return err
-	}
-
-	fmt.Println("=== Height Indexing ===")
-	fmt.Println("Last height:", height.Height)
-	for _, s := range heightStatuses {
-		fmt.Printf("Status: %s, Count: %d\n", s.Status, s.Num)
-	}
+	rpc := near.DefaultClient(cfg.RPCEndpoint)
 
 	status, err := rpc.Status()
 	if err != nil {
 		return err
 	}
-	info := status.SyncInfo
 
-	fmt.Println("=== Node Status ===")
-	fmt.Println("Chain:", status.ChainID)
-	fmt.Println("Version:", status.Version)
-	fmt.Println("Syncing:", info.Syncing)
-	fmt.Println("Last height:", status.SyncInfo.LatestBlockHeight)
-	fmt.Println("Last hash:", status.SyncInfo.LatestBlockHash)
-	fmt.Println("Last time:", status.SyncInfo.LatestBlockTime)
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetHeader([]string{"Attribute", "Value"})
 
-	gc, err := rpc.GenesisConfig()
-	if err != nil {
-		return err
+	table.AppendBulk([][]string{
+		{"Chain ID", status.ChainID},
+		{"Version", status.Version.String()},
+		{"Syncing", fmt.Sprintf("%v", status.SyncInfo.Syncing)},
+		{"Latest Block Height", fmt.Sprintf("%v", status.SyncInfo.LatestBlockHeight)},
+		{"Latest Block Hash", status.SyncInfo.LatestBlockHash},
+		{"Latest Block Time", status.SyncInfo.LatestBlockTime.UTC().Format(time.RFC3339)},
+	})
+
+	lastBlock, err := db.Blocks.Last()
+	if err == nil {
+		table.AppendBulk([][]string{
+			{"Indexer Block Height", fmt.Sprintf("%v", lastBlock.ID)},
+			{"Indexer Block Hash", lastBlock.Hash},
+			{"Indexer Block Time", lastBlock.Time.UTC().Format(time.RFC3339)},
+			{"Indexer Lag", fmt.Sprintf("%v", status.SyncInfo.LatestBlockHeight-uint64(lastBlock.ID))},
+		})
+	} else {
+		if err == store.ErrNotFound {
+			table.Append([]string{"Indexed Block", "N/A"})
+		}
+		log.Println("cant fetch recent block:", err)
 	}
-	fmt.Println("=== Genesis Status ===")
-	fmt.Println("Height:", gc.GenesisHeight)
-	fmt.Println("Time:", gc.GenesisTime)
 
+	genesis, err := rpc.GenesisConfig()
+	if err == nil {
+		table.AppendBulk([][]string{
+			{"Genesis Block Height", fmt.Sprintf("%v", genesis.GenesisHeight)},
+			{"Genesis Block Time", genesis.GenesisTime.UTC().Format(time.RFC3339)},
+		})
+	} else {
+		log.Println("cant fetch genesis config:", err)
+	}
+
+	table.Render()
 	return nil
 }

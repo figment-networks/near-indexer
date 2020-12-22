@@ -8,8 +8,7 @@ import (
 )
 
 type Account struct {
-	Model
-
+	ID             int64        `json:"-"`
 	Name           string       `json:"name"`
 	StartHeight    types.Height `json:"start_height"`
 	StartTime      time.Time    `json:"start_time"`
@@ -17,6 +16,8 @@ type Account struct {
 	LastTime       time.Time    `json:"last_time"`
 	Balance        types.Amount `json:"balance"`
 	StakingBalance types.Amount `json:"staking_balance"`
+	CreatedAt      time.Time    `json:"-"`
+	UpdatedAt      time.Time    `json:"-"`
 }
 
 // Validate returns an error if account is invalid
@@ -29,12 +30,6 @@ func (acc Account) Validate() error {
 	}
 	if acc.StartTime.Year() == 1 {
 		return errors.New("start time is invalid")
-	}
-	if !acc.Balance.Valid() {
-		return errors.New("balance is required")
-	}
-	if !acc.StakingBalance.Valid() {
-		return errors.New("staking balance is invalid")
 	}
 	return nil
 }

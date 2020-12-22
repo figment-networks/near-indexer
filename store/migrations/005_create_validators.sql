@@ -10,6 +10,7 @@ CREATE TABLE validators (
   slashed         BOOLEAN,
   stake           VARCHAR,
   efficiency      NUMERIC,
+  reward_fee      INTEGER,
   created_at      TIMESTAMP WITH TIME ZONE NOT NULL,
   updated_at      TIMESTAMP WITH TIME ZONE NOT NULL
 );
@@ -22,6 +23,9 @@ CREATE INDEX idx_validators_height
 
 CREATE iNDEX idx_validators_time
   ON validators(time DESC);
+
+CREATE INDEX idx_validators_epoch
+  ON validators(epoch);
 
 -- +goose Down
 DROP TABLE validators;

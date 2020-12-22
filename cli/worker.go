@@ -2,9 +2,10 @@ package cli
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/near"
@@ -13,12 +14,13 @@ import (
 )
 
 func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) context.CancelFunc {
-	wg.Add(1)
 	ctx, cancel := context.WithCancel(context.Background())
 	timer := time.NewTimer(cfg.SyncDuration())
+	busy := false
 
-	client := near.NewClient(cfg.RPCEndpoint)
+	client := near.DefaultClient(cfg.RPCEndpoint)
 	client.SetDebug(cfg.Debug)
+	client.SetTimeout(cfg.RPCClientTimeout())
 
 	go func() {
 		defer func() {
@@ -29,38 +31,14 @@ func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) co
 		for {
 			select {
 			case <-timer.C:
-				lag, _ := pipeline.RunSync(cfg, db, client)
-				if lag > 60 {
-					timer = time.NewTimer(time.Millisecond * 50)
-				} else {
-					timer = time.NewTimer(cfg.SyncDuration())
-				}
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-
-	return cancel
-}
-
-func startStatsWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) context.CancelFunc {
-	wg.Add(1)
-	ctx, cancel := context.WithCancel(context.Background())
-	ticker := time.NewTicker(time.Second)
-
-	go func() {
-		defer func() {
-			ticker.Stop()
-			wg.Done()
-		}()
-
-		for {
-			select {
-			case t := <-ticker.C:
-				if t.Second() == 0 {
-					if err := pipeline.RunStats(db); err != nil {
-						log.Println("stats error:", err)
+				if !busy {
+					busy = true
+					lag, _ := pipeline.RunSync(cfg, db, client)
+					busy = false
+					if lag > 60 {
+						timer = time.NewTimer(time.Millisecond * 10)
+					} else {
+						timer = time.NewTimer(cfg.SyncDuration())
 					}
 				}
 			case <-ctx.Done():
@@ -72,8 +50,7 @@ func startStatsWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) c
 	return cancel
 }
 
-func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) context.CancelFunc {
-	wg.Add(1)
+func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store, logger *logrus.Logger) context.CancelFunc {
 	ctx, cancel := context.WithCancel(context.Background())
 	ticker := time.NewTicker(cfg.CleanupDuration())
 
@@ -86,7 +63,7 @@ func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store)
 		for {
 			select {
 			case <-ticker.C:
-				pipeline.RunCleanup(cfg, db)
+				pipeline.RunCleanup(cfg, db, logger)
 			case <-ctx.Done():
 				return
 			}
@@ -96,10 +73,11 @@ func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store)
 	return cancel
 }
 
-func startWorker(cfg *config.Config) error {
-	log.Println("using rpc endpoint", cfg.RPCEndpoint)
-	log.Println("sync will run every", cfg.SyncInterval)
-	log.Println("cleanup will run every", cfg.CleanupInterval)
+func startWorker(cfg *config.Config, logger *logrus.Logger) error {
+	logger.Info("log level: ", cfg.LogLevel)
+	logger.Info("using rpc endpoint: ", cfg.RPCEndpoint)
+	logger.Info("sync will run every: ", cfg.SyncInterval)
+	logger.Info("cleanup will run every: ", cfg.CleanupInterval)
 
 	db, err := initStore(cfg)
 	if err != nil {
@@ -108,16 +86,15 @@ func startWorker(cfg *config.Config) error {
 	defer db.Close()
 
 	wg := &sync.WaitGroup{}
+	wg.Add(2)
 
 	cancelSync := startSyncWorker(wg, cfg, db)
-	cancelStats := startStatsWorker(wg, cfg, db)
-	cancelCleanup := startCleanupWorker(wg, cfg, db)
+	cancelCleanup := startCleanupWorker(wg, cfg, db, logger)
 
 	s := <-initSignals()
+	logger.Info("received signal: ", s)
 
-	log.Println("received signal", s)
 	cancelSync()
-	cancelStats()
 	cancelCleanup()
 
 	wg.Wait()

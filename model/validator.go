@@ -8,8 +8,7 @@ import (
 )
 
 type Validator struct {
-	Model
-
+	ID             int64        `json:"-"`
 	Height         types.Height `json:"height"`
 	Time           time.Time    `json:"time"`
 	AccountID      string       `json:"account_id"`
@@ -19,6 +18,9 @@ type Validator struct {
 	Slashed        bool         `json:"slashed"`
 	Stake          types.Amount `json:"stake"`
 	Efficiency     float64      `json:"efficiency"`
+	RewardFee      int          `json:"reward_fee"`
+	CreatedAt      time.Time    `json:"-"`
+	UpdatedAt      time.Time    `json:"-"`
 }
 
 func (Validator) TableName() string {

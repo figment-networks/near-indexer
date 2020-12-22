@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/figment-networks/indexing-engine/store/bulk"
-	"github.com/figment-networks/indexing-engine/store/jsonquery"
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/model/types"
 	"github.com/figment-networks/near-indexer/store/queries"
@@ -28,11 +27,11 @@ func (s ValidatorsStore) ByHeight(height types.Height) ([]model.Validator, error
 	return result, err
 }
 
-// BulkInsert creates new validators or updates existing ones
-func (s ValidatorsStore) BulkInsert(records []model.Validator) error {
+// Import creates new validators in batch
+func (s ValidatorsStore) Import(records []model.Validator) error {
 	t := time.Now()
 
-	return s.Import(queries.ValidatorsImport, len(records), func(i int) bulk.Row {
+	return s.bulkImport(queries.ValidatorsImport, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
 			r.Height,
@@ -50,16 +49,8 @@ func (s ValidatorsStore) BulkInsert(records []model.Validator) error {
 	})
 }
 
-// CountsForInterval returns validator counts for a period of time
-func (s ValidatorsStore) CountsForInterval(interval, period string) ([]byte, error) {
-	return jsonquery.MustArray(s.db, queries.ValidatorsCountsForInterval, interval, period)
-}
-
-// Cleanup removes any records before a certain height
-func (s ValidatorsStore) Cleanup(maxHeight uint64) error {
-	return s.db.Delete(s.model, "height < ?", maxHeight).Error
-}
-
-func (s ValidatorsStore) CleanupCounts() error {
-	return s.db.Exec(queries.ValidatorsPurgeCounts).Error
+// Cleanup removes old validator records and keeps the N most recent ones
+func (s ValidatorsStore) Cleanup(keepHeights uint64) (int64, error) {
+	result := s.db.Exec(queries.ValidatorsCleanup, keepHeights)
+	return result.RowsAffected, result.Error
 }
