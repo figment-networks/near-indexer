@@ -22,6 +22,7 @@ SET
   expected_blocks = COALESCE((SELECT SUM(expected_blocks) FROM validator_epochs WHERE account_id = excluded.account_id LIMIT 1), 0),
   produced_blocks = COALESCE((SELECT SUM(produced_blocks) FROM validator_epochs WHERE account_id = excluded.account_id LIMIT 1), 0),
   efficiency      = COALESCE((SELECT AVG(efficiency) FROM validator_epochs WHERE account_id = excluded.account_id LIMIT 1), 0),
+  stake           = excluded.stake,
   slashed         = excluded.slashed,
   active          = excluded.active,
   updated_at      = excluded.updated_at
