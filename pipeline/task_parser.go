@@ -63,11 +63,17 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			if err != nil {
 				return err
 			}
+			if fee, ok := h.RewardFees[v.AccountID]; ok {
+				validator.RewardFee = &fee.Numerator
+			}
 			parsed.Validators = append(parsed.Validators, *validator)
 
 			validatorAgg, err := mapper.ValidatorAgg(h.Block, &v)
 			if err != nil {
 				return err
+			}
+			if fee, ok := h.RewardFees[v.AccountID]; ok {
+				validatorAgg.RewardFee = &fee.Numerator
 			}
 			parsed.ValidatorAggs = append(parsed.ValidatorAggs, *validatorAgg)
 

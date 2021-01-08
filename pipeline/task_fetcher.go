@@ -187,6 +187,14 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 				data.PreviousValidators = previousValidators.CurrentValidators
 				data.PreviousBlock = lastBlockOfEpoch
 			}
+
+			logrus.WithField("height", data.Height).Info("fetching validator reward fees")
+			rewardFees, err := t.fetchRewardFees(data.Validators)
+			if err != nil {
+				return err
+			}
+			data.RewardFees = rewardFees
+
 		} else {
 			isLastInBatch := dataIdx == len(payload.Heights)-1
 
@@ -364,4 +372,54 @@ func (t FetcherTask) fetchBlockTransactions(block *near.Block, hashes []string) 
 	}
 
 	return txlist, nil
+}
+
+type feeFetchResult struct {
+	account string
+	fee     *near.RewardFee
+	err     error
+}
+
+func (t FetcherTask) fetchRewardFees(validators []near.Validator) (map[string]near.RewardFee, error) {
+	results := []feeFetchResult{}
+	resultsChan := make(chan feeFetchResult)
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(validators))
+
+	for _, validator := range validators {
+		go func(account string) {
+			defer wg.Done()
+
+			fee, err := t.rpc.RewardFee(account)
+			resultsChan <- feeFetchResult{
+				account: account,
+				fee:     fee,
+				err:     err,
+			}
+		}(validator.AccountID)
+	}
+
+	go func() {
+		for {
+			select {
+			case res, ok := <-resultsChan:
+				if !ok {
+					return
+				}
+				results = append(results, res)
+			}
+		}
+	}()
+
+	wg.Wait()
+	close(resultsChan)
+
+	rewardFees := map[string]near.RewardFee{}
+
+	for _, res := range results {
+		rewardFees[res.account] = *res.fee
+	}
+
+	return rewardFees, nil
 }

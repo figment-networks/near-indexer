@@ -8,6 +8,7 @@ INSERT INTO validators (
 	slashed,
 	stake,
 	efficiency,
+  reward_fee,
 	created_at,
 	updated_at
 )

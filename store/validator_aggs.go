@@ -135,6 +135,7 @@ func (s ValidatorAggsStore) Import(records []model.ValidatorAgg) error {
 			r.Stake,
 			r.Efficiency,
 			r.Active,
+			r.RewardFee,
 			t,
 			t,
 		}
