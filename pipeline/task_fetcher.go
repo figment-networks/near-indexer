@@ -418,6 +418,9 @@ func (t FetcherTask) fetchRewardFees(validators []near.Validator) (map[string]ne
 	rewardFees := map[string]near.RewardFee{}
 
 	for _, res := range results {
+		if res.err != nil {
+			return nil, res.err
+		}
 		rewardFees[res.account] = *res.fee
 	}
 
