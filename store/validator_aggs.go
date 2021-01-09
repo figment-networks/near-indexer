@@ -108,6 +108,7 @@ func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch
 			r.ProducedBlocks,
 			r.Efficiency,
 			r.StakingBalance,
+			r.RewardFee,
 		}
 	})
 }

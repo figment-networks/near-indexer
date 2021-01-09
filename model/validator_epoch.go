@@ -16,6 +16,7 @@ type ValidatorEpoch struct {
 	ProducedBlocks int          `json:"produced_blocks"`
 	Efficiency     float64      `json:"efficiency"`
 	StakingBalance types.Amount `json:"staking_balance"`
+	RewardFee      *int         `json:"reward_fee"`
 }
 
 func (ValidatorEpoch) TableName() string {
