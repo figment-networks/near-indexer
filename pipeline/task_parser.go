@@ -92,6 +92,7 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 				ProducedBlocks: validator.ProducedBlocks,
 				Efficiency:     validator.Efficiency,
 				StakingBalance: validator.Stake,
+				RewardFee:      validator.RewardFee,
 			})
 		}
 
@@ -110,6 +111,7 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 				ProducedBlocks: validator.ProducedBlocks,
 				Efficiency:     validator.Efficiency,
 				StakingBalance: validator.Stake,
+				RewardFee:      validator.RewardFee,
 			})
 		}
 
