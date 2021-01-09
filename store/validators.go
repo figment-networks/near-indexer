@@ -43,6 +43,7 @@ func (s ValidatorsStore) Import(records []model.Validator) error {
 			r.Slashed,
 			r.Stake,
 			r.Efficiency,
+			r.RewardFee,
 			t,
 			t,
 		}

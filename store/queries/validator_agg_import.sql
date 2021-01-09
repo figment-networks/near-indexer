@@ -10,6 +10,7 @@ INSERT INTO validator_aggregates(
   stake,
   efficiency,
   active,
+  reward_fee,
   created_at,
   updated_at
 )
@@ -25,4 +26,5 @@ SET
   stake           = excluded.stake,
   slashed         = excluded.slashed,
   active          = excluded.active,
+  reward_fee      = excluded.reward_fee,
   updated_at      = excluded.updated_at

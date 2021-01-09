@@ -30,6 +30,7 @@ type HeightPayload struct {
 	Transactions []near.TransactionDetails
 	Delegations  []near.Delegation
 	Accounts     []near.Account
+	RewardFees   map[string]near.RewardFee
 
 	CurrentEpoch         bool
 	PreviousValidators   []near.Validator
