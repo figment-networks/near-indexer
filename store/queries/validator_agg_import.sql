@@ -26,5 +26,5 @@ SET
   stake           = excluded.stake,
   slashed         = excluded.slashed,
   active          = excluded.active,
-  reward_fee      = excluded.reward_fee,
+  reward_fee      = COALESCE(excluded.reward_fee, validator_aggregates.reward_fee),
   updated_at      = excluded.updated_at
