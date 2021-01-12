@@ -365,12 +365,12 @@ func (s Server) GetTransactions(c *gin.Context) {
 		return
 	}
 
-	events, err := s.db.Transactions.Search(search)
+	transactions, err := s.db.Transactions.Search(search)
 	if shouldReturn(c, err) {
 		return
 	}
 
-	jsonOk(c, events)
+	jsonOk(c, transactions)
 }
 
 // GetTransaction returns a transaction details
