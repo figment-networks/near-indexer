@@ -41,7 +41,7 @@ func NewFetcherTask(
 
 // Name returns the task name
 func (t FetcherTask) Name() string {
-	return analyzerTaskName
+	return fetcherTaskName
 }
 
 // ShouldRun returns true if there any heights to process
