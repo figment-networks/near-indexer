@@ -1,7 +1,7 @@
 package store
 
 const (
-	paginationLimit = 50
+	paginationLimit = 100
 )
 
 type Pagination struct {

@@ -359,22 +359,18 @@ func (s Server) GetValidatorsByHeight(c *gin.Context) {
 
 // GetTransactions returns a list of transactions that match query
 func (s Server) GetTransactions(c *gin.Context) {
-	var (
-		txs []model.Transaction
-		err error
-	)
-
-	if blockHash := c.Query("block_hash"); blockHash != "" {
-		txs, err = s.db.Transactions.FindByBlock(blockHash)
-	} else {
-		txs, err = s.db.Transactions.Recent(100)
+	search := store.TransactionsSearch{}
+	if err := c.Bind(&search); err != nil {
+		badRequest(c, err)
+		return
 	}
 
+	transactions, err := s.db.Transactions.Search(search)
 	if shouldReturn(c, err) {
 		return
 	}
 
-	jsonOk(c, txs)
+	jsonOk(c, transactions)
 }
 
 // GetTransaction returns a transaction details
