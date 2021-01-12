@@ -41,7 +41,7 @@ func NewFetcherTask(
 
 // Name returns the task name
 func (t FetcherTask) Name() string {
-	return analyzerTaskName
+	return fetcherTaskName
 }
 
 // ShouldRun returns true if there any heights to process
@@ -329,41 +329,26 @@ type txFetchResult struct {
 
 // fetchBlockTransactions retrieves all transactions in parallel
 func (t FetcherTask) fetchBlockTransactions(block *near.Block, hashes []string) ([]near.TransactionDetails, error) {
-	results := []txFetchResult{}
-	resultsChan := make(chan txFetchResult)
+	results := make([]txFetchResult, len(hashes))
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(hashes))
 
-	for _, h := range hashes {
-		go func(hash string) {
+	for idx, h := range hashes {
+		go func(i int, hash string) {
 			defer wg.Done()
 
 			tx, err := t.rpc.Transaction(hash)
-			resultsChan <- txFetchResult{
+			results[i] = txFetchResult{
 				transaction: tx,
 				err:         err,
 			}
-		}(h)
+		}(idx, h)
 	}
 
-	go func() {
-		for {
-			select {
-			case res, ok := <-resultsChan:
-				if !ok {
-					return
-				}
-				results = append(results, res)
-			}
-		}
-	}()
-
 	wg.Wait()
-	close(resultsChan)
 
 	txlist := []near.TransactionDetails{}
-
 	for _, res := range results {
 		if res.err != nil {
 			return nil, res.err
@@ -381,42 +366,27 @@ type feeFetchResult struct {
 }
 
 func (t FetcherTask) fetchRewardFees(validators []near.Validator) (map[string]near.RewardFee, error) {
-	results := []feeFetchResult{}
-	resultsChan := make(chan feeFetchResult)
+	results := make([]feeFetchResult, len(validators))
 
 	wg := sync.WaitGroup{}
 	wg.Add(len(validators))
 
-	for _, validator := range validators {
-		go func(account string) {
+	for idx, validator := range validators {
+		go func(i int, account string) {
 			defer wg.Done()
 
 			fee, err := t.rpc.RewardFee(account)
-			resultsChan <- feeFetchResult{
+			results[i] = feeFetchResult{
 				account: account,
 				fee:     fee,
 				err:     err,
 			}
-		}(validator.AccountID)
+		}(idx, validator.AccountID)
 	}
 
-	go func() {
-		for {
-			select {
-			case res, ok := <-resultsChan:
-				if !ok {
-					return
-				}
-				results = append(results, res)
-			}
-		}
-	}()
-
 	wg.Wait()
-	close(resultsChan)
 
 	rewardFees := map[string]near.RewardFee{}
-
 	for _, res := range results {
 		if res.err != nil {
 			return nil, res.err
