@@ -86,7 +86,7 @@ func (s Server) GetEndpoints(c *gin.Context) {
 			"/validators/:id/events": "Get validator events",
 			"/transactions":          "List all recent transactions",
 			"/transactions/:id":      "Get transaction details",
-			"/accounts/:id":          "Get accoun details",
+			"/accounts/:id":          "Get account details",
 			"/delegations/:id":       "Get account delegations",
 			"/events":                "Get list of events",
 		},
