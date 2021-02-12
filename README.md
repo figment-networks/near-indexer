@@ -139,18 +139,26 @@ near-indexer -config path/to/config.json -cmd=server
 
 | Method | Path                            | Description
 |--------|---------------------------------|------------------------------------
+| GET    | /                               | See all available endpoints
 | GET    | /health                         | Healthcheck endpoint
 | GET    | /status                         | App version info and sync status
 | GET    | /height                         | Current indexed blockchain height
+| GET    | /block                          | Get latest block
 | GET    | /blocks                         | Blocks search
 | GET    | /blocks/:hash                   | Block details by ID or Hash
-| GET    | /block_times                    | Block times stats
+| GET    | /block_stats                    | Block times stats for a time bucket
+| GET    | /block_times                    | Block average times
 | GET    | /block_times_interval           | Block creation stats
+| GET    | /epochs                         | Get list of epochs
+| GET    | /epochs/:id                     | Epoch details by ID
 | GET    | /validators                     | List of chain validators
-| GET    | /validator_times_interval       | Active validator stats
-| GET    | /accounts/:id                   | Account details by ID or Key
+| GET    | /validators/:id/epochs          | Validator Epochs performance by ID
+| GET    | /validators/:id/events          | Validator Events by ID
 | GET    | /transactions                   | List of transactions
-| GET    | /transactions/:hash             | Find transaction by hash
+| GET    | /transactions/:id               | Get transaction details
+| GET    | /accounts/:id                   | Account details by ID or Key
+| GET    | /delegations/:id                | Account delegations by ID
+| GET    | /events                         | List of Events
 
 ## License
 
