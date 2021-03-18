@@ -1,6 +1,7 @@
 package server
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -57,6 +58,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/accounts/:id", s.GetAccount)
 	router.GET("/delegations/:id", s.GetDelegations)
 	router.GET("/events", s.GetEvents)
+	router.GET("/events/:id", s.GetEvent)
 
 	return s
 }
@@ -89,6 +91,7 @@ func (s Server) GetEndpoints(c *gin.Context) {
 			"/accounts/:id":          "Get account details",
 			"/delegations/:id":       "Get account delegations",
 			"/events":                "Get list of events",
+			"/events/:id":            "Get event details",
 		},
 	})
 }
@@ -421,4 +424,19 @@ func (s Server) GetEvents(c *gin.Context) {
 	}
 
 	jsonOk(c, events)
+}
+
+// GetEvent returns a single event
+func (s Server) GetEvent(c *gin.Context) {
+	eventID, err := strconv.Atoi(c.Param("id"))
+	if shouldReturn(c, err) {
+		return
+	}
+
+	event, err := s.db.Events.FindByID(eventID)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, event)
 }
