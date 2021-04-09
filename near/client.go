@@ -33,6 +33,12 @@ var (
 
 	// ErrBlockNotFound is returned when block does not exist at given height
 	ErrBlockNotFound = errors.New("block not found")
+
+	// ErrEpochUnknown is returned when epoch can't be obtained from the node
+	ErrEpochUnknown = errors.New("unknown epoch")
+
+	// ErrValidatorsUnavailable is returned when requesting validator information using invalid epoch
+	ErrValidatorsUnavailable = errors.New("validator info unavailable")
 )
 
 var (
@@ -63,7 +69,7 @@ type Client interface {
 	Transaction(string) (TransactionDetails, error)
 	GasPrice(string) (string, error)
 	CurrentValidators() (*ValidatorsResponse, error)
-	ValidatorsByHeight(uint64) (*ValidatorsResponse, error)
+	ValidatorsByEpoch(string) (*ValidatorsResponse, error)
 	BlockChanges(interface{}) (BlockChangesResponse, error)
 	RewardFee(string) (*RewardFee, error)
 	Delegations(string, uint64, uint64) ([]Delegation, error)
@@ -228,13 +234,13 @@ func (c client) CurrentValidators() (*ValidatorsResponse, error) {
 	return result, nil
 }
 
-// ValidatorsByHeight returns validators for a given height
-func (c client) ValidatorsByHeight(height uint64) (*ValidatorsResponse, error) {
+// ValidatorsByEpoch returns validators for a given height
+func (c client) ValidatorsByEpoch(epoch string) (*ValidatorsResponse, error) {
 	result := &ValidatorsResponse{}
-	params := []interface{}{height}
+	params := []interface{}{epoch}
 
 	if err := c.Call(methodValidators, params, &result); err != nil {
-		return nil, err
+		return nil, c.handleRPCError(err, methodValidators, params)
 	}
 	return result, nil
 }
@@ -314,6 +320,12 @@ func (c client) handleServerError(err *json2.Error) error {
 			}
 			if strings.Contains(msg, "block missing") {
 				return ErrBlockMissing
+			}
+			if strings.Contains(msg, "unknown epoch") {
+				return ErrEpochUnknown
+			}
+			if strings.Contains(msg, "validator info unavailable") {
+				return ErrValidatorsUnavailable
 			}
 		}
 	}
