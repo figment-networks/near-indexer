@@ -169,43 +169,47 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 			var previousValidators *near.ValidatorsResponse
 			if lastBlockOfEpoch != nil {
 				logrus.WithField("height", lastBlockOfEpoch.Header.Height).Info("fetching previous validators")
-				previousValidators, err = t.rpc.ValidatorsByHeight(lastBlockOfEpoch.Header.Height)
-				if err != nil {
+				previousValidators, err = t.rpc.ValidatorsByEpoch(lastBlockOfEpoch.Header.EpochID)
+				if err != nil && err != near.ErrEpochUnknown && err != near.ErrValidatorsUnavailable {
 					return err
 				}
 			}
 
 			logrus.WithField("height", data.Height).Info("fetching current validators")
-			validators, err := t.rpc.ValidatorsByHeight(data.Height)
-			if err != nil {
+			validators, err := t.rpc.ValidatorsByEpoch(data.Block.Header.EpochID)
+			if err != nil && err != near.ErrEpochUnknown && err != near.ErrValidatorsUnavailable {
 				return err
 			}
 
-			data.Validators = validators.CurrentValidators
-			data.PreviousEpochKickOut = validators.PreviousEpochKickout
-			if previousValidators != nil {
-				data.PreviousValidators = previousValidators.CurrentValidators
-				data.PreviousBlock = lastBlockOfEpoch
-			}
+			if validators != nil {
+				data.Validators = validators.CurrentValidators
+				data.PreviousEpochKickOut = validators.PreviousEpochKickout
+				if previousValidators != nil {
+					data.PreviousValidators = previousValidators.CurrentValidators
+					data.PreviousBlock = lastBlockOfEpoch
+				}
 
-			logrus.WithField("height", data.Height).Info("fetching validator reward fees")
-			rewardFees, err := t.fetchRewardFees(data.Validators)
-			if err != nil {
-				return err
+				logrus.WithField("height", data.Height).Info("fetching validator reward fees")
+				rewardFees, err := t.fetchRewardFees(data.Validators)
+				if err != nil {
+					return err
+				}
+				data.RewardFees = rewardFees
 			}
-			data.RewardFees = rewardFees
-
 		} else {
 			isLastInBatch := dataIdx == len(payload.Heights)-1
 
 			// Fetch validators in the current epoch in the last height of the batch
 			if currentBlock.Header.EpochID == data.Block.Header.EpochID && isLastInBatch {
-				validators, err := t.rpc.ValidatorsByHeight(data.Height)
-				if err != nil {
+				validators, err := t.rpc.ValidatorsByEpoch(data.Block.Header.EpochID)
+				if err != nil && err != near.ErrEpochUnknown && err != near.ErrValidatorsUnavailable {
 					return err
 				}
-				data.Validators = validators.CurrentValidators
-				data.CurrentEpoch = true
+
+				if validators != nil {
+					data.Validators = validators.CurrentValidators
+					data.CurrentEpoch = true
+				}
 			}
 		}
 
