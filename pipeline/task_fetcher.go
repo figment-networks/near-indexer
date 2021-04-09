@@ -148,7 +148,8 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 					logrus.WithField("epoch", lastEpoch).Info("last block found")
 					lastBlockOfEpoch = &near.Block{
 						Header: near.BlockHeader{
-							Height: uint64(epochBlock.ID),
+							Height:  uint64(epochBlock.ID),
+							EpochID: epochBlock.Epoch,
 						},
 					}
 				} else {
