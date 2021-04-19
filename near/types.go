@@ -179,7 +179,7 @@ type TransactionOutcome struct {
 
 type TransactionDetails struct {
 	ReceiptsOutcome    []ReceiptsOutcome  `json:"receipts_outcome"`
-	Status             Status             `json:"status"`
+	Status             interface{}        `json:"status"`
 	Transaction        Transaction        `json:"transaction"`
 	TransactionOutcome TransactionOutcome `json:"transaction_outcome"`
 }
