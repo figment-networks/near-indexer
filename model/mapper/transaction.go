@@ -3,6 +3,7 @@ package mapper
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/model/types"
@@ -23,7 +24,16 @@ func Transaction(block *near.Block, input *near.TransactionDetails) (*model.Tran
 		Receiver:  tx.ReceiverID,
 		Amount:    types.NewAmount("0"),
 		GasBurnt:  fmt.Sprintf("%v", input.TransactionOutcome.Outcome.GasBurnt),
-		Success:   input.Status.SuccessValue != nil,
+	}
+
+	// Status field may be represented by different types depending on the situation
+	switch val := input.Status.(type) {
+	case string:
+		t.Success = strings.ToLower(val) != "failure"
+	case map[string]interface{}:
+		t.Success = val["SuccessValue"] != nil
+	default:
+		return nil, fmt.Errorf("unsupported tx status attribute: %v", input.Status)
 	}
 
 	if actions := near.DecodeActions(&tx); len(actions) > 0 {
