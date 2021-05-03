@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Builder Image
 # ------------------------------------------------------------------------------
-FROM golang:1.14 AS build
+FROM golang:1.15 AS build
 
 WORKDIR /go/src/github.com/figment-networks/near-indexer
 
@@ -16,7 +16,7 @@ ENV CGO_ENABLED=0
 ENV GOARCH=amd64
 ENV GOOS=linux
 
-RUN go get github.com/jessevdk/go-assets-builder
+RUN make setup
 
 RUN \
   GO_VERSION=$(go version | awk {'print $3'}) \
