@@ -24,10 +24,8 @@ func Run() {
 		runCommand  string
 		showVersion bool
 	)
-
-	flag.BoolVar(&showVersion, "v", false, "Show application version")
-	flag.StringVar(&configPath, "config", "", "Path to config")
-	flag.StringVar(&runCommand, "cmd", "", "Command to run")
+	runCommand = "server"
+	configPath = "./config.example.json"
 	flag.Parse()
 
 	if showVersion {
@@ -60,8 +58,6 @@ func Run() {
 
 func startCommand(cfg *config.Config, logger *logrus.Logger, name string) error {
 	switch name {
-	case "migrate", "migrate:up", "migrate:down", "migrate:redo":
-		return startMigrations(name, cfg)
 	case "server":
 		return startServer(cfg, logger)
 	case "worker":

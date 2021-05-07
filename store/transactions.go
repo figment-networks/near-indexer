@@ -6,7 +6,6 @@ import (
 	"github.com/figment-networks/indexing-engine/store/bulk"
 
 	"github.com/figment-networks/near-indexer/model"
-	"github.com/figment-networks/near-indexer/store/queries"
 )
 
 type TransactionsStore struct {
@@ -115,7 +114,8 @@ func (s TransactionsStore) Search(search TransactionsSearch) (*PaginatedResult, 
 func (s TransactionsStore) Import(records []model.Transaction) error {
 	t := time.Now()
 
-	return s.bulkImport(queries.TransactionsImport, len(records), func(i int) bulk.Row {
+	rr := "INSERT INTO transactions (  hash,   block_hash,   height,   time,  sender,  receiver,   amount,   gas_burnt,   success,   actions,  actions_count,   created_at,  updated_at ) VALUES @values ON CONFLICT (hash) DO UPDATE SET   updated_at = excluded.updated_at"
+	return s.bulkImport(rr, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
 			r.Hash,

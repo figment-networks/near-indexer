@@ -3,7 +3,6 @@ package store
 import (
 	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/near-indexer/model"
-	"github.com/figment-networks/near-indexer/store/queries"
 )
 
 // EventsStore manages events records
@@ -85,7 +84,8 @@ func (s EventsStore) Search(search EventsSearch) (*PaginatedResult, error) {
 }
 
 func (s EventsStore) Import(records []model.Event) error {
-	return s.bulkImport(queries.EventsImport, len(records), func(i int) bulk.Row {
+	rr := "INSERT INTO events (  scope,  action,  block_height,  block_time,  epoch,  item_id,  item_type,  metadata,  created_at) VALUES @values"
+	return s.bulkImport(rr, len(records), func(i int) bulk.Row {
 		r := records[i]
 
 		return bulk.Row{

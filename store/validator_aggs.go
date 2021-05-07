@@ -5,7 +5,6 @@ import (
 
 	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/near-indexer/model"
-	"github.com/figment-networks/near-indexer/store/queries"
 )
 
 type ValidatorAggsStore struct {
@@ -97,7 +96,8 @@ func (s ValidatorAggsStore) FindBy(key string, value interface{}) (*model.Valida
 
 // ImportValidatorEpochs imports validator epochs records in batch
 func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch) error {
-	return s.bulkImport(queries.ValidatorEpochsImport, len(records), func(i int) bulk.Row {
+	rr:= "INSERT INTO validator_epochs (  account_id,  epoch,  last_height,  last_time,  expected_blocks,  produced_blocks,  efficiency,  staking_balance,  reward_fee) VALUES @values ON CONFLICT (account_id, epoch) DO UPDATE SET  last_height     = excluded.last_height,  last_time       = excluded.last_time,  expected_blocks = excluded.expected_blocks, produced_blocks = excluded.produced_blocks,  efficiency      = ROUND(excluded.efficiency, 4), staking_balance = excluded.staking_balance, reward_fee      = COALESCE(excluded.reward_fee, validator_epochs.reward_fee)"
+	return s.bulkImport(rr, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
 			r.AccountID,
@@ -121,8 +121,8 @@ func (s ValidatorAggsStore) Import(records []model.ValidatorAgg) error {
 	if err := s.db.Exec("UPDATE validator_aggregates SET active = false").Error; err != nil {
 		return err
 	}
-
-	return s.bulkImport(queries.ValidatorAggImport, len(records), func(i int) bulk.Row {
+	rr := "INSERT INTO validator_aggregates( start_height, start_time,  last_height,  last_time,  account_id,  expected_blocks,  produced_blocks,  slashed,  stake,  efficiency,  active,  reward_fee,  created_at,  updated_at) VALUES @values ON CONFLICT(account_id) DO UPDATE SET last_height     = excluded.last_height, last_time       = excluded.last_time,  expected_blocks = COALESCE((SELECT SUM(expected_blocks) FROM validator_epochs WHERE account_id = excluded.account_id LIMIT 1), 0),  produced_blocks = COALESCE((SELECT SUM(produced_blocks) FROM validator_epochs WHERE account_id = excluded.account_id LIMIT 1), 0),  efficiency      = COALESCE((SELECT AVG(efficiency) FROM validator_epochs WHERE account_id = excluded.account_id LIMIT 1), 0),  stake           = excluded.stake,  slashed         = excluded.slashed,  active          = excluded.active,  reward_fee      = COALESCE(excluded.reward_fee, validator_aggregates.reward_fee), updated_at      = excluded.updated_at"
+	return s.bulkImport(rr, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
 			r.StartHeight,

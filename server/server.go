@@ -59,6 +59,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/delegations/:id", s.GetDelegations)
 	router.GET("/events", s.GetEvents)
 	router.GET("/events/:id", s.GetEvent)
+	router.GET("/rewards/:id", s.GetRewards)
 
 	return s
 }
@@ -92,6 +93,7 @@ func (s Server) GetEndpoints(c *gin.Context) {
 			"/delegations/:id":       "Get account delegations",
 			"/events":                "Get list of events",
 			"/events/:id":            "Get event details",
+			"/rewards/:id":           "Get event details",
 		},
 	})
 }
@@ -439,4 +441,19 @@ func (s Server) GetEvent(c *gin.Context) {
 	}
 
 	jsonOk(c, event)
+}
+
+// GetDelegations returns list of delegations for a given account
+func (s Server) GetRewards(c *gin.Context) {
+	rawDelegations, err := s.rpc.Delegations(c.Param("id"), 0, 10000)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	delegations, err := mapper.Delegations(rawDelegations)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, delegations)
 }

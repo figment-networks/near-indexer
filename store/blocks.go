@@ -7,7 +7,7 @@ import (
 	"github.com/figment-networks/indexing-engine/store/jsonquery"
 
 	"github.com/figment-networks/near-indexer/model"
-	"github.com/figment-networks/near-indexer/store/queries"
+	//"github.com/figment-networks/near-indexer/store/queries"
 )
 
 // BlocksStore handles operations on blocks
@@ -95,19 +95,21 @@ func (s BlocksStore) Search() ([]model.Block, error) {
 
 // BlockTimes returns recent blocks averages
 func (s BlocksStore) BlockTimes(limit int64) ([]byte, error) {
-	return jsonquery.MustObject(s.db, queries.BlockTimes, limit)
+	rr := "WITH selected_blocks AS (  SELECT id AS height, time\n\tFROM blocks ORDER BY id DESC LIMIT ?) SELECT MIN(height) AS start_height, MAX(height) AS end_height, MIN(time) AS start_time, MAX(time) AS end_time, COUNT(*) AS count, EXTRACT(EPOCH FROM MAX(time) - MIN(time)) AS diff, EXTRACT(EPOCH FROM ((MAX(time) - MIN(time)) / COUNT(*))) AS avg FROM  selected_blocks"
+	return jsonquery.MustObject(s.db, rr, limit)
 }
 
 // BlockStats returns block stats for a given interval
 func (s BlocksStore) BlockStats(bucket string, limit uint) ([]byte, error) {
-	return jsonquery.MustArray(s.db, queries.BlocksTimeStats, bucket, limit)
+	rr := "SELECT time,  bucket, blocks_count,  block_time_avg,  validators_count,  transactions_count FROM block_stats WHERE  bucket = $1 ORDER BY   time DESC LIMIT $2"
+	return jsonquery.MustArray(s.db, rr, bucket, limit)
 }
 
 // Import creates block records in batch
 func (s BlocksStore) Import(records []model.Block) error {
 	now := time.Now()
-
-	return s.bulkImport(queries.BlocksImport, len(records), func(i int) bulk.Row {
+	rr := "INSERT INTO blocks ( id, time, hash, producer, epoch, gas_price,  gas_limit, gas_used, total_supply,  chunks_count, transactions_count,  approvals_count, created_at) VALUES @values ON CONFLICT (id) DO NOTHING"
+	return s.bulkImport(rr, len(records), func(i int) bulk.Row {
 		r := records[i]
 
 		return bulk.Row{
