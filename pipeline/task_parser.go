@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"github.com/figment-networks/near-indexer/model/util"
 	"time"
 
 	"github.com/figment-networks/near-indexer/model"
@@ -65,6 +66,10 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			}
 			if fee, ok := h.RewardFees[v.AccountID]; ok {
 				validator.RewardFee = &fee.Numerator
+				rff, err := util.Divide(fee.Numerator, fee.Denominator)
+				if err == nil {
+					validator.RewardFeeFraction = rff
+				}
 			}
 			parsed.Validators = append(parsed.Validators, *validator)
 
@@ -84,15 +89,16 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			parsed.Accounts = append(parsed.Accounts, *account)
 
 			parsed.ValidatorEpochs = append(parsed.ValidatorEpochs, model.ValidatorEpoch{
-				AccountID:      validator.AccountID,
-				Epoch:          validator.Epoch,
-				LastHeight:     validator.Height,
-				LastTime:       validator.Time,
-				ExpectedBlocks: validator.ExpectedBlocks,
-				ProducedBlocks: validator.ProducedBlocks,
-				Efficiency:     validator.Efficiency,
-				StakingBalance: validator.Stake,
-				RewardFee:      validator.RewardFee,
+				AccountID:         validator.AccountID,
+				Epoch:             validator.Epoch,
+				LastHeight:        validator.Height,
+				LastTime:          validator.Time,
+				ExpectedBlocks:    validator.ExpectedBlocks,
+				ProducedBlocks:    validator.ProducedBlocks,
+				Efficiency:        validator.Efficiency,
+				StakingBalance:    validator.Stake,
+				RewardFee:         validator.RewardFee,
+				RewardFeeFraction: validator.RewardFeeFraction,
 			})
 		}
 
@@ -103,15 +109,16 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			}
 
 			parsed.ValidatorEpochs = append(parsed.ValidatorEpochs, model.ValidatorEpoch{
-				AccountID:      validator.AccountID,
-				Epoch:          validator.Epoch,
-				LastHeight:     validator.Height,
-				LastTime:       validator.Time,
-				ExpectedBlocks: validator.ExpectedBlocks,
-				ProducedBlocks: validator.ProducedBlocks,
-				Efficiency:     validator.Efficiency,
-				StakingBalance: validator.Stake,
-				RewardFee:      validator.RewardFee,
+				AccountID:         validator.AccountID,
+				Epoch:             validator.Epoch,
+				LastHeight:        validator.Height,
+				LastTime:          validator.Time,
+				ExpectedBlocks:    validator.ExpectedBlocks,
+				ProducedBlocks:    validator.ProducedBlocks,
+				Efficiency:        validator.Efficiency,
+				StakingBalance:    validator.Stake,
+				RewardFee:         validator.RewardFee,
+				RewardFeeFraction: validator.RewardFeeFraction,
 			})
 		}
 
