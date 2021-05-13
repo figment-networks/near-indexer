@@ -96,7 +96,7 @@ func (s ValidatorAggsStore) FindBy(key string, value interface{}) (*model.Valida
 
 // ImportValidatorEpochs imports validator epochs records in batch
 func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch) error {
-	rr:= "INSERT INTO validator_epochs (  account_id,  epoch,  last_height,  last_time,  expected_blocks,  produced_blocks,  efficiency,  staking_balance,  reward_fee) VALUES @values ON CONFLICT (account_id, epoch) DO UPDATE SET  last_height     = excluded.last_height,  last_time       = excluded.last_time,  expected_blocks = excluded.expected_blocks, produced_blocks = excluded.produced_blocks,  efficiency      = ROUND(excluded.efficiency, 4), staking_balance = excluded.staking_balance, reward_fee      = COALESCE(excluded.reward_fee, validator_epochs.reward_fee)"
+	rr:= "INSERT INTO validator_epochs (  account_id,  epoch,  last_height,  last_time,  expected_blocks,  produced_blocks,  efficiency,  staking_balance,  reward_fee, reward_fee_fraction) VALUES @values ON CONFLICT (account_id, epoch) DO UPDATE SET  last_height     = excluded.last_height,  last_time       = excluded.last_time,  expected_blocks = excluded.expected_blocks, produced_blocks = excluded.produced_blocks,  efficiency      = ROUND(excluded.efficiency, 4), staking_balance = excluded.staking_balance, reward_fee      = COALESCE(excluded.reward_fee, validator_epochs.reward_fee), reward_fee_fraction = excluded.reward_fee_fraction "
 	return s.bulkImport(rr, len(records), func(i int) bulk.Row {
 		r := records[i]
 		return bulk.Row{
@@ -109,6 +109,7 @@ func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch
 			r.Efficiency,
 			r.StakingBalance,
 			r.RewardFee,
+			r.RewardFeeFraction,g
 		}
 	})
 }

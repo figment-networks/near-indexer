@@ -19,21 +19,7 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="eec9485b-087e-4fe2-8e44-59e5d5b31308" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/cli/cli.go" beforeDir="false" afterPath="$PROJECT_DIR$/cli/cli.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cli/migrate.go" beforeDir="false" afterPath="$PROJECT_DIR$/cli/migrate.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/accounts.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/accounts.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/blocks.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/blocks.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/epochs.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/epochs.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/events.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/events.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/stats.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/stats.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/transactions.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/transactions.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/validator_aggs.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/validator_aggs.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/store/validators.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/validators.go" afterDir="false" />
-    </list>
+    <list default="true" id="eec9485b-087e-4fe2-8e44-59e5d5b31308" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -94,6 +80,7 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
