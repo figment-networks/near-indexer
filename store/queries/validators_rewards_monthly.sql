@@ -1,5 +1,5 @@
 SELECT
-	date_trunc('month', last_time) AS month,
+	to_char(last_time, 'YYYY-MM') AS month,
 	SUM(reward) AS amount
 FROM
 	validator_epochs
@@ -8,4 +8,4 @@ WHERE
 	AND last_time BETWEEN ? AND ?
 	AND reward IS NOT NULL
 GROUP BY
-	date_trunc('month', last_time)
+	to_char(last_time, 'YYYY-MM')
