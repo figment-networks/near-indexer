@@ -8,7 +8,7 @@ INSERT INTO validator_epochs (
   efficiency,
   staking_balance,
   reward_fee,
-  reward,
+  reward
 )
 VALUES @values
 
