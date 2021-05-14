@@ -3,7 +3,7 @@ package pipeline
 import (
 	"context"
 	"github.com/figment-networks/near-indexer/model/types"
-	"github.com/figment-networks/near-indexer/model/util"
+	"math/big"
 	"time"
 
 	"github.com/figment-networks/near-indexer/model"
@@ -67,10 +67,12 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			}
 			if fee, ok := h.RewardFees[v.AccountID]; ok {
 				validator.RewardFee = &fee.Numerator
-				rff, _ := util.Divide(fee.Numerator, fee.Denominator)
-				reward := types.NewInt64Amount(0)
-				reward.Mul(validator.Stake.Int, rff)
-				validator.Reward = reward
+				rew := new(big.Int)
+				reward, _ := rew.SetString(validator.Stake.String(), 10)
+				reward.Mul(reward, big.NewInt(int64(fee.Numerator)))
+				reward.Quo(reward, big.NewInt(int64(fee.Denominator)))
+				resA := types.NewAmount(reward.String())
+				validator.Reward = resA
 			}
 			parsed.Validators = append(parsed.Validators, *validator)
 
