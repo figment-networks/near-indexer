@@ -50,6 +50,16 @@ func (s ValidatorAggsStore) FindValidatorEpochs(account string, limit int) ([]mo
 	return result, checkErr(err)
 }
 
+// CalculateRewards calculates rewards monthly
+func (s *ValidatorAggsStore) CalculateRewards(account string, from time.Time, to time.Time) (model.RewardsResponse, error) {
+	var res model.RewardsResponse
+	err := s.db.Raw(queries.ValidatorsRewardsMonthly, account, from, to).Scan(&res).Error
+	if err != nil {
+		return res, err
+	}
+	return res, nil
+}
+
 // PaginateValidatorEpochs returns a paginated search of validator epochs
 func (s ValidatorAggsStore) PaginateValidatorEpochs(account string, pagination Pagination) (*PaginatedResult, error) {
 	if err := pagination.Validate(); err != nil {

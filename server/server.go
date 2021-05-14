@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
@@ -53,6 +54,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/validators/:id", s.GetValidator)
 	router.GET("/validators/:id/epochs", s.GetValidatorEpochs)
 	router.GET("/validators/:id/events", s.GetValidatorEvents)
+	router.GET("/validators/:id/rewards", s.GetValidatorEvents)
 	router.GET("/transactions", s.GetTransactions)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
@@ -72,26 +74,27 @@ func (s Server) Run(addr string) error {
 func (s Server) GetEndpoints(c *gin.Context) {
 	jsonOk(c, gin.H{
 		"endpoints": gin.H{
-			"/health":                "Get service health",
-			"/status":                "Get service and network status",
-			"/height":                "Get current block height",
-			"/block":                 "Get current block details",
-			"/blocks":                "Get latest blocks",
-			"/blocks/:id":            "Get block details by height or hash",
-			"/block_times":           "Get average block times",
-			"/block_stats":           "Get block stats for a time bucket",
-			"/epochs":                "Get list of epochs",
-			"/epochs/:id":            "Get epoch details",
-			"/validators":            "List all validators",
-			"/validators/:id":        "Get validator details",
-			"/validators/:id/epochs": "Get validator epochs performance",
-			"/validators/:id/events": "Get validator events",
-			"/transactions":          "List all recent transactions",
-			"/transactions/:id":      "Get transaction details",
-			"/accounts/:id":          "Get account details",
-			"/delegations/:id":       "Get account delegations",
-			"/events":                "Get list of events",
-			"/events/:id":            "Get event details",
+			"/health":                 "Get service health",
+			"/status":                 "Get service and network status",
+			"/height":                 "Get current block height",
+			"/block":                  "Get current block details",
+			"/blocks":                 "Get latest blocks",
+			"/blocks/:id":             "Get block details by height or hash",
+			"/block_times":            "Get average block times",
+			"/block_stats":            "Get block stats for a time bucket",
+			"/epochs":                 "Get list of epochs",
+			"/epochs/:id":             "Get epoch details",
+			"/validators":             "List all validators",
+			"/validators/:id":         "Get validator details",
+			"/validators/:id/epochs":  "Get validator epochs performance",
+			"/validators/:id/events":  "Get validator events",
+			"/validators/:id/rewards": "Get validator rewards",
+			"/transactions":           "List all recent transactions",
+			"/transactions/:id":       "Get transaction details",
+			"/accounts/:id":           "Get account details",
+			"/delegations/:id":        "Get account delegations",
+			"/events":                 "Get list of events",
+			"/events/:id":             "Get event details",
 		},
 	})
 }
@@ -296,6 +299,22 @@ func (s Server) GetValidatorEvents(c *gin.Context) {
 	}
 
 	jsonOk(c, events)
+}
+
+// GetValidatorEvents returns validator events
+func (s Server) GetValidatorRewards(c *gin.Context) {
+	var params types.QueryParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		badRequest(c, errors.New("invalid from or/and to date"))
+		return
+	}
+
+	resp, err := s.db.ValidatorAggs.CalculateRewards(c.Param("id"), params.From, params.To)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, resp)
 }
 
 // GetValidator returns validator details
