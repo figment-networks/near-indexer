@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
@@ -53,6 +54,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/validators/:id", s.GetValidator)
 	router.GET("/validators/:id/epochs", s.GetValidatorEpochs)
 	router.GET("/validators/:id/events", s.GetValidatorEvents)
+	router.GET("/validators/:id/rewards", s.GetValidatorRewards)
 	router.GET("/transactions", s.GetTransactions)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
@@ -68,7 +70,21 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 func (s Server) Run(addr string) error {
 	return s.router.Run(addr)
 }
+// GetValidatorEvents returns validator events
+func (s Server) GetValidatorRewards(c *gin.Context) {
+	var params types.QueryParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		badRequest(c, errors.New("invalid from or/and to date"))
+		return
+	}
 
+	resp, err := s.db.ValidatorAggs.CalculateRewards(c.Param("id"), params.From, params.To)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, resp)
+}
 // GetEndpoints returns a list of all available endpoints
 func (s Server) GetEndpoints(c *gin.Context) {
 	jsonOk(c, gin.H{
@@ -87,6 +103,7 @@ func (s Server) GetEndpoints(c *gin.Context) {
 			"/validators/:id":        "Get validator details",
 			"/validators/:id/epochs": "Get validator epochs performance",
 			"/validators/:id/events": "Get validator events",
+			"/validators/:id/rewards": "Get validator rewards",
 			"/transactions":          "List all recent transactions",
 			"/transactions/:id":      "Get transaction details",
 			"/accounts/:id":          "Get account details",

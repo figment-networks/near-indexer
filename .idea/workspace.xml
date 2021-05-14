@@ -19,11 +19,30 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="eec9485b-087e-4fe2-8e44-59e5d5b31308" name="Default Changelist" comment="" />
+    <list default="true" id="eec9485b-087e-4fe2-8e44-59e5d5b31308" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/model/rewards.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model/types/query_params.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/store/queries/validators_rewards_monthly.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/util/calculate.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/util/calculate.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/validator.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/validator.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/model/validator_epoch.go" beforeDir="false" afterPath="$PROJECT_DIR$/model/validator_epoch.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline/task_parser.go" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline/task_parser.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/store/migrations/013_add_rewards_fee_fraction_to_validator_epochs.sql" beforeDir="false" afterPath="$PROJECT_DIR$/store/migrations/013_add_rewards_fee_fraction_to_validator_epochs.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/store/validator_aggs.go" beforeDir="false" afterPath="$PROJECT_DIR$/store/validator_aggs.go" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
   </component>
   <component name="GOROOT" path="C:\Go" />
   <component name="Git.Settings">
@@ -38,15 +57,17 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="DefaultGoTemplateProperty" value="Go File" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/store/queries" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\emire\repo\near-indexer\store\queries" />
       <recent name="C:\Users\emire\repo\near-indexer" />
     </key>
   </component>
@@ -122,10 +143,10 @@
       <screen x="1920" y="0" width="1920" height="1040" />
     </state>
     <state x="2702" y="222" key="RollbackChangesDialog/0.0.1536.824/1920.0.1920.1040@1920.0.1920.1040" timestamp="1620395495099" />
-    <state x="2587" y="253" width="586" height="534" key="find.popup" timestamp="1620410363707">
+    <state x="2587" y="253" width="586" height="534" key="find.popup" timestamp="1621021581896">
       <screen x="1920" y="0" width="1920" height="1040" />
     </state>
-    <state x="2587" y="253" width="586" height="534" key="find.popup/0.0.1536.824/1920.0.1920.1040@1920.0.1920.1040" timestamp="1620410363707" />
+    <state x="2587" y="253" width="586" height="534" key="find.popup/0.0.1536.824/1920.0.1920.1040@1920.0.1920.1040" timestamp="1621021581896" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -152,7 +173,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/server/server.go</url>
-          <line>102</line>
+          <line>119</line>
           <option name="timeStamp" value="8" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">

@@ -2,7 +2,6 @@ package model
 
 import (
 	"errors"
-	"math/big"
 	"time"
 
 	"github.com/figment-networks/near-indexer/model/types"
@@ -20,7 +19,7 @@ type Validator struct {
 	Stake             types.Amount `json:"stake"`
 	Efficiency        float64      `json:"efficiency"`
 	RewardFee         *int         `json:"reward_fee"`
-	RewardFeeFraction *big.Int     `json:"reward_fee_fraction"`
+	Reward  types.Amount    		`json:"reward"`
 	CreatedAt         time.Time    `json:"-"`
 	UpdatedAt         time.Time    `json:"-"`
 }

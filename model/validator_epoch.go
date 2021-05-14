@@ -1,7 +1,6 @@
 package model
 
 import (
-	"math/big"
 	"time"
 
 	"github.com/figment-networks/near-indexer/model/types"
@@ -18,7 +17,7 @@ type ValidatorEpoch struct {
 	Efficiency        float64      `json:"efficiency"`
 	StakingBalance    types.Amount `json:"staking_balance"`
 	RewardFee         *int         `json:"reward_fee"`
-	RewardFeeFraction *big.Int     `json:"reward_fee_fraction"`
+	Reward types.Amount    `json:"reward"`
 }
 
 func (ValidatorEpoch) TableName() string {
