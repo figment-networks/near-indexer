@@ -2,27 +2,26 @@ package model
 
 import (
 	"errors"
-	"math/big"
 	"time"
 
 	"github.com/figment-networks/near-indexer/model/types"
 )
 
 type Validator struct {
-	ID                int64        `json:"-"`
-	Height            types.Height `json:"height"`
-	Time              time.Time    `json:"time"`
-	AccountID         string       `json:"account_id"`
-	Epoch             string       `json:"epoch"`
-	ExpectedBlocks    int          `json:"expected_blocks"`
-	ProducedBlocks    int          `json:"produced_blocks"`
-	Slashed           bool         `json:"slashed"`
-	Stake             types.Amount `json:"stake"`
-	Efficiency        float64      `json:"efficiency"`
-	RewardFee         *int         `json:"reward_fee"`
-	RewardFeeFraction *big.Int     `json:"reward_fee_fraction"`
-	CreatedAt         time.Time    `json:"-"`
-	UpdatedAt         time.Time    `json:"-"`
+	ID             int64        `json:"-"`
+	Height         types.Height `json:"height"`
+	Time           time.Time    `json:"time"`
+	AccountID      string       `json:"account_id"`
+	Epoch          string       `json:"epoch"`
+	ExpectedBlocks int          `json:"expected_blocks"`
+	ProducedBlocks int          `json:"produced_blocks"`
+	Slashed        bool         `json:"slashed"`
+	Stake          types.Amount `json:"stake"`
+	Efficiency     float64      `json:"efficiency"`
+	RewardFee      *int         `json:"reward_fee"`
+	Reward         types.Amount `json:"reward"`
+	CreatedAt      time.Time    `json:"-"`
+	UpdatedAt      time.Time    `json:"-"`
 }
 
 func (Validator) TableName() string {
