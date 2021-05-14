@@ -110,16 +110,16 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			}
 
 			parsed.ValidatorEpochs = append(parsed.ValidatorEpochs, model.ValidatorEpoch{
-				AccountID:         validator.AccountID,
-				Epoch:             validator.Epoch,
-				LastHeight:        validator.Height,
-				LastTime:          validator.Time,
-				ExpectedBlocks:    validator.ExpectedBlocks,
-				ProducedBlocks:    validator.ProducedBlocks,
-				Efficiency:        validator.Efficiency,
-				StakingBalance:    validator.Stake,
-				RewardFee:         validator.RewardFee,
-				RewardFeeFraction: validator.Reward,
+				AccountID:      validator.AccountID,
+				Epoch:          validator.Epoch,
+				LastHeight:     validator.Height,
+				LastTime:       validator.Time,
+				ExpectedBlocks: validator.ExpectedBlocks,
+				ProducedBlocks: validator.ProducedBlocks,
+				Efficiency:     validator.Efficiency,
+				StakingBalance: validator.Stake,
+				RewardFee:      validator.RewardFee,
+				Reward:         validator.Reward,
 			})
 		}
 
