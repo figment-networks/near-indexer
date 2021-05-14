@@ -54,7 +54,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/validators/:id", s.GetValidator)
 	router.GET("/validators/:id/epochs", s.GetValidatorEpochs)
 	router.GET("/validators/:id/events", s.GetValidatorEvents)
-	router.GET("/validators/:id/rewards", s.GetValidatorEvents)
+	router.GET("/validators/:id/rewards", s. GetValidatorRewards)
 	router.GET("/transactions", s.GetTransactions)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
@@ -301,7 +301,7 @@ func (s Server) GetValidatorEvents(c *gin.Context) {
 	jsonOk(c, events)
 }
 
-// GetValidatorEvents returns validator events
+// GetValidatorRewards returns validator events
 func (s Server) GetValidatorRewards(c *gin.Context) {
 	var params types.QueryParams
 	if err := c.ShouldBindQuery(&params); err != nil {
