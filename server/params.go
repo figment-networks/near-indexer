@@ -1,6 +1,9 @@
 package server
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 type statsParams struct {
 	Bucket string `form:"bucket"`
@@ -49,4 +52,10 @@ func (p *statsParams) Validate() error {
 	}
 
 	return nil
+}
+
+type queryParams struct {
+	From     time.Time `form:"from" binding:"required" time_format:"2006-01-02"`
+	To       time.Time `form:"to" binding:"required" time_format:"2006-01-02"`
+	Interval string    `form:"interval" binding:"required" `
 }

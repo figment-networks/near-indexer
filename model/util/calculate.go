@@ -2,6 +2,9 @@ package util
 
 import (
 	"errors"
+	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/model/types"
+	"github.com/figment-networks/near-indexer/near"
 	"math/big"
 )
 
@@ -25,4 +28,13 @@ func Divide(x int, y int) (*big.Int, error) {
 	n := big.NewInt(int64(x))
 	d := big.NewInt(int64(y))
 	return n.Div(n, d), nil
+}
+
+// CalculateReward calculates reward of the given validator
+func CalculateReward(validator *model.Validator, rewardFeeFraction near.RewardFee) (types.Amount, error) {
+	rew := new(big.Int)
+	reward, _ := rew.SetString(validator.Stake.String(), 10)
+	reward.Mul(reward, big.NewInt(int64(rewardFeeFraction.Numerator)))
+	reward.Quo(reward, big.NewInt(int64(rewardFeeFraction.Denominator)))
+	return types.NewAmount(reward.String()), nil
 }

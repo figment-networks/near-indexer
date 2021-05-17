@@ -54,7 +54,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/validators/:id", s.GetValidator)
 	router.GET("/validators/:id/epochs", s.GetValidatorEpochs)
 	router.GET("/validators/:id/events", s.GetValidatorEvents)
-	router.GET("/validators/:id/rewards", s. GetValidatorRewards)
+	router.GET("/validators/:id/rewards", s.GetValidatorRewards)
 	router.GET("/transactions", s.GetTransactions)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
@@ -303,13 +303,20 @@ func (s Server) GetValidatorEvents(c *gin.Context) {
 
 // GetValidatorRewards returns validator events
 func (s Server) GetValidatorRewards(c *gin.Context) {
-	var params types.QueryParams
+	var params queryParams
 	if err := c.ShouldBindQuery(&params); err != nil {
-		badRequest(c, errors.New("invalid from or/and to date"))
+		badRequest(c, errors.New("invalid from or/and to date or missing interval"))
 		return
 	}
+	var interval model.TimeInterval
+	var ok bool
+	if interval, ok = model.GetTypeForTimeInterval(params.Interval); !ok {
+		if shouldReturn(c, errors.New("time interval type is wrong")) {
+			return
+		}
+	}
 
-	resp, err := s.db.ValidatorAggs.CalculateRewards(c.Param("id"), params.From, params.To)
+	resp, err := s.db.ValidatorAggs.CalculateRewards(c.Param("id"), params.From, params.To, interval)
 	if shouldReturn(c, err) {
 		return
 	}
