@@ -24,13 +24,14 @@ type HeightPayload struct {
 	Error  error
 	Skip   bool
 
-	Block        *near.Block
-	Validators   []near.Validator
-	Chunks       []near.ChunkDetails
-	Transactions []near.TransactionDetails
-	Delegations  []near.Delegation
-	Accounts     []near.Account
-	RewardFees   map[string]near.RewardFee
+	Block                  *near.Block
+	Validators             []near.Validator
+	Chunks                 []near.ChunkDetails
+	Transactions           []near.TransactionDetails
+	Delegations            []near.Delegation
+	Accounts               []near.Account
+	RewardFees             map[string]near.RewardFee
+	DelegationsByValidator map[string][]near.Delegation
 
 	CurrentEpoch         bool
 	PreviousValidators   []near.Validator
@@ -54,6 +55,7 @@ type ParsedPayload struct {
 	Validators      []model.Validator
 	ValidatorAggs   []model.ValidatorAgg
 	ValidatorEpochs []model.ValidatorEpoch
+	DelegatorEpochs []model.DelegatorEpoch
 	Accounts        []model.Account
 	Events          []model.Event
 }

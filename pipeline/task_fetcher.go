@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"math"
 	"sync"
 	"time"
 
@@ -196,6 +197,13 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 					return err
 				}
 				data.RewardFees = rewardFees
+
+				logrus.WithField("height", data.Height).Info("fetching validator delegations")
+				delegations, err := t.fetchDelegations(data.Validators)
+				if err != nil {
+					return err
+				}
+				data.DelegationsByValidator = delegations
 			}
 		} else {
 			isLastInBatch := dataIdx == len(payload.Heights)-1
@@ -400,4 +408,42 @@ func (t FetcherTask) fetchRewardFees(validators []near.Validator) (map[string]ne
 	}
 
 	return rewardFees, nil
+}
+
+type delegationsFetchResult struct {
+	account     string // validator
+	delegations []near.Delegation
+	err         error
+}
+
+func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][]near.Delegation, error) {
+	results := make([]delegationsFetchResult, len(validators))
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(validators))
+
+	for idx, validator := range validators {
+		go func(i int, account string) {
+			defer wg.Done()
+
+			dlgs, err := t.rpc.Delegations(account, 0, math.MaxUint64)
+			results[i] = delegationsFetchResult{
+				account:     account,
+				delegations: dlgs,
+				err:         err,
+			}
+		}(idx, validator.AccountID)
+	}
+
+	wg.Wait()
+
+	delegationsByValidator := map[string][]near.Delegation{}
+	for _, res := range results {
+		if res.err != nil {
+			return nil, res.err
+		}
+		delegationsByValidator[res.account] = res.delegations
+	}
+
+	return delegationsByValidator, nil
 }

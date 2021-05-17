@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"github.com/figment-networks/near-indexer/model/types"
 	"github.com/figment-networks/near-indexer/model/util"
 	"time"
 
@@ -64,12 +65,32 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			if err != nil {
 				return err
 			}
+
+			var remainingRewards types.Amount
 			if fee, ok := h.RewardFees[v.AccountID]; ok {
 				validator.RewardFee = &fee.Numerator
-				res, _ := util.CalculateReward(validator, fee)
+				res, _ := util.CalculateValidatorReward(validator, fee)
 				validator.Reward = res
+				remainingRewards = validator.Stake.Sub(res)
 			}
+
 			parsed.Validators = append(parsed.Validators, *validator)
+
+			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && remainingRewards.Int != nil {
+				for _, d := range delegations {
+					res, _ := util.CalculateDelegatorReward(d, validator, remainingRewards)
+					parsed.DelegatorEpochs = append(parsed.DelegatorEpochs, model.DelegatorEpoch{
+						AccountID:       d.Account,
+						ValidatorID:     validator.AccountID,
+						Epoch:           validator.Epoch,
+						LastHeight:      validator.Height,
+						LastTime:        validator.Time,
+						StakedBalance:   types.NewAmount(d.StakedBalance),
+						UnstakedBalance: types.NewAmount(d.UnstakedBalance),
+						Reward:          res,
+					})
+				}
+			}
 
 			validatorAgg, err := mapper.ValidatorAgg(h.Block, &v)
 			if err != nil {
