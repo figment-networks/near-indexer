@@ -11,7 +11,6 @@ import (
 type DelegatorsStore struct {
 	baseStore
 }
-q
 
 // FetchRewardsByInterval fetches reward by interval
 func (s *DelegatorsStore) FetchRewardsByInterval(account string, validatorId string, from time.Time, to time.Time, timeInterval model.TimeInterval) (model.RewardsSummary, error) {
