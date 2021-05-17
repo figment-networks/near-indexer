@@ -34,7 +34,7 @@ func Divide(x int, y int) (*big.Int, error) {
 func CalculateValidatorReward(validator *model.Validator, rewardFeeFraction near.RewardFee) (types.Amount, error) {
 	reward, _ := new(big.Int).SetString(validator.Stake.String(), 10)
 	reward.Mul(reward, big.NewInt(int64(rewardFeeFraction.Numerator)))
-	reward.Quo(reward, big.NewInt(int64(rewardFeeFraction.Denominator)))
+	reward.Div(reward, big.NewInt(int64(rewardFeeFraction.Denominator)))
 	return types.NewAmount(reward.String()), nil
 }
 
@@ -43,7 +43,7 @@ func CalculateDelegatorReward(delegation near.Delegation, validator *model.Valid
 	reward, _ := new(big.Int).SetString(remainingRewards.String(), 10)
 	totalStakedBalance, _ := new(big.Int).SetString(validator.Stake.String(), 10)
 	stakedBalance, _ := new(big.Int).SetString(delegation.StakedBalance, 10)
-	reward.Quo(reward, stakedBalance)
+	reward.Mul(reward, stakedBalance)
 	reward.Div(reward, totalStakedBalance)
 	return types.NewAmount(reward.String()), nil
 }

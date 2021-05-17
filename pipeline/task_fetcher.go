@@ -440,7 +440,7 @@ func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][
 	delegationsByValidator := map[string][]near.Delegation{}
 	for _, res := range results {
 		if res.err != nil {
-			return nil, res.err
+			continue
 		}
 		delegationsByValidator[res.account] = res.delegations
 	}
