@@ -55,6 +55,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/validators/:id/epochs", s.GetValidatorEpochs)
 	router.GET("/validators/:id/events", s.GetValidatorEvents)
 	router.GET("/validators/:id/rewards", s.GetValidatorRewards)
+	router.GET("/delegators/:id/rewards", s.GetDelegatorRewards)
 	router.GET("/transactions", s.GetTransactions)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
@@ -89,6 +90,7 @@ func (s Server) GetEndpoints(c *gin.Context) {
 			"/validators/:id/epochs":  "Get validator epochs performance",
 			"/validators/:id/events":  "Get validator events",
 			"/validators/:id/rewards": "Get validator rewards",
+			"/delegators/:id/rewards": "Get delegator rewards",
 			"/transactions":           "List all recent transactions",
 			"/transactions/:id":       "Get transaction details",
 			"/accounts/:id":           "Get account details",
@@ -301,9 +303,9 @@ func (s Server) GetValidatorEvents(c *gin.Context) {
 	jsonOk(c, events)
 }
 
-// GetValidatorRewards returns validator events
+// GetValidatorRewards returns validator rewards
 func (s Server) GetValidatorRewards(c *gin.Context) {
-	var params queryParams
+	var params validatorRewardsParams
 	if err := c.ShouldBindQuery(&params); err != nil {
 		badRequest(c, errors.New("invalid from or/and to date or missing interval"))
 		return
@@ -317,6 +319,29 @@ func (s Server) GetValidatorRewards(c *gin.Context) {
 	}
 
 	resp, err := s.db.ValidatorAggs.FetchRewardsByInterval(c.Param("id"), params.From, params.To, interval)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, resp)
+}
+
+// GetDelegatorRewards returns delegator rewards
+func (s Server) GetDelegatorRewards(c *gin.Context) {
+	var params delegatorRewardsParams
+	if err := c.ShouldBindQuery(&params); err != nil {
+		badRequest(c, errors.New("invalid from or/and to date or missing interval"))
+		return
+	}
+	var interval model.TimeInterval
+	var ok bool
+	if interval, ok = model.GetTypeForTimeInterval(params.Interval); !ok {
+		if shouldReturn(c, errors.New("time interval type is wrong")) {
+			return
+		}
+	}
+
+	resp, err := s.db.Delegators.FetchRewardsByInterval(c.Param("id"), params.ValidatorId, params.From, params.To, interval)
 	if shouldReturn(c, err) {
 		return
 	}
