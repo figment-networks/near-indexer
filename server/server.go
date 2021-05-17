@@ -316,7 +316,7 @@ func (s Server) GetValidatorRewards(c *gin.Context) {
 		}
 	}
 
-	resp, err := s.db.ValidatorAggs.CalculateRewards(c.Param("id"), params.From, params.To, interval)
+	resp, err := s.db.ValidatorAggs.FetchRewardsByInterval(c.Param("id"), params.From, params.To, interval)
 	if shouldReturn(c, err) {
 		return
 	}

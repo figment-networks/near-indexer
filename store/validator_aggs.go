@@ -50,8 +50,8 @@ func (s ValidatorAggsStore) FindValidatorEpochs(account string, limit int) ([]mo
 	return result, checkErr(err)
 }
 
-// CalculateRewards calculates rewards monthly
-func (s *ValidatorAggsStore) CalculateRewards(account string, from time.Time, to time.Time, timeInterval model.TimeInterval) (model.RewardsSummary, error) {
+// FetchRewardsByInterval fetches reward by interval
+func (s *ValidatorAggsStore) FetchRewardsByInterval(account string, from time.Time, to time.Time, timeInterval model.TimeInterval) (model.RewardsSummary, error) {
 	var res model.RewardsSummary
 	err := s.db.Raw(queries.ValidatorsRewards, timeInterval.String(), account, from, to, timeInterval.String()).Scan(&res).Error
 	if err != nil {
