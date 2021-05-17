@@ -11,9 +11,6 @@ CREATE TABLE delegator_epochs (
   reward                 DECIMAL(65, 0)  NOT NULL
 );
 
-	UnstakedBalance types.Amount `json:"unstaked_balance"`
-	StakedBalance   types.Amount `json:"staked_balance"`
-
 CREATE INDEX idx_delegator_epochs_account_id
   ON delegator_epochs(account_id);
 
