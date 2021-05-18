@@ -330,7 +330,7 @@ func (s Server) GetValidatorRewards(c *gin.Context) {
 func (s Server) GetDelegatorRewards(c *gin.Context) {
 	var params delegatorRewardsParams
 	if err := c.ShouldBindQuery(&params); err != nil {
-		badRequest(c, errors.New("invalid from or/and to date or missing interval"))
+		badRequest(c, errors.New("invalid from or/and to date or missing interval or validator id"))
 		return
 	}
 	var interval model.TimeInterval
