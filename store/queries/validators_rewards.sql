@@ -1,5 +1,5 @@
 SELECT
-	to_char(last_time, ?) AS interval,
+	to_char(last_time, $INTERVAL) AS interval,
 	SUM(reward) AS amount
 FROM
 	validator_epochs
@@ -8,4 +8,4 @@ WHERE
 	AND last_time BETWEEN ? AND ?
 	AND reward IS NOT NULL
 GROUP BY
-	to_char(last_time, ?)
+	to_char(last_time, $INTERVAL)

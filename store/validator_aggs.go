@@ -1,6 +1,7 @@
 package store
 
 import (
+	"strings"
 	"time"
 
 	"github.com/figment-networks/indexing-engine/store/bulk"
@@ -53,7 +54,8 @@ func (s ValidatorAggsStore) FindValidatorEpochs(account string, limit int) ([]mo
 // FetchRewardsByInterval fetches reward by interval
 func (s *ValidatorAggsStore) FetchRewardsByInterval(account string, from time.Time, to time.Time, timeInterval model.TimeInterval) (model.RewardsSummary, error) {
 	var res model.RewardsSummary
-	err := s.db.Raw(queries.ValidatorsRewards, timeInterval.String(), account, from, to, timeInterval.String()).Scan(&res).Error
+	q := strings.Replace(queries.ValidatorsRewards, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
+	err := s.db.Raw(q, timeInterval.String(), account, from, to, timeInterval.String()).Scan(&res).Error
 	if err != nil {
 		return res, err
 	}

@@ -1,10 +1,12 @@
 package store
 
 import (
+	"strings"
+	"time"
+
 	"github.com/figment-networks/indexing-engine/store/bulk"
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/store/queries"
-	"time"
 )
 
 // DelegatorsStore handles operations on blocks
@@ -15,7 +17,8 @@ type DelegatorsStore struct {
 // FetchRewardsByInterval fetches reward by interval
 func (s *DelegatorsStore) FetchRewardsByInterval(account string, validatorId string, from time.Time, to time.Time, timeInterval model.TimeInterval) (model.RewardsSummary, error) {
 	var res model.RewardsSummary
-	err := s.db.Raw(queries.DelegatorsRewards, timeInterval.String(), account, validatorId, from, to, timeInterval.String()).Scan(&res).Error
+	q := strings.Replace(queries.DelegatorsRewards, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
+	err := s.db.Raw(q, timeInterval.String(), account, validatorId, from, to, timeInterval.String()).Scan(&res).Error
 	if err != nil {
 		return res, err
 	}
