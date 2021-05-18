@@ -2,10 +2,11 @@ package util
 
 import (
 	"errors"
+	"math/big"
+
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/model/types"
 	"github.com/figment-networks/near-indexer/near"
-	"math/big"
 )
 
 // Percentage returns a percentage value for given inputs
