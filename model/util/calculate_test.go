@@ -3,11 +3,11 @@ package util
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/model/types"
 	"github.com/figment-networks/near-indexer/near"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCalculateValidatorReward(t *testing.T) {
