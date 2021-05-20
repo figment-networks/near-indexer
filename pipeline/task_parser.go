@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"errors"
 	"github.com/figment-networks/near-indexer/model/types"
 	"github.com/figment-networks/near-indexer/model/util"
 	"time"
@@ -81,7 +82,10 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 
 			parsed.Validators = append(parsed.Validators, *validator)
 
-			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && remainingRewards.Int != nil {
+			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && remainingRewards.Int != nil && h.firstBlockOfNewEpoch {
+				if h.PreviousBlock == nil {
+					return errors.New("no previous block info")
+				}
 				for _, d := range delegations {
 					res, err := util.CalculateDelegatorReward(d, validator, remainingRewards)
 					if err != nil {
