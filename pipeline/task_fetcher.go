@@ -204,12 +204,14 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 				}
 				data.RewardFees = rewardFees
 
-				logrus.WithField("height", data.Height).Info("fetching validator delegations")
-				delegations, err := t.fetchDelegations(data.Validators)
-				if err != nil {
-					return err
+				if data.Block.Header.EpochID == currentBlock.Header.EpochID {
+					logrus.WithField("height", data.Height).Info("fetching validator delegations")
+					delegations, err := t.fetchDelegations(data.Validators)
+					if err != nil {
+						return err
+					}
+					data.DelegationsByValidator = delegations
 				}
-				data.DelegationsByValidator = delegations
 			}
 		} else {
 			isLastInBatch := dataIdx == len(payload.Heights)-1
