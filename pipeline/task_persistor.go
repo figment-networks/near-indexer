@@ -121,6 +121,13 @@ func (t PersistorTask) processHeight(h *HeightPayload, parsed *ParsedPayload) er
 		}
 	}
 
+	if len(parsed.ValidatorEpochsRewards) > 0 {
+		t.logger.WithField("count", len(parsed.ValidatorEpochsRewards)).Debug("saving validator epochs rewards")
+		if err := t.db.ValidatorAggs.ImportValidatorEpochsRewards(parsed.ValidatorEpochsRewards); err != nil {
+			return err
+		}
+	}
+
 	if len(parsed.Accounts) > 0 {
 		t.logger.WithField("count", len(parsed.Accounts)).Debug("saving accounts")
 		if err := t.db.Accounts.Import(parsed.Accounts); err != nil {

@@ -75,7 +75,16 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 					if err != nil {
 						return err
 					}
-					validator.Reward = res
+
+					parsed.ValidatorEpochsRewards = append(parsed.ValidatorEpochsRewards, model.ValidatorEpochReward{
+						AccountID:         validator.AccountID,
+						Epoch:             h.PreviousBlock.Header.EpochID,
+						DistributedHeight: types.Height(h.Block.Header.Height),
+						DistributedTime:   util.ParseTime(h.Block.Header.Timestamp),
+						RewardFee:         validator.RewardFee,
+						Reward:            res,
+					})
+
 					remainingRewards = validator.Stake.Sub(res)
 				}
 			}

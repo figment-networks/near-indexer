@@ -125,6 +125,21 @@ func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch
 	})
 }
 
+// ImportValidatorEpochsRewards imports validator epochs rewards records in batch
+func (s ValidatorAggsStore) ImportValidatorEpochsRewards(records []model.ValidatorEpochReward) error {
+	return s.bulkImport(queries.ValidatorEpochsRewardsImport, len(records), func(i int) bulk.Row {
+		r := records[i]
+		return bulk.Row{
+			r.AccountID,
+			r.Epoch,
+			r.DistributedHeight,
+			r.DistributedTime,
+			r.RewardFee,
+			r.Reward,
+		}
+	})
+}
+
 // Import create validator aggregates in batch
 func (s ValidatorAggsStore) Import(records []model.ValidatorAgg) error {
 	t := time.Now()
