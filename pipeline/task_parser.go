@@ -86,14 +86,14 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 						return err
 					}
 					parsed.DelegatorEpochs = append(parsed.DelegatorEpochs, model.DelegatorEpoch{
-						AccountID:       d.Account,
-						ValidatorID:     validator.AccountID,
-						Epoch:           validator.Epoch,
-						LastHeight:      validator.Height,
-						LastTime:        validator.Time,
-						StakedBalance:   types.NewAmount(d.StakedBalance),
-						UnstakedBalance: types.NewAmount(d.UnstakedBalance),
-						Reward:          res,
+						AccountID:         d.Account,
+						ValidatorID:       validator.AccountID,
+						Epoch:             h.PreviousBlock.Header.EpochID,
+						DistributedHeight: types.Height(h.Block.Header.Height),
+						DistributedTime:   util.ParseTime(h.Block.Header.Timestamp),
+						StakedBalance:     types.NewAmount(d.StakedBalance),
+						UnstakedBalance:   types.NewAmount(d.UnstakedBalance),
+						Reward:            res,
 					})
 				}
 			}
