@@ -69,12 +69,14 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			var remainingRewards types.Amount
 			if fee, ok := h.RewardFees[v.AccountID]; ok {
 				validator.RewardFee = &fee.Numerator
-				res, err := util.CalculateValidatorReward(validator, fee)
-				if err != nil {
-					return err
+				if h.firstBlockOfNewEpoch {
+					res, err := util.CalculateValidatorReward(validator, fee)
+					if err != nil {
+						return err
+					}
+					validator.Reward = res
+					remainingRewards = validator.Stake.Sub(res)
 				}
-				validator.Reward = res
-				remainingRewards = validator.Stake.Sub(res)
 			}
 
 			parsed.Validators = append(parsed.Validators, *validator)
