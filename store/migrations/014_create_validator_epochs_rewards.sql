@@ -9,8 +9,8 @@ CREATE TABLE validator_epochs_rewards (
   reward                 DECIMAL(65, 0)  NOT NULL
 );
 
-CREATE UNIQUE INDEX validator_epochs_rewards
-  ON delegator_epochs(account_id, epoch);
+CREATE UNIQUE INDEX validator_epochs_rewards_pk
+  ON validator_epochs_rewards(account_id, epoch);
 
 CREATE INDEX idx_validator_epochs_rewards_distributed_time ON validator_epochs_rewards (distributed_time);
 
