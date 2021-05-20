@@ -17,7 +17,7 @@ CREATE INDEX idx_delegator_epochs_account_id
 CREATE UNIQUE INDEX idx_delegator_epochs_account_epoch
   ON delegator_epochs(account_id, validator_id, epoch);
 
-CREATE INDEX idx_delegator_epochs_distributed_time ON validator_statistics (distributed_time);
+CREATE INDEX idx_delegator_epochs_distributed_time ON delegator_epochs (distributed_time);
 
 -- +goose Down
 DROP TABLE delegator_epochs;
