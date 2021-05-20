@@ -70,7 +70,7 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			var remainingRewards types.Amount
 			if fee, ok := h.RewardFees[v.AccountID]; ok {
 				validator.RewardFee = &fee.Numerator
-				if h.firstBlockOfNewEpoch {
+				if h.firstBlockOfNewEpoch && h.PreviousBlock != nil {
 					res, err := util.CalculateValidatorReward(validator, fee)
 					if err != nil {
 						return err
@@ -91,7 +91,7 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 
 			parsed.Validators = append(parsed.Validators, *validator)
 
-			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && remainingRewards.Int != nil && h.firstBlockOfNewEpoch {
+			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && remainingRewards.Int != nil && h.firstBlockOfNewEpoch && h.PreviousBlock != nil {
 				if h.PreviousBlock == nil {
 					return errors.New("no previous block info")
 				}
