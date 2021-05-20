@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -440,7 +441,8 @@ func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][
 	delegationsByValidator := map[string][]near.Delegation{}
 	for _, res := range results {
 		if res.err != nil {
-			continue
+			t.logger.WithError(res.err).Error(fmt.Sprintf("can not fetch delegations, validator_id %s ", res.account))
+			return nil, res.err
 		}
 		delegationsByValidator[res.account] = res.delegations
 	}
