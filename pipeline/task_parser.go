@@ -69,7 +69,10 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			var remainingRewards types.Amount
 			if fee, ok := h.RewardFees[v.AccountID]; ok {
 				validator.RewardFee = &fee.Numerator
-				res, _ := util.CalculateValidatorReward(validator, fee)
+				res, err := util.CalculateValidatorReward(validator, fee)
+				if err != nil {
+					return err
+				}
 				validator.Reward = res
 				remainingRewards = validator.Stake.Sub(res)
 			}
@@ -78,7 +81,10 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 
 			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && remainingRewards.Int != nil {
 				for _, d := range delegations {
-					res, _ := util.CalculateDelegatorReward(d, validator, remainingRewards)
+					res, err := util.CalculateDelegatorReward(d, validator, remainingRewards)
+					if err != nil {
+						return err
+					}
 					parsed.DelegatorEpochs = append(parsed.DelegatorEpochs, model.DelegatorEpoch{
 						AccountID:       d.Account,
 						ValidatorID:     validator.AccountID,
