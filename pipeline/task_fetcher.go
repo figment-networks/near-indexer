@@ -15,6 +15,11 @@ import (
 	"github.com/figment-networks/near-indexer/store"
 )
 
+const (
+	feeFetchConcurrency        = 10
+	delegatorsFetchConcurrency = 10
+)
+
 // FetcherTask performs fetching data from the network node
 type FetcherTask struct {
 	rpc    near.Client
@@ -388,7 +393,7 @@ func (t FetcherTask) fetchRewardFees(validators []near.Validator) (map[string]ne
 	results := []feeFetchResult{}
 	resultsLock := &sync.Mutex{}
 
-	doConcurrently(accounts, 10, func(account string) {
+	doConcurrently(accounts, feeFetchConcurrency, func(account string) {
 		fee, err := t.rpc.RewardFee(account)
 
 		resultsLock.Lock()
@@ -427,7 +432,7 @@ func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][
 	results := []delegationsFetchResult{}
 	resultsLock := &sync.Mutex{}
 
-	doConcurrently(accounts, 10, func(account string) {
+	doConcurrently(accounts, delegatorsFetchConcurrency, func(account string) {
 		dlgs, err := t.rpc.Delegations(account, 0, math.MaxUint64)
 
 		resultsLock.Lock()
