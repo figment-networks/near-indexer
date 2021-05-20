@@ -18,7 +18,13 @@ type DelegatorsStore struct {
 func (s *DelegatorsStore) FetchRewardsByInterval(account string, validatorId string, from time.Time, to time.Time, timeInterval model.TimeInterval) (model.RewardsSummary, error) {
 	var res model.RewardsSummary
 	q := strings.Replace(queries.DelegatorsRewards, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
-	err := s.db.Raw(q, account, validatorId, from, to).Scan(&res).Error
+	var err error
+	if validatorId == "" {
+		q = strings.Replace(q, "AND validator_id = ?", "", -1)
+		err = s.db.Raw(q, account, from, to).Scan(&res).Error
+	} else {
+		err = s.db.Raw(q, account, validatorId, from, to).Scan(&res).Error
+	}
 	if err != nil {
 		return res, err
 	}

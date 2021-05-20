@@ -66,5 +66,5 @@ type validatorRewardsParams struct {
 
 type delegatorRewardsParams struct {
 	rewardsParams
-	ValidatorId string `form:"validator_id" binding:"required" `
+	ValidatorId string `form:"validator_id" binding:"-" `
 }
