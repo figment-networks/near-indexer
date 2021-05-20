@@ -1,11 +1,11 @@
 SELECT
-	to_char(last_time, $INTERVAL) AS interval,
+	to_char(distributed_time, $INTERVAL) AS interval,
 	SUM(reward) AS amount
 FROM
-	validator_epochs
+	validator_epochs_rewards
 WHERE
 	account_id = ?
-	AND last_time BETWEEN ? AND ?
+	AND distributed_time BETWEEN ? AND ?
 	AND reward IS NOT NULL
 GROUP BY
-	to_char(last_time, $INTERVAL)
+	to_char(distributed_time, $INTERVAL)

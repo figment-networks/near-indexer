@@ -7,8 +7,7 @@ INSERT INTO validator_epochs (
   produced_blocks,
   efficiency,
   staking_balance,
-  reward_fee,
-  reward
+  reward_fee
 )
 VALUES @values
 
@@ -20,5 +19,4 @@ SET
   produced_blocks     = excluded.produced_blocks,
   efficiency          = ROUND(excluded.efficiency, 4),
   staking_balance     = excluded.staking_balance,
-  reward_fee          = COALESCE(excluded.reward_fee, validator_epochs.reward_fee),
-  reward              = excluded.reward
+  reward_fee          = COALESCE(excluded.reward_fee, validator_epochs.reward_fee)
