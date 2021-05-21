@@ -30,7 +30,7 @@ var (
 type Config struct {
 	AppEnv           string `json:"app_env" envconfig:"APP_ENV" default:"development"`
 	RPCEndpoints     string `json:"rpc_endpoints" envconfig:"NEAR_RPC_ENDPOINTS"`
-	RPCTimeout       string `json:"rpc_timeout" envconfig:"NEAR_RPC_TIMEOUT" default:"15s"`
+	RPCTimeout       string `json:"rpc_timeout" envconfig:"NEAR_RPC_TIMEOUT" default:"45s"`
 	ServerAddr       string `json:"server_addr" envconfig:"SERVER_ADDR" default:"0.0.0.0"`
 	ServerPort       int    `json:"server_port" envconfig:"SERVER_PORT" default:"8081"`
 	StartHeight      uint64 `json:"start_height" envconfig:"START_HEIGHT"`

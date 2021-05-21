@@ -59,7 +59,7 @@ func (t FetcherTask) ShouldRun(payload *Payload) bool {
 	return true
 }
 
-func (t FetcherTask) RPC() near.Client {
+func (t *FetcherTask) RPC() near.Client {
 	t.lock.Lock()
 	defer t.lock.Unlock()
 	if len(t.rpc) == 1 {
