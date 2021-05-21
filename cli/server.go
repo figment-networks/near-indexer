@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"errors"
 	"github.com/sirupsen/logrus"
+	"strings"
 
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/near"
@@ -17,7 +19,11 @@ func startServer(cfg *config.Config, logger *logrus.Logger) error {
 	}
 	defer db.Close()
 
-	rpc := near.DefaultClient(cfg.RPCEndpoint)
+	rpcEndpoints := strings.Split(cfg.RPCEndpoints, ",")
+	if len(rpcEndpoints) != 1 {
+		return errors.New("only one rpc should be set for status command")
+	}
+	rpc := near.DefaultClient(rpcEndpoints[0])
 
 	srv := server.New(cfg, db, logger, rpc)
 

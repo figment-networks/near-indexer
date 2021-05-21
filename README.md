@@ -72,7 +72,7 @@ Example:
 ```json
 {
   "app_env": "production",
-  "rpc_endpoint": "http://YOUR_NODE_RPC_IP:PORT",
+  "rpc_endpoints": "http://YOUR_NODE_RPC_IP:PORT,http://YOUR_NODE_RPC_IP2:PORT2",
   "server_addr": "127.0.0.1",
   "server_port": 8081,
   "database_url": "postgres://user:pass@host/dbname?sslmode=mode",
@@ -91,7 +91,7 @@ Example:
 |----------------------|-------------------------|-----------------
 | `APP_ENV`            | Application environment | `development`
 | `DATABASE_URL`       | PostgreSQL database URL | REQUIRED
-| `NEAR_RPC_ENDPOINT`  | Near RPC endpoint       | REQUIRED
+| `NEAR_RPC_ENDPOINTS` | Near RPC endpoints      | REQUIRED
 | `START_HEIGHT`       | Initial start height    | optional, will use genesis if 0
 | `SERVER_ADDR`        | Server listen addr      | `0.0.0.0`
 | `SERVER_PORT`        | Server listen port      | `8081`
