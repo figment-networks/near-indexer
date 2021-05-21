@@ -21,7 +21,7 @@ func startServer(cfg *config.Config, logger *logrus.Logger) error {
 
 	rpcEndpoints := strings.Split(cfg.RPCEndpoints, ",")
 	if len(rpcEndpoints) != 1 {
-		return errors.New("only one rpc should be set for status command")
+		return errors.New("only one rpc should be set for server command")
 	}
 	rpc := near.DefaultClient(rpcEndpoints[0])
 
