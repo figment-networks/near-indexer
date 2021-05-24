@@ -15,6 +15,11 @@ import (
 	"github.com/figment-networks/near-indexer/store"
 )
 
+const (
+	feeFetchConcurrency        = 10
+	delegatorsFetchConcurrency = 10
+)
+
 // FetcherTask performs fetching data from the network node
 type FetcherTask struct {
 	rpc    near.Client
@@ -380,25 +385,26 @@ type feeFetchResult struct {
 }
 
 func (t FetcherTask) fetchRewardFees(validators []near.Validator) (map[string]near.RewardFee, error) {
-	results := make([]feeFetchResult, len(validators))
-
-	wg := sync.WaitGroup{}
-	wg.Add(len(validators))
-
+	accounts := make([]string, len(validators))
 	for idx, validator := range validators {
-		go func(i int, account string) {
-			defer wg.Done()
-
-			fee, err := t.rpc.RewardFee(account)
-			results[i] = feeFetchResult{
-				account: account,
-				fee:     fee,
-				err:     err,
-			}
-		}(idx, validator.AccountID)
+		accounts[idx] = validator.AccountID
 	}
 
-	wg.Wait()
+	results := []feeFetchResult{}
+	resultsLock := &sync.Mutex{}
+
+	doConcurrently(accounts, feeFetchConcurrency, func(account string) {
+		fee, err := t.rpc.RewardFee(account)
+
+		resultsLock.Lock()
+		defer resultsLock.Unlock()
+
+		results = append(results, feeFetchResult{
+			account: account,
+			fee:     fee,
+			err:     err,
+		})
+	})
 
 	rewardFees := map[string]near.RewardFee{}
 	for _, res := range results {
@@ -418,25 +424,26 @@ type delegationsFetchResult struct {
 }
 
 func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][]near.Delegation, error) {
-	results := make([]delegationsFetchResult, len(validators))
-
-	wg := sync.WaitGroup{}
-	wg.Add(len(validators))
-
+	accounts := make([]string, len(validators))
 	for idx, validator := range validators {
-		go func(i int, account string) {
-			defer wg.Done()
-
-			dlgs, err := t.rpc.Delegations(account, 0, math.MaxUint64)
-			results[i] = delegationsFetchResult{
-				account:     account,
-				delegations: dlgs,
-				err:         err,
-			}
-		}(idx, validator.AccountID)
+		accounts[idx] = validator.AccountID
 	}
 
-	wg.Wait()
+	results := []delegationsFetchResult{}
+	resultsLock := &sync.Mutex{}
+
+	doConcurrently(accounts, delegatorsFetchConcurrency, func(account string) {
+		dlgs, err := t.rpc.Delegations(account, 0, math.MaxUint64)
+
+		resultsLock.Lock()
+		defer resultsLock.Unlock()
+
+		results = append(results, delegationsFetchResult{
+			account:     account,
+			delegations: dlgs,
+			err:         err,
+		})
+	})
 
 	delegationsByValidator := map[string][]near.Delegation{}
 	for _, res := range results {
@@ -448,4 +455,28 @@ func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][
 	}
 
 	return delegationsByValidator, nil
+}
+
+func doConcurrently(items []string, maxConcurrency int, workFn func(string)) {
+	wg := &sync.WaitGroup{}
+	wg.Add(maxConcurrency)
+
+	queue := make(chan string)
+
+	for i := 0; i < maxConcurrency; i++ {
+		go func() {
+			defer wg.Done()
+
+			for item := range queue {
+				workFn(item)
+			}
+		}()
+	}
+
+	for _, item := range items {
+		queue <- item
+	}
+	close(queue)
+
+	wg.Wait()
 }
