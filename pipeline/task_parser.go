@@ -3,14 +3,15 @@ package pipeline
 import (
 	"context"
 	"errors"
-	"github.com/figment-networks/near-indexer/model/types"
-	"github.com/figment-networks/near-indexer/model/util"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/model/mapper"
+	"github.com/figment-networks/near-indexer/model/types"
+	"github.com/figment-networks/near-indexer/model/util"
 	"github.com/figment-networks/near-indexer/store"
-	"github.com/sirupsen/logrus"
 )
 
 // ParserTask performs raw block data parsing
@@ -70,19 +71,19 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			var remainingRewards types.Amount
 			if fee, ok := h.RewardFees[v.AccountID]; ok {
 				validator.RewardFee = &fee.Numerator
-				if h.firstBlockOfNewEpoch && h.PreviousBlock != nil {
+				if h.FirstBlockOfNewEpoch && h.PreviousBlock != nil {
 					res, err := util.CalculateValidatorReward(validator, fee)
 					if err != nil {
 						return err
 					}
 
 					parsed.ValidatorEpochsRewards = append(parsed.ValidatorEpochsRewards, model.ValidatorEpochReward{
-						AccountID:         validator.AccountID,
-						Epoch:             h.PreviousBlock.Header.EpochID,
-						DistributedHeight: types.Height(h.Block.Header.Height),
-						DistributedTime:   util.ParseTime(h.Block.Header.Timestamp),
-						RewardFee:         validator.RewardFee,
-						Reward:            res,
+						AccountID:           validator.AccountID,
+						Epoch:               h.PreviousBlock.Header.EpochID,
+						DistributedAtHeight: types.Height(h.Block.Header.Height),
+						DistributedAtTime:   util.ParseTime(h.Block.Header.Timestamp),
+						RewardFee:           validator.RewardFee,
+						Reward:              res,
 					})
 
 					remainingRewards = validator.Stake.Sub(res)
@@ -91,7 +92,7 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 
 			parsed.Validators = append(parsed.Validators, *validator)
 
-			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && remainingRewards.Int != nil && h.firstBlockOfNewEpoch && h.PreviousBlock != nil {
+			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && remainingRewards.Int != nil && h.FirstBlockOfNewEpoch && h.PreviousBlock != nil {
 				if h.PreviousBlock == nil {
 					return errors.New("no previous block info")
 				}
@@ -101,14 +102,14 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 						return err
 					}
 					parsed.DelegatorEpochs = append(parsed.DelegatorEpochs, model.DelegatorEpoch{
-						AccountID:         d.Account,
-						ValidatorID:       validator.AccountID,
-						Epoch:             h.PreviousBlock.Header.EpochID,
-						DistributedHeight: types.Height(h.Block.Header.Height),
-						DistributedTime:   util.ParseTime(h.Block.Header.Timestamp),
-						StakedBalance:     types.NewAmount(d.StakedBalance),
-						UnstakedBalance:   types.NewAmount(d.UnstakedBalance),
-						Reward:            res,
+						AccountID:           d.Account,
+						ValidatorID:         validator.AccountID,
+						Epoch:               h.PreviousBlock.Header.EpochID,
+						DistributedAtHeight: types.Height(h.Block.Header.Height),
+						DistributedAtTime:   util.ParseTime(h.Block.Header.Timestamp),
+						StakedBalance:       types.NewAmount(d.StakedBalance),
+						UnstakedBalance:     types.NewAmount(d.UnstakedBalance),
+						Reward:              res,
 					})
 				}
 			}

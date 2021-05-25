@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/store"
-	"github.com/sirupsen/logrus"
 )
 
 // PersistorTask saves the processed data in the database

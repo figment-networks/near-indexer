@@ -34,7 +34,7 @@ type HeightPayload struct {
 	DelegationsByValidator map[string][]near.Delegation
 
 	CurrentEpoch         bool
-	firstBlockOfNewEpoch bool
+	FirstBlockOfNewEpoch bool
 	PreviousValidators   []near.Validator
 	PreviousEpochKickOut []near.ValidatorKickout
 	PreviousBlock        *near.Block

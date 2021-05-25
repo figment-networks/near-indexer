@@ -132,8 +132,8 @@ func (s ValidatorAggsStore) ImportValidatorEpochsRewards(records []model.Validat
 		return bulk.Row{
 			r.AccountID,
 			r.Epoch,
-			r.DistributedHeight,
-			r.DistributedTime,
+			r.DistributedAtHeight,
+			r.DistributedAtTime,
 			r.RewardFee,
 			r.Reward,
 		}

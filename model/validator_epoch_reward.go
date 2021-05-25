@@ -7,13 +7,13 @@ import (
 )
 
 type ValidatorEpochReward struct {
-	ID                int64        `json:"-"`
-	AccountID         string       `json:"-"`
-	Epoch             string       `json:"epoch"`
-	DistributedHeight types.Height `json:"distributed_height"`
-	DistributedTime   time.Time    `json:"distributed_time"`
-	RewardFee         *int         `json:"reward_fee"`
-	Reward            types.Amount `json:"reward"`
+	ID                  int64        `json:"-"`
+	AccountID           string       `json:"-"`
+	Epoch               string       `json:"epoch"`
+	DistributedAtHeight types.Height `json:"distributed_at_height"`
+	DistributedAtTime   time.Time    `json:"distributed_at_time"`
+	RewardFee           *int         `json:"reward_fee"`
+	Reward              types.Amount `json:"reward"`
 }
 
 func (ValidatorEpochReward) TableName() string {
