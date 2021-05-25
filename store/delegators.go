@@ -9,6 +9,8 @@ import (
 	"github.com/figment-networks/near-indexer/store/queries"
 )
 
+const batchSize = 100
+
 // DelegatorsStore handles operations on blocks
 type DelegatorsStore struct {
 	baseStore
@@ -33,17 +35,28 @@ func (s *DelegatorsStore) FetchRewardsByInterval(account string, validatorId str
 
 // Import creates new validators in batch
 func (s DelegatorsStore) ImportDelegatorEpochs(records []model.DelegatorEpoch) error {
-	return s.bulkImport(queries.DelegatorEpochsImport, len(records), func(i int) bulk.Row {
-		r := records[i]
-		return bulk.Row{
-			r.AccountID,
-			r.ValidatorID,
-			r.Epoch,
-			r.DistributedAtHeight,
-			r.DistributedAtTime,
-			r.StakedBalance,
-			r.UnstakedBalance,
-			r.Reward,
+	var err error
+	for i := 0; i < len(records); i += batchSize {
+		j := i + batchSize
+		if j > len(records) {
+			j = len(records)
 		}
-	})
+		err = s.bulkImport(queries.DelegatorEpochsImport, j-i, func(k int) bulk.Row {
+			r := records[i+k]
+			return bulk.Row{
+				r.AccountID,
+				r.ValidatorID,
+				r.Epoch,
+				r.DistributedAtHeight,
+				r.DistributedAtTime,
+				r.StakedBalance,
+				r.UnstakedBalance,
+				r.Reward,
+			}
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
