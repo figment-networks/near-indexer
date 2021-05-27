@@ -72,7 +72,7 @@ func (t *FetcherTask) RPC() near.Client {
 	} else {
 		t.rpcIndex++
 	}
-	return t.rpc[t.rpcIndex]
+	return t.rpc[t.rpcIndex % len(t.rpc)]
 }
 
 // Run executes the data fetching
