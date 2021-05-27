@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"github.com/figment-networks/near-indexer/model"
 	"time"
 )
 
@@ -67,4 +68,17 @@ type validatorRewardsParams struct {
 type delegatorRewardsParams struct {
 	rewardsParams
 	ValidatorId string `form:"validator_id" binding:"-" `
+}
+
+func (p *rewardsParams) Validate() error {
+	if p.From.IsZero() && p.To.IsZero() {
+		return errors.New("invalid time range: " + "")
+	}
+
+	var ok bool
+	if _, ok = model.GetTypeForTimeInterval(p.Interval); !ok {
+			return errors.New("time interval type is wrong")
+	}
+
+	return nil
 }

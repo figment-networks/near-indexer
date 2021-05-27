@@ -306,19 +306,17 @@ func (s Server) GetValidatorEvents(c *gin.Context) {
 // GetValidatorRewards returns validator rewards
 func (s Server) GetValidatorRewards(c *gin.Context) {
 	var params validatorRewardsParams
-	if err := c.ShouldBindQuery(&params); err != nil {
+	if err := c.BindQuery(&params); err != nil {
 		badRequest(c, errors.New("invalid from or/and to date or missing interval"))
 		return
 	}
-	var interval model.TimeInterval
-	var ok bool
-	if interval, ok = model.GetTypeForTimeInterval(params.Interval); !ok {
-		if shouldReturn(c, errors.New("time interval type is wrong")) {
-			return
-		}
+
+	if err := params.Validate(); err != nil {
+		badRequest(c, err)
+		return
 	}
 
-	resp, err := s.db.ValidatorAggs.FetchRewardsByInterval(c.Param("id"), params.From, params.To, interval)
+	resp, err := s.db.ValidatorAggs.FetchRewardsByInterval(c.Param("id"), params.From, params.To, params.Interval)
 	if shouldReturn(c, err) {
 		return
 	}
@@ -329,19 +327,17 @@ func (s Server) GetValidatorRewards(c *gin.Context) {
 // GetDelegatorRewards returns delegator rewards
 func (s Server) GetDelegatorRewards(c *gin.Context) {
 	var params delegatorRewardsParams
-	if err := c.ShouldBindQuery(&params); err != nil {
+	if err := c.BindQuery(&params); err != nil {
 		badRequest(c, errors.New("invalid from or/and to date or missing interval or validator id"))
 		return
 	}
-	var interval model.TimeInterval
-	var ok bool
-	if interval, ok = model.GetTypeForTimeInterval(params.Interval); !ok {
-		if shouldReturn(c, errors.New("time interval type is wrong")) {
-			return
-		}
+
+	if err := params.Validate(); err != nil {
+		badRequest(c, err)
+		return
 	}
 
-	resp, err := s.db.Delegators.FetchRewardsByInterval(c.Param("id"), params.ValidatorId, params.From, params.To, interval)
+	resp, err := s.db.Delegators.FetchRewardsByInterval(c.Param("id"), params.ValidatorId, params.From, params.To, params.Interval)
 	if shouldReturn(c, err) {
 		return
 	}

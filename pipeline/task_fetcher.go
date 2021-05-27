@@ -24,7 +24,7 @@ const (
 type FetcherTask struct {
 	rpc      []near.Client
 	rpcIndex int
-	lock     sync.Mutex
+	lock     *sync.Mutex
 
 	db     *store.Store
 	logger *logrus.Logger
