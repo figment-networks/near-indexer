@@ -224,7 +224,7 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 				data.RewardFees = rewardFees
 				data.FirstBlockOfNewEpoch = data.Block.Header.EpochID == currentBlock.Header.EpochID
 
-				if data.FirstBlockOfNewEpoch {
+				if data.FirstBlockOfNewEpoch && prevBlock != nil {
 					logrus.WithField("height", data.Height).Info("fetching validator delegations")
 					delegations, err := t.fetchDelegations(data.Validators)
 					if err != nil {
