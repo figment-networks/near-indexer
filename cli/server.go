@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"github.com/sirupsen/logrus"
 	"strings"
 
@@ -20,9 +19,6 @@ func startServer(cfg *config.Config, logger *logrus.Logger) error {
 	defer db.Close()
 
 	rpcEndpoints := strings.Split(cfg.RPCEndpoints, ",")
-	if len(rpcEndpoints) != 1 {
-		return errors.New("only one rpc should be set for server command")
-	}
 	rpc := near.DefaultClient(rpcEndpoints[0])
 
 	srv := server.New(cfg, db, logger, rpc)
