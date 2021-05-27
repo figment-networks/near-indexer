@@ -22,7 +22,10 @@ const (
 
 // FetcherTask performs fetching data from the network node
 type FetcherTask struct {
-	rpc    near.Client
+	rpc      []near.Client
+	rpcIndex int
+	lock     sync.Mutex
+
 	db     *store.Store
 	logger *logrus.Logger
 
@@ -33,7 +36,7 @@ type FetcherTask struct {
 // NewFetcherTask returns a new data fetcher task
 func NewFetcherTask(
 	db *store.Store,
-	rpc near.Client,
+	rpc []near.Client,
 	config *config.Config,
 	logger *logrus.Logger,
 ) FetcherTask {
@@ -56,6 +59,12 @@ func (t FetcherTask) ShouldRun(payload *Payload) bool {
 	return true
 }
 
+func (t *FetcherTask) RPC() near.Client {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	return t.rpc[t.rpcIndex % len(t.rpc)]
+}
+
 // Run executes the data fetching
 func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 	defer logTaskDuration(t, time.Now())
@@ -68,7 +77,7 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 	)
 
 	// Fetch the current block from the chain
-	currentBlock, err := t.rpc.CurrentBlock()
+	currentBlock, err := t.RPC().CurrentBlock()
 	if err != nil {
 		t.logger.WithError(err).Error("cant fetch current block")
 		return err
@@ -94,7 +103,7 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 
 	// Get the genesis block height if no start height was provided
 	if startHeight == 0 {
-		genesis, err := t.rpc.GenesisConfig()
+		genesis, err := t.RPC().GenesisConfig()
 		if err != nil {
 			return err
 		}
@@ -177,14 +186,14 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 			var previousValidators *near.ValidatorsResponse
 			if lastBlockOfEpoch != nil {
 				logrus.WithField("height", lastBlockOfEpoch.Header.Height).Info("fetching previous validators")
-				previousValidators, err = t.rpc.ValidatorsByEpoch(lastBlockOfEpoch.Header.EpochID)
+				previousValidators, err = t.RPC().ValidatorsByEpoch(lastBlockOfEpoch.Header.EpochID)
 				if err != nil && err != near.ErrEpochUnknown && err != near.ErrValidatorsUnavailable {
 					return err
 				}
 			}
 
 			logrus.WithField("height", data.Height).Info("fetching current validators")
-			validators, err := t.rpc.ValidatorsByEpoch(data.Block.Header.EpochID)
+			validators, err := t.RPC().ValidatorsByEpoch(data.Block.Header.EpochID)
 			if err != nil && err != near.ErrEpochUnknown && err != near.ErrValidatorsUnavailable {
 				return err
 			}
@@ -219,7 +228,7 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 
 			// Fetch validators in the current epoch in the last height of the batch
 			if currentBlock.Header.EpochID == data.Block.Header.EpochID && isLastInBatch {
-				validators, err := t.rpc.ValidatorsByEpoch(data.Block.Header.EpochID)
+				validators, err := t.RPC().ValidatorsByEpoch(data.Block.Header.EpochID)
 				if err != nil && err != near.ErrEpochUnknown && err != near.ErrValidatorsUnavailable {
 					return err
 				}
@@ -302,7 +311,7 @@ func (t FetcherTask) fetchHeightData(height uint64) (payload *HeightPayload) {
 		Height: height,
 	}
 
-	block, err := t.rpc.BlockByHeight(payload.Height)
+	block, err := t.RPC().BlockByHeight(payload.Height)
 	if err != nil {
 		payload.Skip = err == near.ErrBlockMissing || err == near.ErrBlockNotFound
 		payload.Error = err
@@ -318,7 +327,7 @@ func (t FetcherTask) fetchHeightData(height uint64) (payload *HeightPayload) {
 			}
 
 			// Fetch chunk details
-			chunk, err := t.rpc.Chunk(blockChunk.ChunkHash)
+			chunk, err := t.RPC().Chunk(blockChunk.ChunkHash)
 			if err != nil {
 				payload.Error = err
 				return
@@ -360,7 +369,7 @@ func (t FetcherTask) fetchBlockTransactions(block *near.Block, hashes []string) 
 		go func(i int, hash string) {
 			defer wg.Done()
 
-			tx, err := t.rpc.Transaction(hash)
+			tx, err := t.RPC().Transaction(hash)
 			results[i] = txFetchResult{
 				transaction: tx,
 				err:         err,
@@ -397,7 +406,7 @@ func (t FetcherTask) fetchRewardFees(validators []near.Validator) (map[string]ne
 	resultsLock := &sync.Mutex{}
 
 	doConcurrently(accounts, feeFetchConcurrency, func(account string) {
-		fee, err := t.rpc.RewardFee(account)
+		fee, err := t.RPC().RewardFee(account)
 
 		resultsLock.Lock()
 		defer resultsLock.Unlock()
@@ -436,7 +445,7 @@ func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][
 	resultsLock := &sync.Mutex{}
 
 	doConcurrently(accounts, delegatorsFetchConcurrency, func(account string) {
-		dlgs, err := t.rpc.Delegations(account, 0, math.MaxUint64)
+		dlgs, err := t.RPC().Delegations(account, 0, math.MaxUint64)
 
 		resultsLock.Lock()
 		defer resultsLock.Unlock()

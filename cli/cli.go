@@ -127,13 +127,18 @@ func initLogger(cfg *config.Config) *logrus.Logger {
 	return logger
 }
 
-func initClient(cfg *config.Config) near.Client {
-	client := near.DefaultClient(cfg.RPCEndpoint)
-	client.SetTimeout(cfg.RPCClientTimeout())
-	if cfg.LogLevel == "debug" {
-		client.SetDebug(true)
+func initClients(cfg *config.Config) []near.Client {
+	rpcEndpoints := strings.Split(cfg.RPCEndpoints, ",")
+	clients := []near.Client{}
+	for _, address := range rpcEndpoints {
+		client := near.DefaultClient(address)
+		client.SetTimeout(cfg.RPCClientTimeout())
+		if cfg.LogLevel == "debug" {
+			client.SetDebug(true)
+		}
+		clients = append(clients, client)
 	}
-	return client
+	return clients
 }
 
 func initStore(cfg *config.Config) (*store.Store, error) {

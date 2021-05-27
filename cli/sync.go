@@ -8,7 +8,7 @@ import (
 )
 
 func runSync(cfg *config.Config, logger *logrus.Logger) error {
-	client := initClient(cfg)
+	clients := initClients(cfg)
 
 	db, err := initStore(cfg)
 	if err != nil {
@@ -16,6 +16,6 @@ func runSync(cfg *config.Config, logger *logrus.Logger) error {
 	}
 	defer db.Close()
 
-	_, err = pipeline.RunSync(cfg, db, client)
+	_, err = pipeline.RunSync(cfg, db, clients)
 	return err
 }
