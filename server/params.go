@@ -2,8 +2,9 @@ package server
 
 import (
 	"errors"
-	"github.com/figment-networks/near-indexer/model"
 	"time"
+
+	"github.com/figment-networks/near-indexer/model"
 )
 
 type statsParams struct {
