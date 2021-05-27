@@ -1,4 +1,4 @@
-.PHONY: setup build migrations queries test fmt docker docker-build docker-push
+.PHONY: setup build migrations queries test fmt vet docker docker-build docker-push
 
 PROJECT      ?= near-indexer
 GIT_COMMIT   ?= $(shell git rev-parse HEAD)
@@ -29,12 +29,16 @@ setup:
 	go get -u github.com/sosedoff/sqlembed
 
 # Run tests
-test:
+test: fmt vet
 	go test -race -cover ./...
 
 # Format code
 fmt:
 	go fmt ./...
+
+# Check code for issues
+vet:
+	go vet ./...
 
 # Build a local docker image for testing
 docker:
