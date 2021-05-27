@@ -52,9 +52,9 @@ func (s ValidatorAggsStore) FindValidatorEpochs(account string, limit int) ([]mo
 }
 
 // FetchRewardsByInterval fetches reward by interval
-func (s *ValidatorAggsStore) FetchRewardsByInterval(account string, from time.Time, to time.Time, timeInterval string) (model.RewardsSummary, error) {
+func (s *ValidatorAggsStore) FetchRewardsByInterval(account string, from time.Time, to time.Time, timeInterval model.TimeInterval) (model.RewardsSummary, error) {
 	var res model.RewardsSummary
-	q := strings.Replace(queries.ValidatorsRewards, "$INTERVAL", "'"+timeInterval+"'", -1)
+	q := strings.Replace(queries.ValidatorsRewards, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
 	err := s.db.Raw(q, account, from, to).Scan(&res).Error
 	if err != nil {
 		return res, err

@@ -316,7 +316,9 @@ func (s Server) GetValidatorRewards(c *gin.Context) {
 		return
 	}
 
-	resp, err := s.db.ValidatorAggs.FetchRewardsByInterval(c.Param("id"), params.From, params.To, params.Interval)
+	interval, _ := model.GetTypeForTimeInterval(params.Interval)
+
+	resp, err := s.db.ValidatorAggs.FetchRewardsByInterval(c.Param("id"), params.From, params.To, interval)
 	if shouldReturn(c, err) {
 		return
 	}
@@ -337,7 +339,9 @@ func (s Server) GetDelegatorRewards(c *gin.Context) {
 		return
 	}
 
-	resp, err := s.db.Delegators.FetchRewardsByInterval(c.Param("id"), params.ValidatorId, params.From, params.To, params.Interval)
+	interval, _ := model.GetTypeForTimeInterval(params.Interval)
+
+	resp, err := s.db.Delegators.FetchRewardsByInterval(c.Param("id"), params.ValidatorId, params.From, params.To, interval)
 	if shouldReturn(c, err) {
 		return
 	}
