@@ -24,7 +24,7 @@ const (
 type FetcherTask struct {
 	rpc      []near.Client
 	rpcIndex int
-	lock     sync.Mutex
+	lock     *sync.Mutex
 
 	db     *store.Store
 	logger *logrus.Logger
@@ -46,6 +46,7 @@ func NewFetcherTask(
 		logger:      logger,
 		batchSize:   config.SyncBatchSize,
 		startHeight: config.StartHeight,
+		lock: &sync.Mutex{},
 	}
 }
 
@@ -62,6 +63,15 @@ func (t FetcherTask) ShouldRun(payload *Payload) bool {
 func (t *FetcherTask) RPC() near.Client {
 	t.lock.Lock()
 	defer t.lock.Unlock()
+	if len(t.rpc) == 1 {
+		return t.rpc[0]
+	}
+
+	if t.rpcIndex == len(t.rpc)-1 {
+		t.rpcIndex = 0
+	} else {
+		t.rpcIndex++
+	}
 	return t.rpc[t.rpcIndex % len(t.rpc)]
 }
 

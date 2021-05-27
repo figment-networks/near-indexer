@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -93,9 +92,6 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			parsed.Validators = append(parsed.Validators, *validator)
 
 			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && remainingRewards.Int != nil && h.FirstBlockOfNewEpoch && h.PreviousBlock != nil {
-				if h.PreviousBlock == nil {
-					return errors.New("no previous block info")
-				}
 				for _, d := range delegations {
 					res, err := util.CalculateDelegatorReward(d, validator, remainingRewards)
 					if err != nil {
