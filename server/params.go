@@ -34,7 +34,7 @@ func (p *statsParams) Validate() error {
 		if p.Limit == 0 {
 			p.Limit = 30
 		}
-		if p.Limit >= 90 {
+		if p.Limit > 90 {
 			return errors.New("maximum daily limit is 90")
 		}
 	case "h":
