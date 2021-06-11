@@ -397,7 +397,20 @@ func (s Server) GetAccount(c *gin.Context) {
 
 // GetDelegations returns list of delegations for a given account
 func (s Server) GetDelegations(c *gin.Context) {
-	rawDelegations, err := s.rpc.Delegations(c.Param("id"), 0, 10000)
+	var (
+		blockID uint64
+		err     error
+	)
+
+	if val := c.Query("block_id"); val != "" {
+		blockID, err = strconv.ParseUint(val, 10, 64)
+		if err != nil {
+			badRequest(c, "Invalid block_id value")
+			return
+		}
+	}
+
+	rawDelegations, err := s.rpc.Delegations(c.Param("id"), blockID, 10000)
 	if shouldReturn(c, err) {
 		return
 	}

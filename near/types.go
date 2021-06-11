@@ -256,7 +256,7 @@ type DelegationsResponse struct {
 	Result      []byte `json:"result"`
 }
 
-type Delegation struct {
+type AccountInfo struct {
 	Account         string `json:"account_id"`
 	UnstakedBalance string `json:"unstaked_balance"`
 	StakedBalance   string `json:"staked_balance"`
@@ -272,4 +272,10 @@ type QueryResponse struct {
 type RewardFee struct {
 	Numerator   int `json:"numerator"`
 	Denominator int `json:"denominator"`
+}
+
+type CallResponse struct {
+	BlockHash   string `json:"block_hash"`
+	BlockHeight uint64 `json:"block_height"`
+	Result      []byte `json:"result"`
 }

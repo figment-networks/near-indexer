@@ -28,7 +28,7 @@ type HeightPayload struct {
 	Validators   []near.Validator
 	Chunks       []near.ChunkDetails
 	Transactions []near.TransactionDetails
-	Delegations  []near.Delegation
+	Delegations  []near.AccountInfo
 	Accounts     []near.Account
 	RewardFees   map[string]near.RewardFee
 
