@@ -7,7 +7,7 @@ import (
 )
 
 // Delegations constructs a set of delegation records
-func Delegations(input []near.Delegation) ([]model.Delegation, error) {
+func Delegations(input []near.AccountInfo) ([]model.Delegation, error) {
 	result := make([]model.Delegation, len(input))
 
 	for i, d := range input {
@@ -22,7 +22,7 @@ func Delegations(input []near.Delegation) ([]model.Delegation, error) {
 }
 
 // Delegation constructs a new delegation record
-func Delegation(input *near.Delegation) (*model.Delegation, error) {
+func Delegation(input *near.AccountInfo) (*model.Delegation, error) {
 	delegation := &model.Delegation{
 		Account:         input.Account,
 		UnstakedBalance: types.NewAmount(input.StakedBalance),

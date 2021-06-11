@@ -60,7 +60,7 @@ func CalculateValidatorReward(totalRewards types.Amount, rewardFeeFraction near.
 }
 
 // CalculateDelegatorReward calculates reward of the given delegation of the given validator
-func CalculateDelegatorReward(delegation near.Delegation, validator *model.Validator, remainingRewards types.Amount) (types.Amount, error) {
+func CalculateDelegatorReward(delegation near.AccountInfo, validator *model.Validator, remainingRewards types.Amount) (types.Amount, error) {
 	reward, ok := new(big.Int).SetString(remainingRewards.String(), 10)
 	if !ok {
 		return types.Amount{}, errors.New("error with remaining rewards")

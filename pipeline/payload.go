@@ -28,16 +28,15 @@ type HeightPayload struct {
 	Validators             []near.Validator
 	Chunks                 []near.ChunkDetails
 	Transactions           []near.TransactionDetails
-	Delegations            []near.Delegation
+	Delegations            []near.AccountInfo
 	Accounts               []near.Account
 	RewardFees             map[string]near.RewardFee
-	DelegationsByValidator map[string][]near.Delegation
-
-	CurrentEpoch         bool
-	FirstBlockOfNewEpoch bool
-	PreviousValidators   []near.Validator
-	PreviousEpochKickOut []near.ValidatorKickout
-	PreviousBlock        *near.Block
+	DelegationsByValidator map[string][]near.AccountInfo
+	CurrentEpoch           bool
+	FirstBlockOfNewEpoch   bool
+	PreviousValidators     []near.Validator
+	PreviousEpochKickOut   []near.ValidatorKickout
+	PreviousBlock          *near.Block
 
 	Parsed *ParsedPayload
 }

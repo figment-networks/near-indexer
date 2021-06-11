@@ -441,11 +441,11 @@ func (t FetcherTask) fetchRewardFees(validators []near.Validator) (map[string]ne
 
 type delegationsFetchResult struct {
 	account     string // validator
-	delegations []near.Delegation
+	delegations []near.AccountInfo
 	err         error
 }
 
-func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][]near.Delegation, error) {
+func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][]near.AccountInfo, error) {
 	accounts := make([]string, len(validators))
 	for idx, validator := range validators {
 		accounts[idx] = validator.AccountID
@@ -467,7 +467,7 @@ func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][
 		})
 	})
 
-	delegationsByValidator := map[string][]near.Delegation{}
+	delegationsByValidator := map[string][]near.AccountInfo{}
 	for _, res := range results {
 		if res.err != nil {
 			t.logger.WithError(res.err).Error(fmt.Sprintf("can not fetch delegations, validator_id %s ", res.account))

@@ -58,7 +58,7 @@ func TestCalculateValidatorReward(t *testing.T) {
 
 func TestCalculateDelegatorReward(t *testing.T) {
 	type args struct {
-		delegation       near.Delegation
+		delegation       near.AccountInfo
 		validator        *model.Validator
 		remainingRewards types.Amount
 	}
@@ -71,7 +71,7 @@ func TestCalculateDelegatorReward(t *testing.T) {
 		{
 			name: "successful",
 			args: args{
-				delegation: near.Delegation{
+				delegation: near.AccountInfo{
 					StakedBalance: "2000",
 				},
 				validator: &model.Validator{
@@ -84,7 +84,7 @@ func TestCalculateDelegatorReward(t *testing.T) {
 		{
 			name: "error case staked balance",
 			args: args{
-				delegation: near.Delegation{},
+				delegation: near.AccountInfo{},
 				validator: &model.Validator{
 					Stake: types.NewInt64Amount(10000),
 				},
@@ -96,7 +96,7 @@ func TestCalculateDelegatorReward(t *testing.T) {
 		{
 			name: "error case validator stake",
 			args: args{
-				delegation: near.Delegation{
+				delegation: near.AccountInfo{
 					StakedBalance: "2000",
 				},
 				validator:        &model.Validator{},
@@ -108,7 +108,7 @@ func TestCalculateDelegatorReward(t *testing.T) {
 		{
 			name: "error case remaining rewards",
 			args: args{
-				delegation: near.Delegation{
+				delegation: near.AccountInfo{
 					StakedBalance: "2000",
 				},
 				validator: &model.Validator{
