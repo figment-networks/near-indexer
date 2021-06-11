@@ -107,6 +107,13 @@ func (s ValidatorAggsStore) FindBy(key string, value interface{}) (*model.Valida
 	return result, checkErr(err)
 }
 
+// FindValidatorEpochBy returns validator epoch by epoch and account id
+func (s ValidatorAggsStore) FindValidatorEpochBy(epoch string, accountId string) (*model.ValidatorEpoch, error) {
+	res := &model.ValidatorEpoch{}
+	err := s.db.Where("epoch >= ? AND account_id = ?", epoch, accountId).Limit(1).Take(res).Error
+	return res, checkErr(err)
+}
+
 // ImportValidatorEpochs imports validator epochs records in batch
 func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch) error {
 	return s.bulkImport(queries.ValidatorEpochsImport, len(records), func(i int) bulk.Row {

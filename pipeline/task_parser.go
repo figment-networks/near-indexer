@@ -71,7 +71,14 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			if fee, ok := h.RewardFees[v.AccountID]; ok {
 				validator.RewardFee = &fee.Numerator
 				if h.FirstBlockOfNewEpoch && h.PreviousBlock != nil {
-					res, err := util.CalculateValidatorReward(validator, fee)
+					prevEpochInfo, err := t.db.ValidatorAggs.FindValidatorEpochBy(h.PreviousBlock.Header.EpochID, validator.AccountID)
+					if err != nil {
+						if err != store.ErrNotFound {
+							return err
+						}
+						continue
+					}
+					res, err := util.CalculateValidatorReward(validator, fee, prevEpochInfo)
 					if err != nil {
 						return err
 					}

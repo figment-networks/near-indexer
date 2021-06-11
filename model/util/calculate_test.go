@@ -14,6 +14,7 @@ func TestCalculateValidatorReward(t *testing.T) {
 	type args struct {
 		validator         *model.Validator
 		rewardFeeFraction near.RewardFee
+		prevEpochInfo     *model.ValidatorEpoch
 	}
 	tests := []struct {
 		name    string
@@ -31,6 +32,9 @@ func TestCalculateValidatorReward(t *testing.T) {
 					Numerator:   10,
 					Denominator: 100,
 				},
+				prevEpochInfo: &model.ValidatorEpoch{
+					StakingBalance: types.NewAmount("0"),
+				},
 			},
 			result: types.NewInt64Amount(1000),
 		},
@@ -41,6 +45,9 @@ func TestCalculateValidatorReward(t *testing.T) {
 				rewardFeeFraction: near.RewardFee{
 					Numerator:   10,
 					Denominator: 100,
+				},
+				prevEpochInfo: &model.ValidatorEpoch{
+					StakingBalance: types.NewAmount("0"),
 				},
 			},
 			wantErr: true,
@@ -55,13 +62,16 @@ func TestCalculateValidatorReward(t *testing.T) {
 					Numerator:   10,
 					Denominator: 0,
 				},
+				prevEpochInfo: &model.ValidatorEpoch{
+					StakingBalance: types.NewAmount("0"),
+				},
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, err := CalculateValidatorReward(tt.args.validator, tt.args.rewardFeeFraction)
+			res, err := CalculateValidatorReward(tt.args.validator, tt.args.rewardFeeFraction, tt.args.prevEpochInfo)
 			if err != nil {
 				assert.True(t, tt.wantErr)
 			} else {
