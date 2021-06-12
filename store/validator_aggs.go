@@ -110,7 +110,7 @@ func (s ValidatorAggsStore) FindBy(key string, value interface{}) (*model.Valida
 // FindValidatorEpochBy returns validator epoch by epoch and account id
 func (s ValidatorAggsStore) FindValidatorEpochBy(epoch string, accountId string) (*model.ValidatorEpoch, error) {
 	res := &model.ValidatorEpoch{}
-	err := s.db.Where("epoch >= ? AND account_id = ?", epoch, accountId).Limit(1).Take(res).Error
+	err := s.db.Where("epoch = ? AND account_id = ?", epoch, accountId).Limit(1).Take(res).Error
 	return res, checkErr(err)
 }
 
