@@ -12,9 +12,8 @@ import (
 
 func TestCalculateValidatorReward(t *testing.T) {
 	type args struct {
-		validator         *model.Validator
+		rewards           types.Amount
 		rewardFeeFraction near.RewardFee
-		prevEpochInfo     *model.ValidatorEpoch
 	}
 	tests := []struct {
 		name    string
@@ -25,45 +24,21 @@ func TestCalculateValidatorReward(t *testing.T) {
 		{
 			name: "successful",
 			args: args{
-				validator: &model.Validator{
-					Stake: types.NewInt64Amount(10000),
-				},
+				rewards: types.NewInt64Amount(10000),
 				rewardFeeFraction: near.RewardFee{
 					Numerator:   10,
 					Denominator: 100,
-				},
-				prevEpochInfo: &model.ValidatorEpoch{
-					StakingBalance: types.NewAmount("0"),
 				},
 			},
 			result: types.NewInt64Amount(1000),
 		},
 		{
-			name: "error case stake value",
-			args: args{
-				validator: &model.Validator{},
-				rewardFeeFraction: near.RewardFee{
-					Numerator:   10,
-					Denominator: 100,
-				},
-				prevEpochInfo: &model.ValidatorEpoch{
-					StakingBalance: types.NewAmount("0"),
-				},
-			},
-			wantErr: true,
-		},
-		{
 			name: "error case denominator",
 			args: args{
-				validator: &model.Validator{
-					Stake: types.NewInt64Amount(10000),
-				},
+				rewards: types.NewInt64Amount(10000),
 				rewardFeeFraction: near.RewardFee{
 					Numerator:   10,
 					Denominator: 0,
-				},
-				prevEpochInfo: &model.ValidatorEpoch{
-					StakingBalance: types.NewAmount("0"),
 				},
 			},
 			wantErr: true,
@@ -71,7 +46,7 @@ func TestCalculateValidatorReward(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			res, err := CalculateValidatorReward(tt.args.validator, tt.args.rewardFeeFraction, tt.args.prevEpochInfo)
+			res, err := CalculateValidatorReward(tt.args.rewards, tt.args.rewardFeeFraction)
 			if err != nil {
 				assert.True(t, tt.wantErr)
 			} else {

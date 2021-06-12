@@ -31,8 +31,8 @@ func Divide(x int, y int) (*big.Int, error) {
 	return n.Div(n, d), nil
 }
 
-// CalculateValidatorReward calculates reward of the given validator
-func CalculateValidatorReward(validator *model.Validator, rewardFeeFraction near.RewardFee, prevEpochInfo *model.ValidatorEpoch) (types.Amount, error) {
+// CalculateTotalReward calculates total rewards of the given staking pool
+func CalculateTotalReward(validator *model.Validator, prevEpochInfo *model.ValidatorEpoch) (types.Amount, error) {
 	reward, ok := new(big.Int).SetString(validator.Stake.String(), 10)
 	if !ok {
 		return types.Amount{}, errors.New("error with stake amount")
@@ -42,6 +42,15 @@ func CalculateValidatorReward(validator *model.Validator, rewardFeeFraction near
 		return types.Amount{}, errors.New("error with stake amount")
 	}
 	reward.Sub(reward, prevStaking)
+	return types.NewAmount(reward.String()), nil
+}
+
+// CalculateValidatorReward calculates reward of the given validator
+func CalculateValidatorReward(totalRewards types.Amount, rewardFeeFraction near.RewardFee) (types.Amount, error) {
+	reward, ok := new(big.Int).SetString(totalRewards.String(), 10)
+	if !ok {
+		return types.Amount{}, errors.New("error with stake amount")
+	}
 	reward.Mul(reward, big.NewInt(int64(rewardFeeFraction.Numerator)))
 	if rewardFeeFraction.Denominator == 0 {
 		return types.Amount{}, errors.New("denominator can not be zero")

@@ -78,7 +78,11 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 						}
 						continue
 					}
-					res, err := util.CalculateValidatorReward(validator, fee, prevEpochInfo)
+					totalRewards, err := util.CalculateTotalReward(validator, prevEpochInfo)
+					if err != nil {
+						return err
+					}
+					validatorReward, err := util.CalculateValidatorReward(totalRewards, fee)
 					if err != nil {
 						return err
 					}
@@ -89,10 +93,10 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 						DistributedAtHeight: types.Height(h.Block.Header.Height),
 						DistributedAtTime:   util.ParseTime(h.Block.Header.Timestamp),
 						RewardFee:           validator.RewardFee,
-						Reward:              res,
+						Reward:              validatorReward,
 					})
 
-					remainingRewards = validator.Stake.Sub(res)
+					remainingRewards = totalRewards.Sub(validatorReward)
 				}
 			}
 
