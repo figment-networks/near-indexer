@@ -8,7 +8,7 @@ CREATE TABLE delegator_epochs (
   distributed_at_time    TIMESTAMP WITH TIME ZONE NOT NULL,
   staked_balance         DECIMAL(65, 0) NOT NULL,
   unstaked_balance       DECIMAL(65, 0) NOT NULL,
-  reward                 DECIMAL(65, 0)  NOT NULL
+  reward                 DECIMAL(65, 0)
 );
 
 CREATE INDEX idx_delegator_epochs_account_id

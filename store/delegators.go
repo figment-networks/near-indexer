@@ -33,6 +33,13 @@ func (s *DelegatorsStore) FetchRewardsByInterval(account string, validatorId str
 	return res, nil
 }
 
+// FindDelegatorEpochBy returns delegator epoch by epoch and account id
+func (s DelegatorsStore) FindDelegatorEpochBy(epoch string, accountId string) (*model.DelegatorEpoch, error) {
+	res := &model.DelegatorEpoch{}
+	err := s.db.Where("epoch = ? AND account_id = ?", epoch, accountId).Limit(1).Take(res).Error
+	return res, checkErr(err)
+}
+
 // Import creates new validators in batch
 func (s DelegatorsStore) ImportDelegatorEpochs(records []model.DelegatorEpoch) error {
 	var err error

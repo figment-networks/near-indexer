@@ -2,6 +2,8 @@ package pipeline
 
 import (
 	"context"
+	"errors"
+	"math/big"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -67,10 +69,10 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 				return err
 			}
 
-			var remainingRewards types.Amount
+			//var remainingRewards types.Amount
 			if fee, ok := h.RewardFees[v.AccountID]; ok {
 				validator.RewardFee = &fee.Numerator
-				if h.FirstBlockOfNewEpoch && h.PreviousBlock != nil {
+				/*if h.FirstBlockOfNewEpoch && h.PreviousBlock != nil {
 					prevEpochInfo, err := t.db.ValidatorAggs.FindValidatorEpochBy(h.PreviousBlock.Header.EpochID, validator.AccountID)
 					if err != nil {
 						if err != store.ErrNotFound {
@@ -97,17 +99,33 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 					})
 
 					remainingRewards = totalRewards.Sub(validatorReward)
-				}
+				} */
 			}
 
 			parsed.Validators = append(parsed.Validators, *validator)
 
-			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && remainingRewards.Int != nil && h.FirstBlockOfNewEpoch && h.PreviousBlock != nil {
+			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && h.FirstBlockOfNewEpoch && h.PreviousBlock != nil {
 				for _, d := range delegations {
-					res, err := util.CalculateDelegatorReward(d, validator, remainingRewards)
+					prevInfo, err := t.db.Delegators.FindDelegatorEpochBy(h.PreviousBlock.Header.EpochID, d.Account)
 					if err != nil {
-						return err
+						if err != store.ErrNotFound {
+							return err
+						}
+						continue
 					}
+					reward, ok := new(big.Int).SetString(d.StakedBalance, 10)
+					if !ok {
+						return errors.New("error with stake amount")
+					}
+					prevStaking, ok := new(big.Int).SetString(prevInfo.StakedBalance.String(), 10)
+					if !ok {
+						return errors.New("error with stake amount")
+					}
+					reward.Sub(reward, prevStaking)
+				//	res, err := util.CalculateDelegatorReward(d, validator, remainingRewards)
+				//	if err != nil {
+				//		return err
+				//	}
 					parsed.DelegatorEpochs = append(parsed.DelegatorEpochs, model.DelegatorEpoch{
 						AccountID:           d.Account,
 						ValidatorID:         validator.AccountID,
@@ -116,7 +134,7 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 						DistributedAtTime:   util.ParseTime(h.Block.Header.Timestamp),
 						StakedBalance:       types.NewAmount(d.StakedBalance),
 						UnstakedBalance:     types.NewAmount(d.UnstakedBalance),
-						Reward:              res,
+						Reward:              types.NewAmount(reward.String()),
 					})
 				}
 			}
