@@ -79,8 +79,8 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 						AccountID:           d.Account,
 						ValidatorID:         validator.AccountID,
 						Epoch:               validator.Epoch,
-						DistributedAtHeight: types.Height(h.Block.Header.Height),
-						DistributedAtTime:   util.ParseTime(h.Block.Header.Timestamp),
+						DistributedAtHeight: types.Height(h.PreviousBlock.Header.Height),
+						DistributedAtTime:   util.ParseTime(h.PreviousBlock.Header.Timestamp),
 						StakedBalance:       types.NewAmount(d.StakedBalance),
 						UnstakedBalance:     types.NewAmount(d.UnstakedBalance),
 					}
