@@ -2,6 +2,7 @@ INSERT INTO delegator_epochs (
   account_id,
   validator_id,
   epoch,
+  distributed_at_epoch,
   distributed_at_height,
   distributed_at_time,
   staked_balance,
@@ -10,7 +11,7 @@ INSERT INTO delegator_epochs (
 )
 VALUES @values
 
-ON CONFLICT (account_id, validator_id, epoch) DO UPDATE
+ON CONFLICT (account_id, validator_id, epoch, distributed_at_epoch) DO UPDATE
 SET
   distributed_at_height  = excluded.distributed_at_height,
   distributed_at_time    = excluded.distributed_at_time,
