@@ -66,13 +66,14 @@ type Client interface {
 	BlockByHash(string) (Block, error)
 	Chunk(string) (ChunkDetails, error)
 	Account(id string) (Account, error)
+	AccountInfo(string, string, uint64) (*AccountInfo, error)
 	Transaction(string) (TransactionDetails, error)
 	GasPrice(string) (string, error)
 	CurrentValidators() (*ValidatorsResponse, error)
 	ValidatorsByEpoch(string) (*ValidatorsResponse, error)
 	BlockChanges(interface{}) (BlockChangesResponse, error)
 	RewardFee(string) (*RewardFee, error)
-	Delegations(string, uint64, uint64) ([]Delegation, error)
+	Delegations(string, uint64, uint64) ([]AccountInfo, error)
 }
 
 // DefaultClient returns a new default RPc client
@@ -205,6 +206,36 @@ func (c client) Account(id string) (acc Account, err error) {
 	return
 }
 
+// AccountInfo returns account delegation balance for a given pool address
+func (c client) AccountInfo(poolID string, lookupID string, blockID uint64) (*AccountInfo, error) {
+	callArgs, err := argsToBase64(map[string]interface{}{
+		"account_id": lookupID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	args := map[string]interface{}{
+		"request_type": "call_function",
+		"method_name":  "get_account",
+		"account_id":   poolID,
+		"args_base64":  callArgs,
+	}
+	if blockID == 0 {
+		args["finality"] = "final"
+	} else {
+		args["block_id"] = blockID
+	}
+
+	resp := CallResponse{}
+	if err := c.Call(methodQuery, args, &resp); err != nil {
+		return nil, err
+	}
+
+	acc := &AccountInfo{}
+	return acc, json.Unmarshal(resp.Result, acc)
+}
+
 // Transaction returns a transaction by hash
 func (c client) Transaction(id string) (tran TransactionDetails, err error) {
 	// NOTE: There's a bug in docs/rpc where it says the second param is optional,
@@ -277,9 +308,9 @@ func (c client) RewardFee(account string) (*RewardFee, error) {
 }
 
 // Delegations returns a list of delegations for a given account
-func (c client) Delegations(account string, fromIndex uint64, limit uint64) ([]Delegation, error) {
+func (c client) Delegations(account string, blockID uint64, limit uint64) ([]AccountInfo, error) {
 	callArgs, err := argsToBase64(map[string]interface{}{
-		"from_index": fromIndex,
+		"from_index": 0,
 		"limit":      limit,
 	})
 	if err != nil {
@@ -287,11 +318,15 @@ func (c client) Delegations(account string, fromIndex uint64, limit uint64) ([]D
 	}
 
 	args := map[string]interface{}{
-		"finality":     "final",
 		"request_type": "call_function",
 		"method_name":  "get_accounts",
 		"account_id":   account,
 		"args_base64":  callArgs,
+	}
+	if blockID == 0 {
+		args["finality"] = "final"
+	} else {
+		args["block_id"] = blockID
 	}
 
 	resp := DelegationsResponse{}
@@ -299,7 +334,7 @@ func (c client) Delegations(account string, fromIndex uint64, limit uint64) ([]D
 		return nil, err
 	}
 
-	delegations := []Delegation{}
+	delegations := []AccountInfo{}
 	if len(resp.Result) == 0 {
 		return delegations, nil
 	}

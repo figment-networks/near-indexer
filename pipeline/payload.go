@@ -28,15 +28,15 @@ type HeightPayload struct {
 	Validators             []near.Validator
 	Chunks                 []near.ChunkDetails
 	Transactions           []near.TransactionDetails
-	Delegations            []near.Delegation
+	Delegations            []near.AccountInfo
 	Accounts               []near.Account
 	RewardFees             map[string]near.RewardFee
-	DelegationsByValidator map[string][]near.Delegation
-
-	CurrentEpoch         bool
-	PreviousValidators   []near.Validator
-	PreviousEpochKickOut []near.ValidatorKickout
-	PreviousBlock        *near.Block
+	DelegationsByValidator map[string][]near.AccountInfo
+	CurrentEpoch           bool
+	FirstBlockOfNewEpoch   bool
+	PreviousValidators     []near.Validator
+	PreviousEpochKickOut   []near.ValidatorKickout
+	PreviousBlock          *near.Block
 
 	Parsed *ParsedPayload
 }
@@ -49,13 +49,13 @@ func (p *HeightPayload) SkipWithError(err error) {
 
 // ParsedPayload contains parsed data for a single height
 type ParsedPayload struct {
-	Block           *model.Block
-	Epoch           *model.Epoch
-	Transactions    []model.Transaction
-	Validators      []model.Validator
-	ValidatorAggs   []model.ValidatorAgg
-	ValidatorEpochs []model.ValidatorEpoch
-	DelegatorEpochs []model.DelegatorEpoch
-	Accounts        []model.Account
-	Events          []model.Event
+	Block                  *model.Block
+	Epoch                  *model.Epoch
+	Transactions           []model.Transaction
+	Validators             []model.Validator
+	ValidatorAggs          []model.ValidatorAgg
+	ValidatorEpochs        []model.ValidatorEpoch
+	DelegatorEpochs        []model.DelegatorEpoch
+	Accounts               []model.Account
+	Events                 []model.Event
 }

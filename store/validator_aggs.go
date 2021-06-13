@@ -1,7 +1,6 @@
 package store
 
 import (
-	"strings"
 	"time"
 
 	"github.com/figment-networks/indexing-engine/store/bulk"
@@ -49,17 +48,6 @@ func (s ValidatorAggsStore) FindValidatorEpochs(account string, limit int) ([]mo
 		Error
 
 	return result, checkErr(err)
-}
-
-// FetchRewardsByInterval fetches reward by interval
-func (s *ValidatorAggsStore) FetchRewardsByInterval(account string, from time.Time, to time.Time, timeInterval model.TimeInterval) (model.RewardsSummary, error) {
-	var res model.RewardsSummary
-	q := strings.Replace(queries.ValidatorsRewards, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
-	err := s.db.Raw(q, account, from, to).Scan(&res).Error
-	if err != nil {
-		return res, err
-	}
-	return res, nil
 }
 
 // PaginateValidatorEpochs returns a paginated search of validator epochs
@@ -121,7 +109,6 @@ func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch
 			r.Efficiency,
 			r.StakingBalance,
 			r.RewardFee,
-			r.Reward,
 		}
 	})
 }

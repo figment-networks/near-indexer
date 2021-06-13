@@ -11,7 +11,7 @@ import (
 	"github.com/figment-networks/near-indexer/store"
 )
 
-func RunSync(cfg *config.Config, db *store.Store, client near.Client) (int, error) {
+func RunSync(cfg *config.Config, db *store.Store, clients []near.Client) (int, error) {
 	var err error
 	startTime := time.Now()
 	payload := &Payload{}
@@ -40,7 +40,7 @@ func RunSync(cfg *config.Config, db *store.Store, client near.Client) (int, erro
 		logrus.WithFields(fields).Info("sync finished")
 	}()
 
-	fetcherTask := NewFetcherTask(db, client, cfg, logger)
+	fetcherTask := NewFetcherTask(db, clients, cfg, logger)
 	parserTask := NewParserTask(db, logger)
 	persistorTask := NewPersistorTask(db, logger)
 	analyzerTask := NewAnalyzerTask(db, logger)

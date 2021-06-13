@@ -1,9 +1,11 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/olekukonko/tablewriter"
@@ -20,7 +22,11 @@ func startStatus(cfg *config.Config) error {
 	}
 	defer db.Close()
 
-	rpc := near.DefaultClient(cfg.RPCEndpoint)
+	rpcEndpoints := strings.Split(cfg.RPCEndpoints, ",")
+	if len(rpcEndpoints) != 1 {
+		return errors.New("only one rpc should be set for status command")
+	}
+	rpc := near.DefaultClient(rpcEndpoints[0])
 
 	status, err := rpc.Status()
 	if err != nil {

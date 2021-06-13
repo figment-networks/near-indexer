@@ -19,7 +19,6 @@ type Validator struct {
 	Stake          types.Amount `json:"stake"`
 	Efficiency     float64      `json:"efficiency"`
 	RewardFee      *int         `json:"reward_fee"`
-	Reward         types.Amount `json:"reward"`
 	CreatedAt      time.Time    `json:"-"`
 	UpdatedAt      time.Time    `json:"-"`
 }

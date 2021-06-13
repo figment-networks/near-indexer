@@ -2,6 +2,7 @@ package cli
 
 import (
 	"github.com/sirupsen/logrus"
+	"strings"
 
 	"github.com/figment-networks/near-indexer/config"
 	"github.com/figment-networks/near-indexer/near"
@@ -17,7 +18,8 @@ func startServer(cfg *config.Config, logger *logrus.Logger) error {
 	}
 	defer db.Close()
 
-	rpc := near.DefaultClient(cfg.RPCEndpoint)
+	rpcEndpoints := strings.Split(cfg.RPCEndpoints, ",")
+	rpc := near.DefaultClient(rpcEndpoints[0])
 
 	srv := server.New(cfg, db, logger, rpc)
 
