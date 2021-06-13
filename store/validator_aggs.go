@@ -1,7 +1,6 @@
 package store
 
 import (
-	"strings"
 	"time"
 
 	"github.com/figment-networks/indexing-engine/store/bulk"
