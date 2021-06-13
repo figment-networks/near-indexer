@@ -54,6 +54,7 @@ func (s DelegatorsStore) ImportDelegatorEpochs(records []model.DelegatorEpoch) e
 				r.AccountID,
 				r.ValidatorID,
 				r.Epoch,
+				r.DistributedAtEpoch,
 				r.DistributedAtHeight,
 				r.DistributedAtTime,
 				r.StakedBalance,

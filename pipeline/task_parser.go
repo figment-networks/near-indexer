@@ -78,7 +78,8 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 					de := model.DelegatorEpoch{
 						AccountID:           d.Account,
 						ValidatorID:         validator.AccountID,
-						Epoch:               validator.Epoch,
+						Epoch:               h.PreviousBlock.Header.EpochID,
+						DistributedAtEpoch:  validator.Epoch,
 						DistributedAtHeight: types.Height(h.Block.Header.Height),
 						DistributedAtTime:   util.ParseTime(h.Block.Header.Timestamp),
 						StakedBalance:       types.NewAmount(d.StakedBalance),

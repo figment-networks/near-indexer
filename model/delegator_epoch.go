@@ -11,6 +11,7 @@ type DelegatorEpoch struct {
 	AccountID           string       `json:"account_id"`
 	ValidatorID         string       `json:"validator_id"`
 	Epoch               string       `json:"epoch"`
+	DistributedAtEpoch  string       `json:"distributed_at_epoch"`
 	DistributedAtHeight types.Height `json:"distributed_at_height"`
 	DistributedAtTime   time.Time    `json:"distributed_at_time"`
 	StakedBalance       types.Amount `json:"staked_balance"`
