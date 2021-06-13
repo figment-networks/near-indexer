@@ -54,7 +54,6 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/validators/:id", s.GetValidator)
 	router.GET("/validators/:id/epochs", s.GetValidatorEpochs)
 	router.GET("/validators/:id/events", s.GetValidatorEvents)
-	router.GET("/validators/:id/rewards", s.GetValidatorRewards)
 	router.GET("/delegators/:id/rewards", s.GetDelegatorRewards)
 	router.GET("/transactions", s.GetTransactions)
 	router.GET("/transactions/:id", s.GetTransaction)
@@ -89,7 +88,6 @@ func (s Server) GetEndpoints(c *gin.Context) {
 			"/validators/:id":         "Get validator details",
 			"/validators/:id/epochs":  "Get validator epochs performance",
 			"/validators/:id/events":  "Get validator events",
-			"/validators/:id/rewards": "Get validator rewards",
 			"/delegators/:id/rewards": "Get delegator rewards",
 			"/transactions":           "List all recent transactions",
 			"/transactions/:id":       "Get transaction details",
@@ -301,29 +299,6 @@ func (s Server) GetValidatorEvents(c *gin.Context) {
 	}
 
 	jsonOk(c, events)
-}
-
-// GetValidatorRewards returns validator rewards
-func (s Server) GetValidatorRewards(c *gin.Context) {
-	var params validatorRewardsParams
-	if err := c.BindQuery(&params); err != nil {
-		badRequest(c, errors.New("invalid from or/and to date or missing interval"))
-		return
-	}
-
-	if err := params.Validate(); err != nil {
-		badRequest(c, err)
-		return
-	}
-
-	interval, _ := model.GetTypeForTimeInterval(params.Interval)
-
-	resp, err := s.db.ValidatorAggs.FetchRewardsByInterval(c.Param("id"), params.From, params.To, interval)
-	if shouldReturn(c, err) {
-		return
-	}
-
-	jsonOk(c, resp)
 }
 
 // GetDelegatorRewards returns delegator rewards

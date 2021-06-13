@@ -55,7 +55,6 @@ type ParsedPayload struct {
 	Validators             []model.Validator
 	ValidatorAggs          []model.ValidatorAgg
 	ValidatorEpochs        []model.ValidatorEpoch
-	ValidatorEpochsRewards []model.ValidatorEpochReward
 	DelegatorEpochs        []model.DelegatorEpoch
 	Accounts               []model.Account
 	Events                 []model.Event

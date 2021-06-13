@@ -62,10 +62,6 @@ type rewardsParams struct {
 	Interval string    `form:"interval" binding:"required" `
 }
 
-type validatorRewardsParams struct {
-	rewardsParams
-}
-
 type delegatorRewardsParams struct {
 	rewardsParams
 	ValidatorId string `form:"validator_id" binding:"-" `

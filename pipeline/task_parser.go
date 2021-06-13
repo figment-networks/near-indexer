@@ -68,49 +68,13 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 			if err != nil {
 				return err
 			}
-
-			//var remainingRewards types.Amount
 			if fee, ok := h.RewardFees[v.AccountID]; ok {
 				validator.RewardFee = &fee.Numerator
-				/*if h.FirstBlockOfNewEpoch && h.PreviousBlock != nil {
-					prevEpochInfo, err := t.db.ValidatorAggs.FindValidatorEpochBy(h.PreviousBlock.Header.EpochID, validator.AccountID)
-					if err != nil {
-						if err != store.ErrNotFound {
-							return err
-						}
-						continue
-					}
-					totalRewards, err := util.CalculateTotalReward(validator, prevEpochInfo)
-					if err != nil {
-						return err
-					}
-					validatorReward, err := util.CalculateValidatorReward(totalRewards, fee)
-					if err != nil {
-						return err
-					}
-
-					parsed.ValidatorEpochsRewards = append(parsed.ValidatorEpochsRewards, model.ValidatorEpochReward{
-						AccountID:           validator.AccountID,
-						Epoch:               h.PreviousBlock.Header.EpochID,
-						DistributedAtHeight: types.Height(h.Block.Header.Height),
-						DistributedAtTime:   util.ParseTime(h.Block.Header.Timestamp),
-						RewardFee:           validator.RewardFee,
-						Reward:              validatorReward,
-					})
-
-					remainingRewards = totalRewards.Sub(validatorReward)
-				} */
 			}
-
 			parsed.Validators = append(parsed.Validators, *validator)
 
 			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && h.FirstBlockOfNewEpoch && h.PreviousBlock != nil {
 				for _, d := range delegations {
-
-					//	res, err := util.CalculateDelegatorReward(d, validator, remainingRewards)
-					//	if err != nil {
-					//		return err
-					//	}
 					de := model.DelegatorEpoch{
 						AccountID:           d.Account,
 						ValidatorID:         validator.AccountID,

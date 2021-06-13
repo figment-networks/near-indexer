@@ -51,17 +51,6 @@ func (s ValidatorAggsStore) FindValidatorEpochs(account string, limit int) ([]mo
 	return result, checkErr(err)
 }
 
-// FetchRewardsByInterval fetches reward by interval
-func (s *ValidatorAggsStore) FetchRewardsByInterval(account string, from time.Time, to time.Time, timeInterval model.TimeInterval) (model.RewardsSummary, error) {
-	var res model.RewardsSummary
-	q := strings.Replace(queries.ValidatorsRewards, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
-	err := s.db.Raw(q, account, from, to).Scan(&res).Error
-	if err != nil {
-		return res, err
-	}
-	return res, nil
-}
-
 // PaginateValidatorEpochs returns a paginated search of validator epochs
 func (s ValidatorAggsStore) PaginateValidatorEpochs(account string, pagination Pagination) (*PaginatedResult, error) {
 	if err := pagination.Validate(); err != nil {
@@ -107,13 +96,6 @@ func (s ValidatorAggsStore) FindBy(key string, value interface{}) (*model.Valida
 	return result, checkErr(err)
 }
 
-// FindValidatorEpochBy returns validator epoch by epoch and account id
-func (s ValidatorAggsStore) FindValidatorEpochBy(epoch string, accountId string) (*model.ValidatorEpoch, error) {
-	res := &model.ValidatorEpoch{}
-	err := s.db.Where("epoch = ? AND account_id = ?", epoch, accountId).Limit(1).Take(res).Error
-	return res, checkErr(err)
-}
-
 // ImportValidatorEpochs imports validator epochs records in batch
 func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch) error {
 	return s.bulkImport(queries.ValidatorEpochsImport, len(records), func(i int) bulk.Row {
@@ -128,21 +110,6 @@ func (s ValidatorAggsStore) ImportValidatorEpochs(records []model.ValidatorEpoch
 			r.Efficiency,
 			r.StakingBalance,
 			r.RewardFee,
-		}
-	})
-}
-
-// ImportValidatorEpochsRewards imports validator epochs rewards records in batch
-func (s ValidatorAggsStore) ImportValidatorEpochsRewards(records []model.ValidatorEpochReward) error {
-	return s.bulkImport(queries.ValidatorEpochsRewardsImport, len(records), func(i int) bulk.Row {
-		r := records[i]
-		return bulk.Row{
-			r.AccountID,
-			r.Epoch,
-			r.DistributedAtHeight,
-			r.DistributedAtTime,
-			r.RewardFee,
-			r.Reward,
 		}
 	})
 }
