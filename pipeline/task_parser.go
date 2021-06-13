@@ -101,7 +101,10 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 							return errors.New("error with stake amount")
 						}
 						reward.Sub(reward, prevStaking)
-						de.Reward = types.NewAmount(reward.String())
+						// if not less than zero, an operation is done
+						if reward.Int64() > 0 {
+							de.Reward = types.NewAmount(reward.String())
+						}
 					}
 					parsed.DelegatorEpochs = append(parsed.DelegatorEpochs, de)
 				}
