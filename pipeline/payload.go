@@ -49,13 +49,13 @@ func (p *HeightPayload) SkipWithError(err error) {
 
 // ParsedPayload contains parsed data for a single height
 type ParsedPayload struct {
-	Block                  *model.Block
-	Epoch                  *model.Epoch
-	Transactions           []model.Transaction
-	Validators             []model.Validator
-	ValidatorAggs          []model.ValidatorAgg
-	ValidatorEpochs        []model.ValidatorEpoch
-	DelegatorEpochs        []model.DelegatorEpoch
-	Accounts               []model.Account
-	Events                 []model.Event
+	Block           *model.Block
+	Epoch           *model.Epoch
+	Transactions    []model.Transaction
+	Validators      []model.Validator
+	ValidatorAggs   []model.ValidatorAgg
+	ValidatorEpochs []model.ValidatorEpoch
+	DelegatorEpochs []model.DelegatorEpoch
+	Accounts        []model.Account
+	Events          []model.Event
 }
