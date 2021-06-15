@@ -227,7 +227,7 @@ func (c client) AccountInfo(poolID string, lookupID string, blockID uint64) (*Ac
 		args["block_id"] = blockID
 	}
 
-	resp := CallResponse{}
+	resp := QueryResponse{}
 	if err := c.Call(methodQuery, args, &resp); err != nil {
 		return nil, err
 	}
@@ -329,7 +329,7 @@ func (c client) Delegations(account string, blockID uint64, limit uint64) ([]Acc
 		args["block_id"] = blockID
 	}
 
-	resp := DelegationsResponse{}
+	resp := QueryResponse{}
 	if err := c.Call(methodQuery, args, &resp); err != nil {
 		return nil, err
 	}
