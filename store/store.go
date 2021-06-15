@@ -9,6 +9,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
 	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/store/queries"
 )
 
 // Store handles all database operations
@@ -48,17 +49,25 @@ func (s *Store) SetDebugMode(enabled bool) {
 
 // ResetAll performs a full database reset without dropping any objects
 func (s *Store) ResetAll() error {
-	tables := []string{
-		"accounts",
-		"blocks",
-		"block_stats",
-		"epochs",
-		"validators",
-		"validator_aggregates",
-		"validator_epochs",
-		"validator_stats",
-		"transactions",
-		"events",
+	rows, err := s.db.DB().Query(queries.UtilListTables)
+	if err != nil {
+		return err
+	}
+	tables := []string{}
+
+	for {
+		var tableName string
+
+		if !rows.Next() {
+			break
+		}
+
+		err := rows.Scan(&tableName)
+		if err != nil {
+			return err
+		}
+
+		tables = append(tables, tableName)
 	}
 
 	for _, table := range tables {
