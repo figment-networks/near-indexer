@@ -68,14 +68,14 @@ type delegatorRewardsParams struct {
 }
 
 func (p *rewardsParams) Validate() error {
-	if p.From.IsZero() && p.To.IsZero() {
-		return errors.New("invalid time range: " + "")
+	if p.From.IsZero() {
+		return errors.New("invalid 'from' time")
 	}
-
-	var ok bool
-	if _, ok = model.GetTypeForTimeInterval(p.Interval); !ok {
-		return errors.New("time interval type is wrong")
+	if p.To.IsZero() {
+		return errors.New("invalid 'to' time")
 	}
-
+	if _, ok := model.GetTypeForTimeInterval(p.Interval); !ok {
+		return errors.New("invalid time interval")
+	}
 	return nil
 }
