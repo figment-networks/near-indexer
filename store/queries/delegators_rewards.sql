@@ -1,12 +1,12 @@
 SELECT
-    to_char(distributed_at_time, $INTERVAL) AS interval,
-    SUM(reward) AS amount
+  to_char(distributed_at_time, $INTERVAL) AS interval,
+  SUM(reward) AS amount
 FROM
-    delegator_epochs
+  delegator_epochs
 WHERE
-    account_id = ?
-    AND validator_id = ?
-    AND distributed_at_time BETWEEN ? AND ?
-    AND reward > 0
+  account_id = ?
+  AND validator_id = ?
+  AND distributed_at_time BETWEEN ? AND ?
+  AND reward > 0
 GROUP BY
-    to_char(distributed_at_time, $INTERVAL)
+  to_char(distributed_at_time, $INTERVAL)

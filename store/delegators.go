@@ -28,7 +28,7 @@ func (s *DelegatorsStore) FetchRewardsByInterval(account string, validatorId str
 		err = s.db.Raw(q, account, validatorId, from, to).Scan(&res).Error
 	}
 	if err != nil {
-		return res, err
+		return res, checkErr(err)
 	}
 	return res, nil
 }
