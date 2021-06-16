@@ -59,7 +59,7 @@ func (p *statsParams) Validate() error {
 type rewardsParams struct {
 	From     time.Time `form:"from" binding:"required" time_format:"2006-01-02"`
 	To       time.Time `form:"to" binding:"required" time_format:"2006-01-02"`
-	Interval string    `form:"interval" binding:"required" `
+	Interval string    `form:"interval" binding:"required"`
 }
 
 type delegatorRewardsParams struct {
@@ -74,7 +74,7 @@ func (p *rewardsParams) Validate() error {
 
 	var ok bool
 	if _, ok = model.GetTypeForTimeInterval(p.Interval); !ok {
-			return errors.New("time interval type is wrong")
+		return errors.New("time interval type is wrong")
 	}
 
 	return nil
