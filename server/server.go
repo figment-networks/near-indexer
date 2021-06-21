@@ -436,7 +436,7 @@ func (s Server) GetDelegations(c *gin.Context) {
 		}
 	}
 
-	rawDelegations, err := s.rpc.Delegations(c.Param("id"), blockID, 100)
+	rawDelegations, err := s.rpc.Delegations(c.Param("id"), blockID)
 	if shouldReturn(c, err) {
 		return
 	}

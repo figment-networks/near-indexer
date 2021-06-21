@@ -3,7 +3,6 @@ package pipeline
 import (
 	"context"
 	"fmt"
-	"math"
 	"sync"
 	"time"
 
@@ -455,7 +454,7 @@ func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][
 	resultsLock := &sync.Mutex{}
 
 	doConcurrently(accounts, delegatorsFetchConcurrency, func(account string) {
-		dlgs, err := t.RPC().Delegations(account, 0, math.MaxUint64)
+		dlgs, err := t.RPC().Delegations(account, 0)
 
 		resultsLock.Lock()
 		defer resultsLock.Unlock()

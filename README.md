@@ -154,6 +154,7 @@ near-indexer -config path/to/config.json -cmd=server
 | GET    | /validators                     | List of chain validators
 | GET    | /validators/:id/epochs          | Validator Epochs performance by ID
 | GET    | /validators/:id/events          | Validator Events by ID
+| GET    | /delegators/:id/rewards         | Delegator rewards by ID
 | GET    | /transactions                   | List of transactions
 | GET    | /transactions/:id               | Get transaction details
 | GET    | /accounts/:id                   | Account details by ID or Key
