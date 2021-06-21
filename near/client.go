@@ -25,6 +25,8 @@ const (
 	methodGenesisConfig  = "EXPERIMENTAL_genesis_config"
 	methodGenesisRecords = "EXPERIMENTAL_genesis_records"
 	methodChangesInBlock = "EXPERIMENTAL_changes_in_block"
+
+	delegationsLimit = 100
 )
 
 var (
@@ -73,7 +75,7 @@ type Client interface {
 	ValidatorsByEpoch(string) (*ValidatorsResponse, error)
 	BlockChanges(interface{}) (BlockChangesResponse, error)
 	RewardFee(string) (*RewardFee, error)
-	Delegations(string, uint64, uint64) ([]AccountInfo, error)
+	Delegations(string, uint64) ([]AccountInfo, error)
 }
 
 // DefaultClient returns a new default RPc client
@@ -308,41 +310,54 @@ func (c client) RewardFee(account string) (*RewardFee, error) {
 }
 
 // Delegations returns a list of delegations for a given account
-func (c client) Delegations(account string, blockID uint64, limit uint64) ([]AccountInfo, error) {
-	callArgs, err := argsToBase64(map[string]interface{}{
-		"from_index": 0,
-		"limit":      limit,
-	})
-	if err != nil {
-		return nil, err
+func (c client) Delegations(account string, blockID uint64) ([]AccountInfo, error) {
+	var (
+		result   []AccountInfo
+		startIdx int
+	)
+
+	for {
+		callArgs, err := argsToBase64(map[string]interface{}{
+			"from_index": startIdx,
+			"limit":      delegationsLimit,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		args := map[string]interface{}{
+			"request_type": "call_function",
+			"method_name":  "get_accounts",
+			"account_id":   account,
+			"args_base64":  callArgs,
+		}
+		if blockID == 0 {
+			args["finality"] = "final"
+		} else {
+			args["block_id"] = blockID
+		}
+
+		resp := QueryResponse{}
+		if err := c.Call(methodQuery, args, &resp); err != nil {
+			return nil, err
+		}
+		if len(resp.Result) == 0 {
+			break
+		}
+
+		delegations := []AccountInfo{}
+		if err := json.Unmarshal(resp.Result, &delegations); err != nil {
+			return nil, err
+		}
+		if len(delegations) == 0 {
+			break
+		}
+
+		result = append(result, delegations...)
+		startIdx += int(delegationsLimit)
 	}
 
-	args := map[string]interface{}{
-		"request_type": "call_function",
-		"method_name":  "get_accounts",
-		"account_id":   account,
-		"args_base64":  callArgs,
-	}
-	if blockID == 0 {
-		args["finality"] = "final"
-	} else {
-		args["block_id"] = blockID
-	}
-
-	resp := QueryResponse{}
-	if err := c.Call(methodQuery, args, &resp); err != nil {
-		return nil, err
-	}
-
-	delegations := []AccountInfo{}
-	if len(resp.Result) == 0 {
-		return delegations, nil
-	}
-
-	if err := json.Unmarshal(resp.Result, &delegations); err != nil {
-		return nil, err
-	}
-	return delegations, nil
+	return result, nil
 }
 
 func (c client) handleServerError(err *json2.Error) error {
