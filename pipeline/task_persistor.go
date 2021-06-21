@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/store"
-	"github.com/sirupsen/logrus"
 )
 
 // PersistorTask saves the processed data in the database
@@ -103,6 +104,13 @@ func (t PersistorTask) processHeight(h *HeightPayload, parsed *ParsedPayload) er
 	if len(parsed.Validators) > 0 {
 		t.logger.WithField("count", len(parsed.Validators)).Debug("saving validators")
 		if err := t.db.Validators.Import(parsed.Validators); err != nil {
+			return err
+		}
+	}
+
+	if len(parsed.DelegatorEpochs) > 0 {
+		t.logger.WithField("count", len(parsed.DelegatorEpochs)).Debug("saving delegator epochs")
+		if err := t.db.Delegators.ImportDelegatorEpochs(parsed.DelegatorEpochs); err != nil {
 			return err
 		}
 	}

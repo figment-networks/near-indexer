@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
@@ -53,6 +54,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/validators/:id", s.GetValidator)
 	router.GET("/validators/:id/epochs", s.GetValidatorEpochs)
 	router.GET("/validators/:id/events", s.GetValidatorEvents)
+	router.GET("/delegators/:id/rewards", s.GetDelegatorRewards)
 	router.GET("/transactions", s.GetTransactions)
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
@@ -72,26 +74,27 @@ func (s Server) Run(addr string) error {
 func (s Server) GetEndpoints(c *gin.Context) {
 	jsonOk(c, gin.H{
 		"endpoints": gin.H{
-			"/health":                "Get service health",
-			"/status":                "Get service and network status",
-			"/height":                "Get current block height",
-			"/block":                 "Get current block details",
-			"/blocks":                "Get latest blocks",
-			"/blocks/:id":            "Get block details by height or hash",
-			"/block_times":           "Get average block times",
-			"/block_stats":           "Get block stats for a time bucket",
-			"/epochs":                "Get list of epochs",
-			"/epochs/:id":            "Get epoch details",
-			"/validators":            "List all validators",
-			"/validators/:id":        "Get validator details",
-			"/validators/:id/epochs": "Get validator epochs performance",
-			"/validators/:id/events": "Get validator events",
-			"/transactions":          "List all recent transactions",
-			"/transactions/:id":      "Get transaction details",
-			"/accounts/:id":          "Get account details",
-			"/delegations/:id":       "Get account delegations",
-			"/events":                "Get list of events",
-			"/events/:id":            "Get event details",
+			"/health":                 "Get service health",
+			"/status":                 "Get service and network status",
+			"/height":                 "Get current block height",
+			"/block":                  "Get current block details",
+			"/blocks":                 "Get latest blocks",
+			"/blocks/:id":             "Get block details by height or hash",
+			"/block_times":            "Get average block times",
+			"/block_stats":            "Get block stats for a time bucket",
+			"/epochs":                 "Get list of epochs",
+			"/epochs/:id":             "Get epoch details",
+			"/validators":             "List all validators",
+			"/validators/:id":         "Get validator details",
+			"/validators/:id/epochs":  "Get validator epochs performance",
+			"/validators/:id/events":  "Get validator events",
+			"/delegators/:id/rewards": "Get delegator rewards",
+			"/transactions":           "List all recent transactions",
+			"/transactions/:id":       "Get transaction details",
+			"/accounts/:id":           "Get account details",
+			"/delegations/:id":        "Get account delegations",
+			"/events":                 "Get list of events",
+			"/events/:id":             "Get event details",
 		},
 	})
 }
@@ -298,6 +301,29 @@ func (s Server) GetValidatorEvents(c *gin.Context) {
 	jsonOk(c, events)
 }
 
+// GetDelegatorRewards returns delegator rewards
+func (s Server) GetDelegatorRewards(c *gin.Context) {
+	var params delegatorRewardsParams
+	if err := c.BindQuery(&params); err != nil {
+		badRequest(c, errors.New("invalid from or/and to date or missing interval or validator id"))
+		return
+	}
+
+	if err := params.Validate(); err != nil {
+		badRequest(c, err)
+		return
+	}
+
+	interval, _ := model.GetTypeForTimeInterval(params.Interval)
+
+	resp, err := s.db.Delegators.FetchRewardsByInterval(c.Param("id"), params.ValidatorId, params.From, params.To, interval)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	jsonOk(c, resp)
+}
+
 // GetValidator returns validator details
 func (s Server) GetValidator(c *gin.Context) {
 	info, err := s.db.ValidatorAggs.FindBy("account_id", c.Param("id"))
@@ -410,7 +436,7 @@ func (s Server) GetDelegations(c *gin.Context) {
 		}
 	}
 
-	rawDelegations, err := s.rpc.Delegations(c.Param("id"), blockID, 10000)
+	rawDelegations, err := s.rpc.Delegations(c.Param("id"), blockID)
 	if shouldReturn(c, err) {
 		return
 	}

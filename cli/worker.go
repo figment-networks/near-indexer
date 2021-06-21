@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,9 +19,14 @@ func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) co
 	timer := time.NewTimer(cfg.SyncDuration())
 	busy := false
 
-	client := near.DefaultClient(cfg.RPCEndpoint)
-	client.SetDebug(cfg.Debug)
-	client.SetTimeout(cfg.RPCClientTimeout())
+	rpcEndpoints := strings.Split(cfg.RPCEndpoints, ",")
+	clients := []near.Client{}
+	for _, address := range rpcEndpoints {
+		client := near.DefaultClient(address)
+		client.SetDebug(cfg.Debug)
+		client.SetTimeout(cfg.RPCClientTimeout())
+		clients = append(clients, client)
+	}
 
 	go func() {
 		defer func() {
@@ -33,7 +39,7 @@ func startSyncWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store) co
 			case <-timer.C:
 				if !busy {
 					busy = true
-					lag, _ := pipeline.RunSync(cfg, db, client)
+					lag, _ := pipeline.RunSync(cfg, db, clients)
 					busy = false
 					if lag > 60 {
 						timer = time.NewTimer(time.Millisecond * 10)
@@ -75,7 +81,7 @@ func startCleanupWorker(wg *sync.WaitGroup, cfg *config.Config, db *store.Store,
 
 func startWorker(cfg *config.Config, logger *logrus.Logger) error {
 	logger.Info("log level: ", cfg.LogLevel)
-	logger.Info("using rpc endpoint: ", cfg.RPCEndpoint)
+	logger.Info("using rpc endpoints: ", cfg.RPCEndpoints)
 	logger.Info("sync will run every: ", cfg.SyncInterval)
 	logger.Info("cleanup will run every: ", cfg.CleanupInterval)
 

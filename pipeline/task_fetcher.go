@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -13,9 +14,17 @@ import (
 	"github.com/figment-networks/near-indexer/store"
 )
 
+const (
+	feeFetchConcurrency        = 10
+	delegatorsFetchConcurrency = 10
+)
+
 // FetcherTask performs fetching data from the network node
 type FetcherTask struct {
-	rpc    near.Client
+	rpc      []near.Client
+	rpcIndex int
+	lock     *sync.Mutex
+
 	db     *store.Store
 	logger *logrus.Logger
 
@@ -26,7 +35,7 @@ type FetcherTask struct {
 // NewFetcherTask returns a new data fetcher task
 func NewFetcherTask(
 	db *store.Store,
-	rpc near.Client,
+	rpc []near.Client,
 	config *config.Config,
 	logger *logrus.Logger,
 ) FetcherTask {
@@ -36,6 +45,7 @@ func NewFetcherTask(
 		logger:      logger,
 		batchSize:   config.SyncBatchSize,
 		startHeight: config.StartHeight,
+		lock:        &sync.Mutex{},
 	}
 }
 
@@ -47,6 +57,21 @@ func (t FetcherTask) Name() string {
 // ShouldRun returns true if there any heights to process
 func (t FetcherTask) ShouldRun(payload *Payload) bool {
 	return true
+}
+
+func (t *FetcherTask) RPC() near.Client {
+	t.lock.Lock()
+	defer t.lock.Unlock()
+	if len(t.rpc) == 1 {
+		return t.rpc[0]
+	}
+
+	if t.rpcIndex == len(t.rpc)-1 {
+		t.rpcIndex = 0
+	} else {
+		t.rpcIndex++
+	}
+	return t.rpc[t.rpcIndex%len(t.rpc)]
 }
 
 // Run executes the data fetching
@@ -61,7 +86,7 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 	)
 
 	// Fetch the current block from the chain
-	currentBlock, err := t.rpc.CurrentBlock()
+	currentBlock, err := t.RPC().CurrentBlock()
 	if err != nil {
 		t.logger.WithError(err).Error("cant fetch current block")
 		return err
@@ -87,7 +112,7 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 
 	// Get the genesis block height if no start height was provided
 	if startHeight == 0 {
-		genesis, err := t.rpc.GenesisConfig()
+		genesis, err := t.RPC().GenesisConfig()
 		if err != nil {
 			return err
 		}
@@ -170,14 +195,14 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 			var previousValidators *near.ValidatorsResponse
 			if lastBlockOfEpoch != nil {
 				logrus.WithField("height", lastBlockOfEpoch.Header.Height).Info("fetching previous validators")
-				previousValidators, err = t.rpc.ValidatorsByEpoch(lastBlockOfEpoch.Header.EpochID)
+				previousValidators, err = t.RPC().ValidatorsByEpoch(lastBlockOfEpoch.Header.EpochID)
 				if err != nil && err != near.ErrEpochUnknown && err != near.ErrValidatorsUnavailable {
 					return err
 				}
 			}
 
 			logrus.WithField("height", data.Height).Info("fetching current validators")
-			validators, err := t.rpc.ValidatorsByEpoch(data.Block.Header.EpochID)
+			validators, err := t.RPC().ValidatorsByEpoch(data.Block.Header.EpochID)
 			if err != nil && err != near.ErrEpochUnknown && err != near.ErrValidatorsUnavailable {
 				return err
 			}
@@ -196,13 +221,23 @@ func (t FetcherTask) Run(ctx context.Context, payload *Payload) error {
 					return err
 				}
 				data.RewardFees = rewardFees
+				data.FirstBlockOfNewEpoch = data.Block.Header.EpochID == currentBlock.Header.EpochID
+
+				if data.FirstBlockOfNewEpoch && prevBlock != nil {
+					logrus.WithField("height", data.Height).Info("fetching validator delegations")
+					delegations, err := t.fetchDelegations(data.Validators)
+					if err != nil {
+						return err
+					}
+					data.DelegationsByValidator = delegations
+				}
 			}
 		} else {
 			isLastInBatch := dataIdx == len(payload.Heights)-1
 
 			// Fetch validators in the current epoch in the last height of the batch
 			if currentBlock.Header.EpochID == data.Block.Header.EpochID && isLastInBatch {
-				validators, err := t.rpc.ValidatorsByEpoch(data.Block.Header.EpochID)
+				validators, err := t.RPC().ValidatorsByEpoch(data.Block.Header.EpochID)
 				if err != nil && err != near.ErrEpochUnknown && err != near.ErrValidatorsUnavailable {
 					return err
 				}
@@ -285,7 +320,7 @@ func (t FetcherTask) fetchHeightData(height uint64) (payload *HeightPayload) {
 		Height: height,
 	}
 
-	block, err := t.rpc.BlockByHeight(payload.Height)
+	block, err := t.RPC().BlockByHeight(payload.Height)
 	if err != nil {
 		payload.Skip = err == near.ErrBlockMissing || err == near.ErrBlockNotFound
 		payload.Error = err
@@ -301,7 +336,7 @@ func (t FetcherTask) fetchHeightData(height uint64) (payload *HeightPayload) {
 			}
 
 			// Fetch chunk details
-			chunk, err := t.rpc.Chunk(blockChunk.ChunkHash)
+			chunk, err := t.RPC().Chunk(blockChunk.ChunkHash)
 			if err != nil {
 				payload.Error = err
 				return
@@ -343,7 +378,7 @@ func (t FetcherTask) fetchBlockTransactions(block *near.Block, hashes []string) 
 		go func(i int, hash string) {
 			defer wg.Done()
 
-			tx, err := t.rpc.Transaction(hash)
+			tx, err := t.RPC().Transaction(hash)
 			results[i] = txFetchResult{
 				transaction: tx,
 				err:         err,
@@ -371,25 +406,26 @@ type feeFetchResult struct {
 }
 
 func (t FetcherTask) fetchRewardFees(validators []near.Validator) (map[string]near.RewardFee, error) {
-	results := make([]feeFetchResult, len(validators))
-
-	wg := sync.WaitGroup{}
-	wg.Add(len(validators))
-
+	accounts := make([]string, len(validators))
 	for idx, validator := range validators {
-		go func(i int, account string) {
-			defer wg.Done()
-
-			fee, err := t.rpc.RewardFee(account)
-			results[i] = feeFetchResult{
-				account: account,
-				fee:     fee,
-				err:     err,
-			}
-		}(idx, validator.AccountID)
+		accounts[idx] = validator.AccountID
 	}
 
-	wg.Wait()
+	results := []feeFetchResult{}
+	resultsLock := &sync.Mutex{}
+
+	doConcurrently(accounts, feeFetchConcurrency, func(account string) {
+		fee, err := t.RPC().RewardFee(account)
+
+		resultsLock.Lock()
+		defer resultsLock.Unlock()
+
+		results = append(results, feeFetchResult{
+			account: account,
+			fee:     fee,
+			err:     err,
+		})
+	})
 
 	rewardFees := map[string]near.RewardFee{}
 	for _, res := range results {
@@ -400,4 +436,68 @@ func (t FetcherTask) fetchRewardFees(validators []near.Validator) (map[string]ne
 	}
 
 	return rewardFees, nil
+}
+
+type delegationsFetchResult struct {
+	account     string // validator
+	delegations []near.AccountInfo
+	err         error
+}
+
+func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][]near.AccountInfo, error) {
+	accounts := make([]string, len(validators))
+	for idx, validator := range validators {
+		accounts[idx] = validator.AccountID
+	}
+
+	results := []delegationsFetchResult{}
+	resultsLock := &sync.Mutex{}
+
+	doConcurrently(accounts, delegatorsFetchConcurrency, func(account string) {
+		dlgs, err := t.RPC().Delegations(account, 0)
+
+		resultsLock.Lock()
+		defer resultsLock.Unlock()
+
+		results = append(results, delegationsFetchResult{
+			account:     account,
+			delegations: dlgs,
+			err:         err,
+		})
+	})
+
+	delegationsByValidator := map[string][]near.AccountInfo{}
+	for _, res := range results {
+		if res.err != nil {
+			t.logger.WithError(res.err).Error(fmt.Sprintf("can not fetch delegations, validator_id %s ", res.account))
+			return nil, res.err
+		}
+		delegationsByValidator[res.account] = res.delegations
+	}
+
+	return delegationsByValidator, nil
+}
+
+func doConcurrently(items []string, maxConcurrency int, workFn func(string)) {
+	wg := &sync.WaitGroup{}
+	wg.Add(maxConcurrency)
+
+	queue := make(chan string)
+
+	for i := 0; i < maxConcurrency; i++ {
+		go func() {
+			defer wg.Done()
+
+			for item := range queue {
+				workFn(item)
+			}
+		}()
+	}
+
+	for _, item := range items {
+		queue <- item
+	}
+	close(queue)
+
+	wg.Wait()
 }

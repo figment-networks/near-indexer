@@ -29,8 +29,8 @@ var (
 // Config holds the configration data
 type Config struct {
 	AppEnv           string `json:"app_env" envconfig:"APP_ENV" default:"development"`
-	RPCEndpoint      string `json:"rpc_endpoint" envconfig:"NEAR_RPC_ENDPOINT"`
-	RPCTimeout       string `json:"rpc_timeout" envconfig:"NEAR_RPC_TIMEOUT" default:"15s"`
+	RPCEndpoints     string `json:"rpc_endpoints" envconfig:"NEAR_RPC_ENDPOINTS"`
+	RPCTimeout       string `json:"rpc_timeout" envconfig:"NEAR_RPC_TIMEOUT" default:"45s"`
 	ServerAddr       string `json:"server_addr" envconfig:"SERVER_ADDR" default:"0.0.0.0"`
 	ServerPort       int    `json:"server_port" envconfig:"SERVER_PORT" default:"8081"`
 	StartHeight      uint64 `json:"start_height" envconfig:"START_HEIGHT"`
@@ -54,7 +54,7 @@ type Config struct {
 
 // Validate returns an error if config is invalid
 func (c *Config) Validate() error {
-	if c.RPCEndpoint == "" {
+	if c.RPCEndpoints == "" {
 		return errEndpointRequired
 	}
 

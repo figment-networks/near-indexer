@@ -250,12 +250,6 @@ type ValidatorsResponse struct {
 	PreviousEpochKickout []ValidatorKickout  `json:"prev_epoch_kickout"`
 }
 
-type DelegationsResponse struct {
-	BlockHash   string `json:"block_hash"`
-	BlockHeight uint64 `json:"block_height"`
-	Result      []byte `json:"result"`
-}
-
 type AccountInfo struct {
 	Account         string `json:"account_id"`
 	UnstakedBalance string `json:"unstaked_balance"`
@@ -263,18 +257,12 @@ type AccountInfo struct {
 	CanWithdraw     bool   `json:"can_withdraw"`
 }
 
-type QueryResponse struct {
-	BlockHash   string `json:"block_hash"`
-	BlockHeight uint64 `json:"block_height"`
-	Result      []byte `json:"result"`
-}
-
 type RewardFee struct {
 	Numerator   int `json:"numerator"`
 	Denominator int `json:"denominator"`
 }
 
-type CallResponse struct {
+type QueryResponse struct {
 	BlockHash   string `json:"block_hash"`
 	BlockHeight uint64 `json:"block_height"`
 	Result      []byte `json:"result"`

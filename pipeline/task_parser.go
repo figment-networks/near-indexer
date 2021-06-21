@@ -2,12 +2,17 @@ package pipeline
 
 import (
 	"context"
+	"errors"
+	"math/big"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/figment-networks/near-indexer/model"
 	"github.com/figment-networks/near-indexer/model/mapper"
+	"github.com/figment-networks/near-indexer/model/types"
+	"github.com/figment-networks/near-indexer/model/util"
 	"github.com/figment-networks/near-indexer/store"
-	"github.com/sirupsen/logrus"
 )
 
 // ParserTask performs raw block data parsing
@@ -67,6 +72,41 @@ func (t ParserTask) Run(ctx context.Context, payload *Payload) error {
 				validator.RewardFee = &fee.Numerator
 			}
 			parsed.Validators = append(parsed.Validators, *validator)
+
+			if delegations, ok := h.DelegationsByValidator[v.AccountID]; ok && h.FirstBlockOfNewEpoch && h.PreviousBlock != nil {
+				for _, d := range delegations {
+					de := model.DelegatorEpoch{
+						AccountID:           d.Account,
+						ValidatorID:         validator.AccountID,
+						Epoch:               h.PreviousBlock.Header.EpochID,
+						DistributedAtEpoch:  validator.Epoch,
+						DistributedAtHeight: types.Height(h.Block.Header.Height),
+						DistributedAtTime:   util.ParseTime(h.Block.Header.Timestamp),
+						StakedBalance:       types.NewAmount(d.StakedBalance),
+						UnstakedBalance:     types.NewAmount(d.UnstakedBalance),
+					}
+
+					prevInfo, err := t.db.Delegators.FindDelegatorEpochBy(h.PreviousBlock.Header.EpochID, d.Account, v.AccountID)
+					if err != nil {
+						if err != store.ErrNotFound {
+							return err
+						}
+						// do nothing
+					} else {
+						reward, ok := new(big.Int).SetString(de.StakedBalance.String(), 10)
+						if !ok {
+							return errors.New("error with stake amount")
+						}
+						prevStaking, ok := new(big.Int).SetString(prevInfo.StakedBalance.String(), 10)
+						if !ok {
+							return errors.New("error with stake amount")
+						}
+						reward.Sub(reward, prevStaking)
+						de.Reward = types.NewAmount(reward.String())
+					}
+					parsed.DelegatorEpochs = append(parsed.DelegatorEpochs, de)
+				}
+			}
 
 			validatorAgg, err := mapper.ValidatorAgg(h.Block, &v)
 			if err != nil {

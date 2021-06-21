@@ -1,6 +1,11 @@
 package server
 
-import "errors"
+import (
+	"errors"
+	"time"
+
+	"github.com/figment-networks/near-indexer/model"
+)
 
 type statsParams struct {
 	Bucket string `form:"bucket"`
@@ -48,5 +53,29 @@ func (p *statsParams) Validate() error {
 		return errors.New("invalid time bucket: " + p.Bucket)
 	}
 
+	return nil
+}
+
+type rewardsParams struct {
+	From     time.Time `form:"from" binding:"required" time_format:"2006-01-02"`
+	To       time.Time `form:"to" binding:"required" time_format:"2006-01-02"`
+	Interval string    `form:"interval" binding:"required"`
+}
+
+type delegatorRewardsParams struct {
+	rewardsParams
+	ValidatorId string `form:"validator_id" binding:"-" `
+}
+
+func (p *rewardsParams) Validate() error {
+	if p.From.IsZero() {
+		return errors.New("invalid 'from' time")
+	}
+	if p.To.IsZero() {
+		return errors.New("invalid 'to' time")
+	}
+	if _, ok := model.GetTypeForTimeInterval(p.Interval); !ok {
+		return errors.New("invalid time interval")
+	}
 	return nil
 }

@@ -9,6 +9,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
 	"github.com/figment-networks/near-indexer/model"
+	"github.com/figment-networks/near-indexer/store/queries"
 )
 
 // Store handles all database operations
@@ -18,6 +19,7 @@ type Store struct {
 	Blocks        BlocksStore
 	Epochs        EpochsStore
 	Accounts      AccountsStore
+	Delegators    DelegatorsStore
 	Validators    ValidatorsStore
 	ValidatorAggs ValidatorAggsStore
 	Transactions  TransactionsStore
@@ -47,17 +49,25 @@ func (s *Store) SetDebugMode(enabled bool) {
 
 // ResetAll performs a full database reset without dropping any objects
 func (s *Store) ResetAll() error {
-	tables := []string{
-		"accounts",
-		"blocks",
-		"block_stats",
-		"epochs",
-		"validators",
-		"validator_aggregates",
-		"validator_epochs",
-		"validator_stats",
-		"transactions",
-		"events",
+	rows, err := s.db.DB().Query(queries.UtilListTables)
+	if err != nil {
+		return err
+	}
+	tables := []string{}
+
+	for {
+		var tableName string
+
+		if !rows.Next() {
+			break
+		}
+
+		err := rows.Scan(&tableName)
+		if err != nil {
+			return err
+		}
+
+		tables = append(tables, tableName)
 	}
 
 	for _, table := range tables {
@@ -85,6 +95,7 @@ func New(connStr string) (*Store, error) {
 		Blocks:        BlocksStore{scoped(conn, model.Block{})},
 		Epochs:        EpochsStore{scoped(conn, model.Epoch{})},
 		Accounts:      AccountsStore{scoped(conn, model.Account{})},
+		Delegators:    DelegatorsStore{scoped(conn, model.DelegatorEpoch{})},
 		Validators:    ValidatorsStore{scoped(conn, model.Validator{})},
 		ValidatorAggs: ValidatorAggsStore{scoped(conn, model.ValidatorAgg{})},
 		Transactions:  TransactionsStore{scoped(conn, model.Transaction{})},
