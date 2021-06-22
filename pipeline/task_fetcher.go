@@ -16,7 +16,8 @@ import (
 
 const (
 	feeFetchConcurrency        = 10
-	delegatorsFetchConcurrency = 10
+	delegatorsFetchConcurrency = 2
+	maxRetryCount              = 4
 )
 
 // FetcherTask performs fetching data from the network node
@@ -454,8 +455,15 @@ func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][
 	resultsLock := &sync.Mutex{}
 
 	doConcurrently(accounts, delegatorsFetchConcurrency, func(account string) {
-		dlgs, err := t.RPC().Delegations(account, 0)
-
+		var dlgs []near.AccountInfo
+		var err error
+		for i := 1; i <= maxRetryCount; i++ {
+			dlgs, err = t.RPC().Delegations(account, 0)
+			if err == nil {
+				break
+			}
+			t.logger.WithError(err).Error(fmt.Sprintf("can not fetch delegations, validator_id %s retrying from another node", account))
+		}
 		resultsLock.Lock()
 		defer resultsLock.Unlock()
 
