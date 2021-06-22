@@ -43,6 +43,10 @@ type Config struct {
 	Debug            bool   `json:"debug" envconfig:"DEBUG"`
 	LogLevel         string `json:"log_level" envconfig:"LOG_LEVEL" default:"info"`
 
+	// delegation calls
+	RetryCountDlg    int `json:"retry_count_delegation_calls" envconfig:"RETRY_COUNT_DELEGATION_CALLS" default:"4"`
+	ConcurrencyLevel int `json:"concurrency_level" envconfig:"CONCURRENCY_LEVEL" default:"2"`
+
 	// Exception tracking
 	RollbarToken     string `json:"rollbar_token" envconfig:"ROLLBAR_TOKEN"`
 	RollbarNamespace string `json:"rollbar_namespace" envconfig:"ROLLBAR_NAMESPACE"`
