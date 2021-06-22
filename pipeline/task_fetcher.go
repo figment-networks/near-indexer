@@ -15,8 +15,7 @@ import (
 )
 
 const (
-	feeFetchConcurrency        = 10
-	delegatorsFetchConcurrency = 10
+	feeFetchConcurrency = 10
 )
 
 // FetcherTask performs fetching data from the network node
@@ -30,6 +29,10 @@ type FetcherTask struct {
 
 	batchSize   int
 	startHeight uint64
+
+	// delegations call
+	maxRetryCount    int
+	concurrencyLevel int
 }
 
 // NewFetcherTask returns a new data fetcher task
@@ -40,12 +43,14 @@ func NewFetcherTask(
 	logger *logrus.Logger,
 ) FetcherTask {
 	return FetcherTask{
-		rpc:         rpc,
-		db:          db,
-		logger:      logger,
-		batchSize:   config.SyncBatchSize,
-		startHeight: config.StartHeight,
-		lock:        &sync.Mutex{},
+		rpc:              rpc,
+		db:               db,
+		logger:           logger,
+		batchSize:        config.SyncBatchSize,
+		startHeight:      config.StartHeight,
+		lock:             &sync.Mutex{},
+		maxRetryCount:    config.RetryCountDlg,
+		concurrencyLevel: config.ConcurrencyLevel,
 	}
 }
 
@@ -453,9 +458,16 @@ func (t FetcherTask) fetchDelegations(validators []near.Validator) (map[string][
 	results := []delegationsFetchResult{}
 	resultsLock := &sync.Mutex{}
 
-	doConcurrently(accounts, delegatorsFetchConcurrency, func(account string) {
-		dlgs, err := t.RPC().Delegations(account, 0)
-
+	doConcurrently(accounts, t.concurrencyLevel, func(account string) {
+		var dlgs []near.AccountInfo
+		var err error
+		for i := 1; i <= t.maxRetryCount; i++ {
+			dlgs, err = t.RPC().Delegations(account, 0)
+			if err == nil {
+				break
+			}
+			t.logger.WithError(err).Error(fmt.Sprintf("can not fetch delegations, validator_id %s retrying from another node", account))
+		}
 		resultsLock.Lock()
 		defer resultsLock.Unlock()
 
