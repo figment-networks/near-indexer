@@ -17,8 +17,8 @@ type DelegatorsStore struct {
 }
 
 // FetchRewardsByInterval fetches reward by interval
-func (s *DelegatorsStore) FetchRewardsByInterval(account string, validatorId string, from time.Time, to time.Time, timeInterval model.TimeInterval) (model.RewardsSummary, error) {
-	var res model.RewardsSummary
+func (s *DelegatorsStore) FetchRewardsByInterval(account string, validatorId string, from time.Time, to time.Time, timeInterval model.TimeInterval) ([]model.RewardsSummary, error) {
+	var res []model.RewardsSummary
 	q := strings.Replace(queries.DelegatorsRewards, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
 	var err error
 	if validatorId == "" {

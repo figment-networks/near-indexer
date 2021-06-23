@@ -10,3 +10,5 @@ WHERE
   AND reward > 0
 GROUP BY
   to_char(distributed_at_time, $INTERVAL)
+ORDER BY
+  to_char(distributed_at_time, $INTERVAL)
