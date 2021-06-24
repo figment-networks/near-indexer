@@ -5,8 +5,9 @@ import (
 )
 
 type RewardsSummary struct {
-	Interval string       `json:"interval"`
-	Amount   types.Amount `json:"amount"`
+	Interval  string       `json:"interval"`
+	Validator string       `json:"validator"`
+	Amount    types.Amount `json:"amount"`
 }
 
 type TimeInterval uint
