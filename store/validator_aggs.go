@@ -50,6 +50,19 @@ func (s ValidatorAggsStore) FindValidatorEpochs(account string, limit int) ([]mo
 	return result, checkErr(err)
 }
 
+// FindValidatorsByEpoch returns validators for given epoch
+func (s ValidatorAggsStore) FindValidatorsByEpoch(epoch string) ([]model.ValidatorEpoch, error) {
+	result := []model.ValidatorEpoch{}
+
+	err := s.db.
+		Model(&model.ValidatorEpoch{}).
+		Where("epoch = ?", epoch).
+		Find(&result).
+		Error
+
+	return result, checkErr(err)
+}
+
 // PaginateValidatorEpochs returns a paginated search of validator epochs
 func (s ValidatorAggsStore) PaginateValidatorEpochs(account string, pagination Pagination) (*PaginatedResult, error) {
 	if err := pagination.Validate(); err != nil {

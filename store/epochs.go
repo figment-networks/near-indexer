@@ -62,3 +62,13 @@ func (s EpochsStore) Import(records []model.Epoch) error {
 		}
 	})
 }
+
+// FindUnIndexedDelegatorsEpochs fetches un indexed delegators' epochs
+func (s *EpochsStore) FindUnIndexedDelegatorsEpochs() ([]model.Epoch, error) {
+	var res []model.Epoch
+	err := s.db.Raw(queries.UnIndexedDelegatorsEpochs).Scan(&res).Error
+	if err != nil {
+		return res, checkErr(err)
+	}
+	return res, nil
+}
