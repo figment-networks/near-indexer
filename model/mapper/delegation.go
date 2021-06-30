@@ -33,7 +33,7 @@ func Delegations(input []near.AccountInfo) ([]model.Delegation, error) {
 func Delegation(input *near.AccountInfo) (*model.Delegation, error) {
 	delegation := &model.Delegation{
 		Account:         input.Account,
-		UnstakedBalance: types.NewAmount(input.StakedBalance),
+		UnstakedBalance: types.NewAmount(input.UnstakedBalance),
 		StakedBalance:   types.NewAmount(input.StakedBalance),
 		CanWithdraw:     input.CanWithdraw,
 	}
