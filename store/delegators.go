@@ -40,7 +40,34 @@ func (s DelegatorsStore) FindDelegatorEpochBy(epoch string, accountId string, va
 	return res, checkErr(err)
 }
 
-// Import creates new validators in batch
+// SearchDelegatorEpochs performs a delegator epoch search and returns matching records
+func (s DelegatorsStore) SearchDelegatorEpochs(search DelegatorEpochsSearch) ([]model.DelegatorEpoch, error) {
+	if err := search.Validate(); err != nil {
+		return nil, err
+	}
+
+	scope := s.db.Model(&model.DelegatorEpoch{})
+
+	if search.Epoch != "" {
+		scope = scope.Where("epoch = ?", search.Epoch)
+	}
+	if search.ValidatorID != "" {
+		scope = scope.Where("validator_id = ?", search.ValidatorID)
+	}
+	if search.AccountID != "" {
+		scope = scope.Where("account_id = ?", search.AccountID)
+	}
+
+	delegatorEpochs := []model.DelegatorEpoch{}
+	err := scope.Find(&delegatorEpochs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return delegatorEpochs, nil
+}
+
+// ImportDelegatorEpochs creates new validators in batch
 func (s DelegatorsStore) ImportDelegatorEpochs(records []model.DelegatorEpoch) error {
 	var err error
 	for i := 0; i < len(records); i += batchSize {

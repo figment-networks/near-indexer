@@ -59,6 +59,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
 	router.GET("/delegations/:id", s.GetDelegations)
+	router.GET("/delegators", s.GetDelegators)
 	router.GET("/events", s.GetEvents)
 	router.GET("/events/:id", s.GetEvent)
 
@@ -447,6 +448,25 @@ func (s Server) GetDelegations(c *gin.Context) {
 	}
 
 	jsonOk(c, delegations)
+}
+
+// GetDelegators returns list of delegators
+func (s Server) GetDelegators(c *gin.Context) {
+	search := store.DelegatorEpochsSearch{}
+	search.Epoch = c.Query("epoch")
+	search.ValidatorID = c.Param("id")
+	search.AccountID = c.Query("account_id")
+
+	delegatorEpochs, err := s.db.Delegators.SearchDelegatorEpochs(search)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	delegators, err := mapper.Delegators(delegatorEpochs)
+	if shouldReturn(c, err) {
+		return
+	}
+	jsonOk(c, delegators)
 }
 
 // GetEvents returns a list of events
