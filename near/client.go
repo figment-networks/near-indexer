@@ -42,7 +42,7 @@ var (
 	// ErrValidatorsUnavailable is returned when requesting validator information using invalid epoch
 	ErrValidatorsUnavailable = errors.New("validator info unavailable")
 
-	// ErrNotExist is returns when requested data is not available
+	// ErrNotExist is returned when requested data is not available
 	ErrNotExist = errors.New("record does not exist")
 )
 
