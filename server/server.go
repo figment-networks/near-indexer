@@ -25,7 +25,7 @@ type Server struct {
 }
 
 // New returns a new server
-func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Client, log *logrus.Logger) Server {
+func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Client) Server {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(requestLogger(logger))
@@ -38,7 +38,6 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 		router: router,
 		db:     db,
 		rpc:    rpc,
-		log:    log,
 	}
 
 	router.GET("/", s.GetEndpoints)

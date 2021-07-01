@@ -22,7 +22,7 @@ func startServer(cfg *config.Config, logger *logrus.Logger) error {
 	rpcEndpoints := strings.Split(cfg.RPCEndpoints, ",")
 	rpc := near.DefaultClient(rpcEndpoints[0])
 
-	srv := server.New(cfg, db, logger, rpc, logger)
+	srv := server.New(cfg, db, logger, rpc)
 
 	logger.Info("Starting server on ", cfg.ListenAddr())
 	return srv.Run(cfg.ListenAddr())
