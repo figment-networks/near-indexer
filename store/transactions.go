@@ -129,6 +129,11 @@ func (s TransactionsStore) Import(records []model.Transaction) error {
 			r.Success,
 			string(r.Actions),
 			r.ActionsCount,
+			r.Fee,
+			r.Signature,
+			r.PublicKey,
+			string(r.Outcome),
+			string(r.Receipt),
 			t,
 			t,
 		}

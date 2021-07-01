@@ -10,6 +10,11 @@ INSERT INTO transactions (
   success,
   actions,
   actions_count,
+  fee,
+  signature,
+  public_key,
+  outcome,
+  receipt,
   created_at,
   updated_at
 )

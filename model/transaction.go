@@ -25,10 +25,15 @@ type Transaction struct {
 	BlockHash    string          `json:"block_hash"`
 	Sender       string          `json:"sender"`
 	Receiver     string          `json:"receiver"`
-	Amount       types.Amount    `json:"-"`
+	Amount       types.Amount    `json:"-"` // TODO: drop this column
 	GasBurnt     string          `json:"gas_burnt"`
+	Fee          string          `json:"fee"`
+	PublicKey    string          `json:"public_key"`
+	Signature    string          `json:"signature"`
 	Actions      json.RawMessage `json:"actions"`
 	ActionsCount int             `json:"actions_count"`
+	Outcome      json.RawMessage `json:"outcome"`
+	Receipt      json.RawMessage `json:"receipt"`
 	Success      bool            `json:"success"`
 }
 
