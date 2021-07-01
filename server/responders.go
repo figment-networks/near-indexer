@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/figment-networks/near-indexer/near"
 	"github.com/figment-networks/near-indexer/store"
 )
 
@@ -57,7 +58,7 @@ func shouldReturn(c *gin.Context, err error) bool {
 		return false
 	}
 
-	if err == store.ErrNotFound {
+	if err == store.ErrNotFound || err == near.ErrNotExist {
 		notFound(c, err)
 	} else {
 		serverError(c, err)

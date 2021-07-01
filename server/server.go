@@ -21,6 +21,7 @@ type Server struct {
 	router *gin.Engine
 	db     *store.Store
 	rpc    near.Client
+	log    *logrus.Logger
 }
 
 // New returns a new server
@@ -37,6 +38,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 		router: router,
 		db:     db,
 		rpc:    rpc,
+		log:    logger,
 	}
 
 	router.GET("/", s.GetEndpoints)
@@ -414,11 +416,12 @@ func (s Server) GetTransaction(c *gin.Context) {
 
 // GetAccount returns an account by name
 func (s Server) GetAccount(c *gin.Context) {
-	acc, err := s.db.Accounts.FindByName(c.Param("id"))
+	account, err := s.rpc.Account(c.Param("id"))
 	if shouldReturn(c, err) {
+		s.log.WithError(err).Error("unable to fetch account details")
 		return
 	}
-	jsonOk(c, acc)
+	jsonOk(c, account)
 }
 
 // GetDelegations returns list of delegations for a given account
