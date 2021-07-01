@@ -38,6 +38,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 		router: router,
 		db:     db,
 		rpc:    rpc,
+		log:    logger,
 	}
 
 	router.GET("/", s.GetEndpoints)

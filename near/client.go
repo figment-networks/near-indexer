@@ -41,6 +41,9 @@ var (
 
 	// ErrValidatorsUnavailable is returned when requesting validator information using invalid epoch
 	ErrValidatorsUnavailable = errors.New("validator info unavailable")
+
+	// ErrNotExist is returns when requested data is not available
+	ErrNotExist = errors.New("record does not exist")
 )
 
 var (
@@ -376,6 +379,9 @@ func (c client) handleServerError(err *json2.Error) error {
 			}
 			if strings.Contains(msg, "validator info unavailable") {
 				return ErrValidatorsUnavailable
+			}
+			if strings.Contains(msg, "does not exist while viewing") {
+				return ErrNotExist
 			}
 		}
 	}
