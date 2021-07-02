@@ -355,7 +355,7 @@ func (t FetcherTask) fetchHeightData(height uint64) (payload *HeightPayload) {
 			}
 
 			// Fetch all transactions concurrently
-			transactions, err := t.fetchBlockTransactions(&block, txHashes)
+			transactions, err := t.fetchBlockTransactions(txHashes)
 			if err != nil {
 				payload.Error = err
 				return
@@ -373,7 +373,7 @@ type txFetchResult struct {
 }
 
 // fetchBlockTransactions retrieves all transactions in parallel
-func (t FetcherTask) fetchBlockTransactions(block *near.Block, hashes []string) ([]near.TransactionDetails, error) {
+func (t FetcherTask) fetchBlockTransactions(hashes []string) ([]near.TransactionDetails, error) {
 	results := make([]txFetchResult, len(hashes))
 
 	wg := sync.WaitGroup{}

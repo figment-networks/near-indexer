@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"math/big"
 
 	"github.com/figment-networks/near-indexer/near"
@@ -19,15 +20,21 @@ func Percentage(max int, cur int) float64 {
 }
 
 // CalculateTransactionFee calculates transaction fee
-func CalculateTransactionFee(trx near.TransactionDetails) string {
+func CalculateTransactionFee(trx near.TransactionDetails) (string, error) {
 	fee := new(big.Int)
 	o := new(big.Int)
 	r := new(big.Int)
-	o.SetString(trx.TransactionOutcome.Outcome.TokensBurnt, 10)
+	_, ok := o.SetString(trx.TransactionOutcome.Outcome.TokensBurnt, 10)
+	if !ok {
+		return "", errors.New("error with tokens burnt field")
+	}
 	fee.Add(fee, o)
 	for _, o := range trx.ReceiptsOutcome {
-		r.SetString(o.Outcome.TokensBurnt, 10)
+		_, ok := r.SetString(o.Outcome.TokensBurnt, 10)
+		if !ok {
+			return "", errors.New("error with tokens burnt field")
+		}
 		fee.Add(fee, r)
 	}
-	return fee.String()
+	return fee.String(), nil
 }

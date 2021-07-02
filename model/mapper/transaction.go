@@ -25,8 +25,13 @@ func Transaction(block *near.Block, input *near.TransactionDetails) (*model.Tran
 		PublicKey: tx.PublicKey,
 		Signature: tx.Signature,
 		GasBurnt:  fmt.Sprintf("%v", input.TransactionOutcome.Outcome.GasBurnt),
-		Fee:       util.CalculateTransactionFee(*input),
 	}
+
+	fee, err := util.CalculateTransactionFee(*input)
+	if err != nil {
+		return nil, err
+	}
+	t.Fee = fee
 
 	outcome, err := json.Marshal(input.TransactionOutcome)
 	if err != nil {
