@@ -5,7 +5,6 @@ INSERT INTO transactions (
   time,
   sender,
   receiver,
-  amount,
   gas_burnt,
   success,
   actions,

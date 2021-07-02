@@ -25,7 +25,6 @@ type Transaction struct {
 	BlockHash    string          `json:"block_hash"`
 	Sender       string          `json:"sender"`
 	Receiver     string          `json:"receiver"`
-	Amount       types.Amount    `json:"-"` // TODO: drop this column
 	GasBurnt     string          `json:"gas_burnt"`
 	Fee          string          `json:"fee"`
 	PublicKey    string          `json:"public_key"`

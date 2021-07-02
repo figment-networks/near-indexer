@@ -24,7 +24,6 @@ func Transaction(block *near.Block, input *near.TransactionDetails) (*model.Tran
 		Receiver:  tx.ReceiverID,
 		PublicKey: tx.PublicKey,
 		Signature: tx.Signature,
-		Amount:    types.NewAmount("0"), // TODO: remove from code
 		GasBurnt:  fmt.Sprintf("%v", input.TransactionOutcome.Outcome.GasBurnt),
 		Fee:       util.CalculateTransactionFee(*input),
 	}

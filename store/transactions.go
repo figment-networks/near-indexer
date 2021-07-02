@@ -124,7 +124,6 @@ func (s TransactionsStore) Import(records []model.Transaction) error {
 			r.Time,
 			r.Sender,
 			r.Receiver,
-			r.Amount,
 			r.GasBurnt,
 			r.Success,
 			string(r.Actions),
