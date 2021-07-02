@@ -19,3 +19,16 @@ func runSync(cfg *config.Config, logger *logrus.Logger) error {
 	_, err = pipeline.RunSync(cfg, db, clients)
 	return err
 }
+
+func runSyncHistoricalTransactionFees(cfg *config.Config, logger *logrus.Logger) error {
+	clients := initClients(cfg)
+
+	db, err := initStore(cfg)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	err = pipeline.RunSyncHistoricalDelegators(cfg, db, clients)
+	return err
+}

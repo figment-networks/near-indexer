@@ -68,6 +68,8 @@ func startCommand(cfg *config.Config, logger *logrus.Logger, name string) error 
 		return startWorker(cfg, logger)
 	case "sync":
 		return runSync(cfg, logger)
+	case "sync-historical-transactions-info":
+		return runSyncHistoricalTransactionFees(cfg, logger)
 	case "status":
 		return startStatus(cfg)
 	case "cleanup":
