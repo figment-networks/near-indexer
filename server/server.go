@@ -308,12 +308,23 @@ func (s Server) GetValidatorEvents(c *gin.Context) {
 func (s Server) GetDelegatorRewards(c *gin.Context) {
 	var params delegatorRewardsParams
 	if err := c.BindQuery(&params); err != nil {
-		badRequest(c, errors.New("invalid from or/and to date or missing interval or validator id"))
+		badRequest(c, err)
 		return
 	}
 
 	if err := params.Validate(); err != nil {
 		badRequest(c, err)
+		return
+	}
+
+	delegatorEpochs, err := s.db.Delegators.SearchDelegatorEpochs(store.DelegatorEpochsSearch{
+		AccountID: c.Param("id"),
+	})
+	if shouldReturn(c, err) {
+		return
+	}
+	if len(delegatorEpochs) == 0 {
+		badRequest(c, errors.New("account is not found"))
 		return
 	}
 

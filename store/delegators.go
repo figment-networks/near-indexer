@@ -1,6 +1,7 @@
 package store
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,18 +19,58 @@ type DelegatorsStore struct {
 
 // FetchRewardsByInterval fetches reward by interval
 func (s *DelegatorsStore) FetchRewardsByInterval(account string, validatorId string, from time.Time, to time.Time, timeInterval model.TimeInterval) ([]model.RewardsSummary, error) {
+	q := "SELECT to_char(distributed_at_time, $INTERVAL) AS interval, validator_id as validator, SUM(reward) AS amount FROM delegator_epochs "
+
+	var (
+		args   []interface{}
+		wherec []string
+		i      = 1
+	)
+
+	if account != "" {
+		wherec = append(wherec, ` account_id =  $`+strconv.Itoa(i))
+		args = append(args, account)
+		i++
+	}
+	if validatorId != "" {
+		wherec = append(wherec, ` validator_id =  $`+strconv.Itoa(i))
+		args = append(args, validatorId)
+		i++
+	}
+	if !from.IsZero() {
+		wherec = append(wherec, ` distributed_at_time > $`+strconv.Itoa(i))
+		args = append(args, from)
+		i++
+	}
+	if !to.IsZero() {
+		wherec = append(wherec, ` distributed_at_time < $`+strconv.Itoa(i))
+		args = append(args, to)
+		i++
+	}
+
+	wherec = append(wherec, ` reward >  $`+strconv.Itoa(i))
+	args = append(args, 0)
+	i++
+
+	q += ` WHERE `
+	q += strings.Join(wherec, " AND ")
+	q += " GROUP BY  to_char(distributed_at_time, $INTERVAL), validator_id ORDER BY to_char(distributed_at_time, $INTERVAL)"
+	q = strings.Replace(q, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
+
 	var res []model.RewardsSummary
-	q := strings.Replace(queries.DelegatorsRewards, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
 	var err error
-	if validatorId == "" {
-		q = strings.Replace(q, "AND validator_id = ?", "", -1)
-		err = s.db.Raw(q, account, from, to).Scan(&res).Error
-	} else {
-		err = s.db.Raw(q, account, validatorId, from, to).Scan(&res).Error
+	rows, err := s.db.Raw(q, args).Rows()
+
+	defer rows.Close()
+
+	for rows.Next() {
+		r := model.RewardsSummary{}
+		if err = rows.Scan(&r.Interval, &r.Validator, &r.Amount); err != nil {
+			return nil, err
+		}
+		res = append(res, r)
 	}
-	if err != nil {
-		return res, checkErr(err)
-	}
+
 	return res, nil
 }
 
