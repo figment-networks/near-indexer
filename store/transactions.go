@@ -54,6 +54,27 @@ func (s TransactionsStore) Recent(n int) ([]model.Transaction, error) {
 	return result, checkErr(err)
 }
 
+// FindUnIndexedTransactionFees returns un indexed transaction fees
+func (s TransactionsStore) FindUnIndexedTransactionFees() ([]model.Transaction, error) {
+	result := []model.Transaction{}
+
+	err := s.db.
+		Model(&model.Transaction{}).
+		Where("fee is null").
+		Order("id DESC").
+		Limit(100).
+		Find(&result).
+		Error
+
+	return result, checkErr(err)
+}
+
+// UpdateTransactionsHistoricalInfo updates transactions historical info
+func (s TransactionsStore) UpdateTransactionsHistoricalInfo(trx model.Transaction) error {
+	return s.db.Exec(queries.TransactionsUpdateHistoricalInfo, trx.Hash, trx.Fee,
+		trx.Signature, trx.PublicKey, string(trx.Outcome), string(trx.Receipt)).Error
+}
+
 // Search performs a transaction search and returns matching records
 func (s TransactionsStore) Search(search TransactionsSearch) (*PaginatedResult, error) {
 	if err := search.Validate(); err != nil {
