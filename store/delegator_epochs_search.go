@@ -5,9 +5,9 @@ import (
 )
 
 type DelegatorEpochsSearch struct {
-	AccountID   string `json:"account_id"`
-	ValidatorID string `json:"validator_id"`
-	Epoch       string `json:"epoch"`
+	AccountID   string `form:"account_id"`
+	ValidatorID string `form:"validator_id"`
+	Epoch       string `form:"epoch"`
 }
 
 func (s *DelegatorEpochsSearch) Validate() error {

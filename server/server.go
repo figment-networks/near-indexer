@@ -452,12 +452,13 @@ func (s Server) GetDelegations(c *gin.Context) {
 
 // GetDelegators returns list of delegators
 func (s Server) GetDelegators(c *gin.Context) {
-	search := store.DelegatorEpochsSearch{}
-	search.Epoch = c.Query("epoch")
-	search.ValidatorID = c.Query("validator_id")
-	search.AccountID = c.Query("account_id")
+	params := store.DelegatorEpochsSearch{}
+	if err := c.BindQuery(&params); err != nil {
+		badRequest(c, err)
+		return
+	}
 
-	delegatorEpochs, err := s.db.Delegators.SearchDelegatorEpochs(search)
+	delegatorEpochs, err := s.db.Delegators.SearchDelegatorEpochs(params)
 	if shouldReturn(c, err) {
 		return
 	}
