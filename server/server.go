@@ -454,7 +454,7 @@ func (s Server) GetDelegations(c *gin.Context) {
 func (s Server) GetDelegators(c *gin.Context) {
 	search := store.DelegatorEpochsSearch{}
 	search.Epoch = c.Query("epoch")
-	search.ValidatorID = c.Param("id")
+	search.ValidatorID = c.Query("validator_id")
 	search.AccountID = c.Query("account_id")
 
 	delegatorEpochs, err := s.db.Delegators.SearchDelegatorEpochs(search)

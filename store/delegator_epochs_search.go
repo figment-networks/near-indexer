@@ -12,7 +12,7 @@ type DelegatorEpochsSearch struct {
 
 func (s *DelegatorEpochsSearch) Validate() error {
 	if s.Epoch == "" && s.AccountID == "" && s.ValidatorID == "" {
-		return errors.New("parameter is required for delegator search")
+		return errors.New("at least a parameter is required for delegator search (epoch, account id or validator id)")
 	}
 	return nil
 }
