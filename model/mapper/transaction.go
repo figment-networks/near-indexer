@@ -22,9 +22,28 @@ func Transaction(block *near.Block, input *near.TransactionDetails) (*model.Tran
 		Time:      util.ParseTime(block.Header.Timestamp),
 		Sender:    tx.SignerID,
 		Receiver:  tx.ReceiverID,
-		Amount:    types.NewAmount("0"),
+		PublicKey: tx.PublicKey,
+		Signature: tx.Signature,
 		GasBurnt:  fmt.Sprintf("%v", input.TransactionOutcome.Outcome.GasBurnt),
 	}
+
+	fee, err := util.CalculateTransactionFee(*input)
+	if err != nil {
+		return nil, err
+	}
+	t.Fee = fee
+
+	outcome, err := json.Marshal(input.TransactionOutcome)
+	if err != nil {
+		return nil, err
+	}
+	t.Outcome = outcome
+
+	receipt, err := json.Marshal(input.ReceiptsOutcome)
+	if err != nil {
+		return nil, err
+	}
+	t.Receipt = receipt
 
 	// Status field may be represented by different types depending on the situation
 	switch val := input.Status.(type) {

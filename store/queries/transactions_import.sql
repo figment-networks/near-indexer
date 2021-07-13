@@ -5,11 +5,15 @@ INSERT INTO transactions (
   time,
   sender,
   receiver,
-  amount,
   gas_burnt,
   success,
   actions,
   actions_count,
+  fee,
+  signature,
+  public_key,
+  outcome,
+  receipt,
   created_at,
   updated_at
 )

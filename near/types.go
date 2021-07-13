@@ -150,6 +150,7 @@ type Validator struct {
 type ReceiptsOutcome struct {
 	BlockHash string  `json:"block_hash"`
 	ID        string  `json:"id"`
+	Proof     []Proof `json:"proof"`
 	Outcome   Outcome `json:"outcome"`
 }
 
@@ -165,16 +166,24 @@ type ActionError struct {
 }
 
 type Outcome struct {
-	GasBurnt   int64         `json:"gas_burnt"`
-	Logs       []interface{} `json:"logs"`
-	ReceiptIds []string      `json:"receipt_ids"`
-	Status     Status        `json:"status"`
+	GasBurnt    int64         `json:"gas_burnt"`
+	TokensBurnt string        `json:"tokens_burnt"`
+	ExecutorId  string        `json:"executor_id"`
+	Logs        []interface{} `json:"logs"`
+	ReceiptIds  []string      `json:"receipt_ids"`
+	Status      Status        `json:"status"`
 }
 
 type TransactionOutcome struct {
 	BlockHash string  `json:"block_hash"`
 	ID        string  `json:"id"`
+	Proof     []Proof `json:"proof"`
 	Outcome   Outcome `json:"outcome"`
+}
+
+type Proof struct {
+	Hash      string `json:"hash"`
+	Direction string `json:"direction"`
 }
 
 type TransactionDetails struct {
