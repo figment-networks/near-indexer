@@ -18,18 +18,39 @@ type DelegatorsStore struct {
 
 // FetchRewardsByInterval fetches reward by interval
 func (s *DelegatorsStore) FetchRewardsByInterval(account string, validatorId string, from time.Time, to time.Time, timeInterval model.TimeInterval) ([]model.RewardsSummary, error) {
-	var res []model.RewardsSummary
-	q := strings.Replace(queries.DelegatorsRewards, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
-	var err error
-	if validatorId == "" {
-		q = strings.Replace(q, "AND validator_id = ?", "", -1)
-		err = s.db.Raw(q, account, from, to).Scan(&res).Error
-	} else {
-		err = s.db.Raw(q, account, validatorId, from, to).Scan(&res).Error
+	slt := " to_char(distributed_at_time, $INTERVAL) AS interval, validator_id as validator, SUM(reward) AS amount"
+	slt = strings.Replace(slt, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
+
+	scope := s.db.Select(slt).Table("delegator_epochs")
+
+	if account != "" {
+		scope = scope.Where("account_id = ?", account)
 	}
+	if validatorId != "" {
+		scope = scope.Where("validator_id = ?", validatorId)
+	}
+	if !from.IsZero() {
+		scope = scope.Where("distributed_at_time > ?", from)
+	}
+	if !to.IsZero() {
+		scope = scope.Where("distributed_at_time < ?", to)
+	}
+	scope = scope.Where("reward > ?", 0)
+
+	grp := " to_char(distributed_at_time, $INTERVAL), validator_id"
+	grp = strings.Replace(grp, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
+	scope = scope.Group(grp)
+
+	ord := " to_char(distributed_at_time, $INTERVAL)"
+	ord = strings.Replace(ord, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
+	scope = scope.Order(ord)
+
+	res := []model.RewardsSummary{}
+	err := scope.Find(&res).Error
 	if err != nil {
-		return res, checkErr(err)
+		return nil, err
 	}
+
 	return res, nil
 }
 
