@@ -17,6 +17,7 @@ type TransactionsSearch struct {
 	BlockHeight uint64 `form:"block_height"`
 	Sender      string `form:"sender"`
 	Receiver    string `form:"receiver"`
+	Account     string `form:"account"`
 	StartDate   string `form:"start_date"`
 	EndDate     string `form:"end_date"`
 

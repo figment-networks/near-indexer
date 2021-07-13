@@ -21,6 +21,7 @@ type Server struct {
 	router *gin.Engine
 	db     *store.Store
 	rpc    near.Client
+	log    *logrus.Logger
 }
 
 // New returns a new server
@@ -37,6 +38,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 		router: router,
 		db:     db,
 		rpc:    rpc,
+		log:    logger,
 	}
 
 	router.GET("/", s.GetEndpoints)
@@ -59,6 +61,7 @@ func New(cfg *config.Config, db *store.Store, logger *logrus.Logger, rpc near.Cl
 	router.GET("/transactions/:id", s.GetTransaction)
 	router.GET("/accounts/:id", s.GetAccount)
 	router.GET("/delegations/:id", s.GetDelegations)
+	router.GET("/delegators", s.GetDelegators)
 	router.GET("/events", s.GetEvents)
 	router.GET("/events/:id", s.GetEvent)
 
@@ -305,12 +308,23 @@ func (s Server) GetValidatorEvents(c *gin.Context) {
 func (s Server) GetDelegatorRewards(c *gin.Context) {
 	var params delegatorRewardsParams
 	if err := c.BindQuery(&params); err != nil {
-		badRequest(c, errors.New("invalid from or/and to date or missing interval or validator id"))
+		badRequest(c, err)
 		return
 	}
 
 	if err := params.Validate(); err != nil {
 		badRequest(c, err)
+		return
+	}
+
+	delegatorEpochs, err := s.db.Delegators.SearchDelegatorEpochs(store.DelegatorEpochsSearch{
+		AccountID: c.Param("id"),
+	})
+	if shouldReturn(c, err) {
+		return
+	}
+	if len(delegatorEpochs) == 0 {
+		badRequest(c, errors.New("account is not found"))
 		return
 	}
 
@@ -414,11 +428,12 @@ func (s Server) GetTransaction(c *gin.Context) {
 
 // GetAccount returns an account by name
 func (s Server) GetAccount(c *gin.Context) {
-	acc, err := s.db.Accounts.FindByName(c.Param("id"))
+	account, err := s.rpc.Account(c.Param("id"))
 	if shouldReturn(c, err) {
+		s.log.WithError(err).Error("unable to fetch account details")
 		return
 	}
-	jsonOk(c, acc)
+	jsonOk(c, account)
 }
 
 // GetDelegations returns list of delegations for a given account
@@ -447,6 +462,26 @@ func (s Server) GetDelegations(c *gin.Context) {
 	}
 
 	jsonOk(c, delegations)
+}
+
+// GetDelegators returns list of delegators
+func (s Server) GetDelegators(c *gin.Context) {
+	params := store.DelegatorEpochsSearch{}
+	if err := c.BindQuery(&params); err != nil {
+		badRequest(c, err)
+		return
+	}
+
+	delegatorEpochs, err := s.db.Delegators.SearchDelegatorEpochs(params)
+	if shouldReturn(c, err) {
+		return
+	}
+
+	delegators, err := mapper.Delegators(delegatorEpochs)
+	if shouldReturn(c, err) {
+		return
+	}
+	jsonOk(c, delegators)
 }
 
 // GetEvents returns a list of events

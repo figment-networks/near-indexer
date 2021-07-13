@@ -34,9 +34,9 @@ func GetTypeForTimeInterval(s string) (TimeInterval, bool) {
 func (k TimeInterval) String() string {
 	switch k {
 	case TimeIntervalDaily:
-		return "DD-MM-YYYY"
+		return "YYYY-MM-DD"
 	case TimeIntervalMonthly:
-		return "MM-YYYY"
+		return "YYYY-MM"
 	case TimeIntervalYearly:
 		return "YYYY"
 	default:
