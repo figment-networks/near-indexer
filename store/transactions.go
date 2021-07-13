@@ -1,6 +1,7 @@
 package store
 
 import (
+	"strings"
 	"time"
 
 	"github.com/figment-networks/indexing-engine/store/bulk"
@@ -71,12 +72,19 @@ func (s TransactionsStore) Search(search TransactionsSearch) (*PaginatedResult, 
 	if search.BlockHeight > 0 {
 		scope = scope.Where("height = ?", search.BlockHeight)
 	}
-	if search.Sender != "" {
-		scope = scope.Where("sender = ?", search.Sender)
+
+	if search.Account != "" {
+		accounts := strings.Split(search.Account, ",")
+		scope = scope.Where("sender IN (?) OR receiver IN (?)", accounts, accounts)
+	} else {
+		if search.Sender != "" {
+			scope = scope.Where("sender = ?", search.Sender)
+		}
+		if search.Receiver != "" {
+			scope = scope.Where("receiver = ?", search.Receiver)
+		}
 	}
-	if search.Receiver != "" {
-		scope = scope.Where("receiver = ?", search.Receiver)
-	}
+
 	if search.startTime != nil {
 		scope = scope.Where("time >= ?", search.startTime)
 	}
