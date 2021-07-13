@@ -1,7 +1,6 @@
 package store
 
 import (
-	"strconv"
 	"strings"
 	"time"
 
@@ -19,56 +18,37 @@ type DelegatorsStore struct {
 
 // FetchRewardsByInterval fetches reward by interval
 func (s *DelegatorsStore) FetchRewardsByInterval(account string, validatorId string, from time.Time, to time.Time, timeInterval model.TimeInterval) ([]model.RewardsSummary, error) {
-	q := "SELECT to_char(distributed_at_time, $INTERVAL) AS interval, validator_id as validator, SUM(reward) AS amount FROM delegator_epochs "
+	slt := " to_char(distributed_at_time, $INTERVAL) AS interval, validator_id as validator, SUM(reward) AS amount"
+	slt = strings.Replace(slt, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
 
-	var (
-		args   []interface{}
-		wherec []string
-		i      = 1
-	)
+	scope := s.db.Select(slt).Table("delegator_epochs")
 
 	if account != "" {
-		wherec = append(wherec, ` account_id =  $`+strconv.Itoa(i))
-		args = append(args, account)
-		i++
+		scope = scope.Where("account_id = ?", account)
 	}
 	if validatorId != "" {
-		wherec = append(wherec, ` validator_id =  $`+strconv.Itoa(i))
-		args = append(args, validatorId)
-		i++
+		scope = scope.Where("validator_id = ?", validatorId)
 	}
 	if !from.IsZero() {
-		wherec = append(wherec, ` distributed_at_time > $`+strconv.Itoa(i))
-		args = append(args, from)
-		i++
+		scope = scope.Where("distributed_at_time > ?", from)
 	}
 	if !to.IsZero() {
-		wherec = append(wherec, ` distributed_at_time < $`+strconv.Itoa(i))
-		args = append(args, to)
-		i++
+		scope = scope.Where("distributed_at_time < ?", to)
 	}
+	scope = scope.Where("reward > ?", 0)
 
-	wherec = append(wherec, ` reward >  $`+strconv.Itoa(i))
-	args = append(args, 0)
-	i++
+	grp := " to_char(distributed_at_time, $INTERVAL), validator_id"
+	grp = strings.Replace(grp, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
+	scope = scope.Group(grp)
 
-	q += ` WHERE `
-	q += strings.Join(wherec, " AND ")
-	q += " GROUP BY  to_char(distributed_at_time, $INTERVAL), validator_id ORDER BY to_char(distributed_at_time, $INTERVAL)"
-	q = strings.Replace(q, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
+	ord := " to_char(distributed_at_time, $INTERVAL)"
+	ord = strings.Replace(ord, "$INTERVAL", "'"+timeInterval.String()+"'", -1)
+	scope = scope.Order(ord)
 
-	var res []model.RewardsSummary
-	var err error
-	rows, err := s.db.Raw(q, args).Rows()
-
-	defer rows.Close()
-
-	for rows.Next() {
-		r := model.RewardsSummary{}
-		if err = rows.Scan(&r.Interval, &r.Validator, &r.Amount); err != nil {
-			return nil, err
-		}
-		res = append(res, r)
+	res := []model.RewardsSummary{}
+	err := scope.Find(&res).Error
+	if err != nil {
+		return nil, err
 	}
 
 	return res, nil
