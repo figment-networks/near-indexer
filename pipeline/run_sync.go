@@ -85,8 +85,12 @@ func RunSyncHistoricalDelegators(cfg *config.Config, db *store.Store, clients []
 		return err
 	}
 
+	logger.Info(" number of epochs for sync: ", len(epochs))
+
 	for _, e := range epochs {
-		validatorEpochs, err := db.ValidatorAggs.FindValidatorsByEpoch(e.ID)
+		logger.WithField("epoch", e.ID).Info(" fetching historical delegators")
+
+		validatorEpochs, err := db.ValidatorAggs.FindValidatorEpochsByEpoch(e.ID)
 		if err != nil {
 			return err
 		}
@@ -146,5 +150,7 @@ func RunSyncHistoricalDelegators(cfg *config.Config, db *store.Store, clients []
 			return err
 		}
 	}
+	logger.Info(" finishing fetching historical delegators")
+
 	return nil
 }
