@@ -4,7 +4,7 @@ import "fmt"
 
 var (
 	AppName    = "near-indexer"
-	AppVersion = "0.7.0"
+	AppVersion = "0.8.0"
 	GitCommit  = "-"
 	GoVersion  = "-"
 )
