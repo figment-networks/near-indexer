@@ -50,8 +50,8 @@ func (s ValidatorAggsStore) FindValidatorEpochs(account string, limit int) ([]mo
 	return result, checkErr(err)
 }
 
-// FindValidatorsByEpoch returns validators for given epoch
-func (s ValidatorAggsStore) FindValidatorsByEpoch(epoch string) ([]model.ValidatorEpoch, error) {
+// FindValidatorEpochsByEpoch returns validator epochs for given epoch
+func (s ValidatorAggsStore) FindValidatorEpochsByEpoch(epoch string) ([]model.ValidatorEpoch, error) {
 	result := []model.ValidatorEpoch{}
 
 	err := s.db.
