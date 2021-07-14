@@ -8,7 +8,9 @@ SELECT
   validators_count,
   average_efficiency
 FROM epochs
-WHERE start_height < (SELECT start_height FROM epochs
-                      INNER JOIN delegator_epochs ON epochs.ID = delegator_epochs.EPOCH
-                      ORDER BY start_height ASC LIMIT 1)
+WHERE start_height < (
+        SELECT start_height FROM epochs
+         INNER JOIN delegator_epochs ON epochs.id = delegator_epochs.epoch
+         ORDER BY start_height ASC LIMIT 1
+    )
 ORDER BY start_height DESC

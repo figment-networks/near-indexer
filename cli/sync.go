@@ -29,6 +29,6 @@ func runSyncHistoricalDelegators(cfg *config.Config, logger *logrus.Logger) erro
 	}
 	defer db.Close()
 
-	err = pipeline.RunSyncHistoricalDelegators(cfg, db, clients)
+	err = pipeline.RunSyncHistoricalDelegators(cfg, db, clients, logger)
 	return err
 }

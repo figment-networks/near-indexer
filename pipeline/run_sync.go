@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -75,22 +74,19 @@ func RunSync(cfg *config.Config, db *store.Store, clients []near.Client) (int, e
 	return payload.Lag, err
 }
 
-func RunSyncHistoricalDelegators(cfg *config.Config, db *store.Store, clients []near.Client) error {
-	logger := logrus.StandardLogger()
+func RunSyncHistoricalDelegators(cfg *config.Config, db *store.Store, clients []near.Client, logger *logrus.Logger) error {
 	fetcherTask := NewFetcherTask(db, clients, cfg, logger)
 
-	var err error
 	epochs, err := db.Epochs.FindUnIndexedDelegatorsEpochs()
 	if err != nil {
 		return err
 	}
+	logger.WithField("count", len(epochs)).Info("found historical epochs to sync")
 
-	logger.Info(" number of epochs for sync: ", len(epochs))
+	for _, epoch := range epochs {
+		logger.WithField("epoch", epoch.ID).Info("fetching historical delegators")
 
-	for _, e := range epochs {
-		logger.WithField("epoch", e.ID).Info(" fetching historical delegators")
-
-		validatorEpochs, err := db.ValidatorAggs.FindValidatorEpochsByEpoch(e.ID)
+		validatorEpochs, err := db.ValidatorAggs.FindValidatorEpochsByEpoch(epoch.ID)
 		if err != nil {
 			return err
 		}
@@ -104,13 +100,12 @@ func RunSyncHistoricalDelegators(cfg *config.Config, db *store.Store, clients []
 
 		doConcurrently(accounts, fetcherTask.concurrencyLevel, func(account string) {
 			var dlgs []near.AccountInfo
-			var err error
 			for i := 1; i <= fetcherTask.maxRetryCount; i++ {
-				dlgs, err = fetcherTask.RPC().Delegations(account, e.EndHeight)
+				dlgs, err = fetcherTask.RPC().Delegations(account, epoch.EndHeight)
 				if err == nil {
 					break
 				}
-				fetcherTask.logger.WithError(err).Error(fmt.Sprintf("can not fetch delegations, validator_id %s retrying from another node", account))
+				fetcherTask.logger.WithError(err).WithField("validator", account).Error("can not fetch delegations")
 			}
 			resultsLock.Lock()
 			defer resultsLock.Unlock()
@@ -125,7 +120,7 @@ func RunSyncHistoricalDelegators(cfg *config.Config, db *store.Store, clients []
 		delegationsByValidator := map[string][]near.AccountInfo{}
 		for _, res := range results {
 			if res.err != nil {
-				fetcherTask.logger.WithError(res.err).Error(fmt.Sprintf("can not fetch delegations, validator_id %s ", res.account))
+				fetcherTask.logger.WithError(res.err).WithField("validator", res.account).Error("can not fetch delegations ")
 				return res.err
 			}
 			delegationsByValidator[res.account] = res.delegations
@@ -137,7 +132,7 @@ func RunSyncHistoricalDelegators(cfg *config.Config, db *store.Store, clients []
 					de := model.DelegatorEpoch{
 						AccountID:       d.Account,
 						ValidatorID:     ve.AccountID,
-						Epoch:           e.ID,
+						Epoch:           epoch.ID,
 						StakedBalance:   types.NewAmount(d.StakedBalance),
 						UnstakedBalance: types.NewAmount(d.UnstakedBalance),
 					}
